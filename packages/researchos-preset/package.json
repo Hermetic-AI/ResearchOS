@@ -1,0 +1,14 @@
+{
+  "name": "@researchos/preset",
+  "version": "0.1.0",
+  "description": "ResearchOS preset assets — SubAgents, Skills, Commands, and MCP declarations for research projects",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./agent/*": "./agent/*.md",
+    "./skill/*": "./skill/*",
+    "./command/*": "./command/*.md",
+    "./opencode.researchos.json": "./opencode.researchos.json"
+  },
+  "files": ["agent/", "skill/", "command/", "opencode.researchos.json"]
+}

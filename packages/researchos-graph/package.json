@@ -1,0 +1,15 @@
+{
+  "name": "@researchos/graph",
+  "version": "0.1.0",
+  "description": "ResearchOS Knowledge Graph — wikilink parsing, edge-table storage, Graph RAG, layout computation",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "*"
+  }
+}

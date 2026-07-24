@@ -1,0 +1,23 @@
+{
+  "mcp": {
+    "researchos-literature": {
+      "type": "local",
+      "command": ["uv", "run", "--directory", "packages/researchos-mcp/literature", "researchos-literature-mcp"]
+    },
+    "researchos-data": {
+      "type": "local",
+      "command": ["uv", "run", "--directory", "packages/researchos-mcp/data", "researchos-data-mcp"]
+    },
+    "researchos-plot": {
+      "type": "local",
+      "command": ["uv", "run", "--directory", "packages/researchos-mcp/plot", "researchos-plot-mcp"]
+    }
+  },
+  "plugin": ["@researchos/writing", "@researchos/plot-core"],
+  "agent": {
+    "literature": { "file": "@researchos/preset/agent/literature.md", "color": "#61afef" },
+    "graph": { "file": "@researchos/preset/agent/graph.md", "color": "#9d7cd8" },
+    "paper-writer": { "file": "@researchos/preset/agent/paper-writer.md", "color": "#7fd88f" },
+    "data-analyst": { "file": "@researchos/preset/agent/data-analyst.md", "color": "#56b6c2" }
+  }
+}

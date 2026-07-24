@@ -1,0 +1,1 @@
+{"name":"@researchos/translate","version":"0.1.0","description":"ResearchOS Translation Center — PDF extraction, en→zh pipeline, terminology glossary","private":true,"type":"module","main":"./src/index.ts","scripts":{"typecheck":"tsgo --noEmit","test":"bun test"},"dependencies":{"zod":"*"}}

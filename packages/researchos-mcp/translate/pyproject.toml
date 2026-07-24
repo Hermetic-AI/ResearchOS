@@ -1,0 +1,11 @@
+[project]
+name = "researchos-translate-mcp"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.0"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pyright]
+typeCheckingMode = "basic"

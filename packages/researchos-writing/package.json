@@ -1,0 +1,1 @@
+{"name":"@researchos/writing","version":"0.1.0","description":"ResearchOS Paper Writing Assistant — CSV/MD to LaTeX, code-to-algorithm, academic rewrite tools","private":true,"type":"module","main":"./src/index.ts","scripts":{"typecheck":"tsgo --noEmit","test":"bun test"},"dependencies":{"zod":"*"}}
