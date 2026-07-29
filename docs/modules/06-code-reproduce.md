@@ -1,5 +1,7 @@
 # 模块六：代码复现中心（Code Reproduce）技术落地文档
 
+> 实现状态（2026-07-29）：v1 已完成。创建 run 仅持久化，不隐式执行；六步通过 HTTP 或 MCP 显式推进，真实 clone/分析/检测/运行/比对的日志、指标和诊断均保存在 `.researchos/reproduce/`。App 已提供历史 run、步骤证据、论文指标录入、比对卡与四类诊断视图。
+
 > 对应总体方案 `docs/ResearchOS最终方案.md` 模块六与 5.7 节；UI 对应 `docs/ResearchOS-UI设计.md` 3.8 节。
 > 核心原则：**完全复用 OpenCode 原生 coding agent / GitHub 连接 / Repo 理解能力，复现流水线以 `reproduce.paper` Skill 编排实现，不改内核。**
 

@@ -1,57 +1,48 @@
-import { createSignal, type Component } from "solid-js"
-import { useParams } from "@solidjs/router"
+import { Button } from "@opencode-ai/ui/button"
+import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup, onMount } from "solid-js"
+import { usePlatform } from "@/context/platform"
+import { useSDK } from "@/context/sdk"
+import { useServerSDK } from "@/context/server-sdk"
+import { createResearchosClient } from "@/utils/researchos-client"
 
-const ReproducePage: Component = () => {
-  const params = useParams<{ dir: string }>()
+export default function ReproducePage() {
+  const sdk = useSDK()
+  const platform = usePlatform()
+  const serverSDK = useServerSDK()
+  const client = createMemo(() => createResearchosClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-reproduce"])
+  const location = () => ({ directory: sdk().directory })
   const [paperUrl, setPaperUrl] = createSignal("")
   const [repoUrl, setRepoUrl] = createSignal("")
-  const [running, setRunning] = createSignal(false)
-  const [progress, setProgress] = createSignal(0)
-
-  const steps = ["Clone", "Analyze", "Detect Env", "Setup Env", "Run", "Compare"]
-  const currentStep = () => Math.floor(progress() / (100 / steps.length))
-
-  const start = async () => {
-    setRunning(true)
-    for (let i = 0; i <= 100; i += 17) {
-      setProgress(i)
-      await new Promise((r) => setTimeout(r, 300))
-    }
-    setProgress(100)
-    setRunning(false)
+  const [strategy, setStrategy] = createSignal<"auto" | "docker" | "venv">("auto")
+  const [selected, setSelected] = createSignal<string>()
+  const [notice, setNotice] = createSignal("Creation only records a run. Every execution step is explicit and auditable.")
+  const [runs, runActions] = createResource(() => sdk().directory, async () => client().list({ location: location() }).then((result) => result.data))
+  const [detail, detailActions] = createResource(selected, async (id) => client().get({ id, location: location() }).then((result) => result.data))
+  const [comparison, comparisonActions] = createResource(selected, async (id) => client().comparison({ id, location: location() }).then((result) => result.data))
+  const [issues, issueActions] = createResource(selected, async (id) => client().issues({ id, location: location() }).then((result) => result.data))
+  const [model, setModel] = createSignal("model")
+  const [dataset, setDataset] = createSignal("dataset")
+  const [metric, setMetric] = createSignal("accuracy")
+  const [paperValue, setPaperValue] = createSignal("")
+  const [busy, setBusy] = createSignal(false)
+  createEffect(() => { if (!selected() && runs()?.[0]) setSelected(runs()![0]!.id) })
+  onMount(() => { const timer = setInterval(() => { if (detail()?.run.status === "running") void Promise.all([detailActions.refetch(), runActions.refetch()]) }, 2_000); onCleanup(() => clearInterval(timer)) })
+  const create = async () => {
+    setBusy(true)
+    try { const result = await client().create({ location: location(), paperUrl: paperUrl(), repoUrl: repoUrl(), envStrategy: strategy() }); setSelected(result.data.runId); setNotice(`Created ${result.data.runId}. Start with Clone.`); await runActions.refetch() } catch (error) { setNotice(message(error)) } finally { setBusy(false) }
   }
-
-  return (
-    <div style={{ display: "flex", "flex-direction": "column", height: "100%" }}>
-      <div style={{ padding: "8px 16px", "border-bottom": "1px solid var(--color-border)" }}>
-        <span style={{ "font-size": "13px", "font-weight": "600" }}>Code Reproduce · {params.dir}</span>
-      </div>
-      <div style={{ flex: "1", display: "flex", "flex-direction": "column", padding: "24px", gap: "12px", "max-width": "600px", margin: "0 auto" }}>
-        <input type="text" value={paperUrl()} onInput={(e) => setPaperUrl(e.currentTarget.value)} placeholder="Paper URL (arXiv, DOI, etc.)" style={{ padding: "8px 12px", "font-size": "13px", "border-radius": "4px", border: "1px solid var(--color-border)", background: "var(--color-surface-base)", color: "var(--color-text)" }} />
-        <input type="text" value={repoUrl()} onInput={(e) => setRepoUrl(e.currentTarget.value)} placeholder="GitHub repo URL" style={{ padding: "8px 12px", "font-size": "13px", "border-radius": "4px", border: "1px solid var(--color-border)", background: "var(--color-surface-base)", color: "var(--color-text)" }} />
-        <button onClick={start} disabled={running()} style={{ padding: "8px 16px", "font-size": "13px", "border-radius": "4px", border: "none", background: "var(--color-primary)", color: "#000", cursor: "pointer", "align-self": "flex-start" }}>
-          {running() ? `Reproducing... ${progress()}%` : "Start Reproduction"}
-        </button>
-        {progress() > 0 && (
-          <div style={{ "margin-top": "12px" }}>
-            <div style={{ display: "flex", gap: "4px", "margin-bottom": "8px" }}>
-              {steps.map((s, i) => (
-                <span style={{ padding: "4px 8px", "font-size": "10px", "border-radius": "3px", background: i <= currentStep() ? "var(--color-primary)" + "33" : "var(--color-surface-raised)", color: i <= currentStep() ? "var(--color-text)" : "var(--color-text-weak)" }}>{s}</span>
-              ))}
-            </div>
-            <div style={{ width: "100%", height: "4px", "border-radius": "2px", background: "var(--color-surface-raised)" }}>
-              <div style={{ width: `${progress()}%`, height: "100%", "border-radius": "2px", background: "var(--color-primary)", transition: "width 0.3s" }} />
-            </div>
-          </div>
-        )}
-        {progress() === 100 && (
-          <div style={{ padding: "12px", "border-radius": "4px", background: "#7fd88f22", "font-size": "12px" }}>
-            ✅ Reproduction complete! All results matched within 1% tolerance.
-          </div>
-        )}
-      </div>
-    </div>
-  )
+  const advance = async (step: "clone" | "analyze" | "env_detect" | "env_generate" | "run" | "compare") => {
+    const id = selected(); if (!id) return
+    setBusy(true); setNotice(`Running ${step}…`)
+    try { const result = await client().advance({ id, step, location: location() }); setNotice(result.data.logTail || `${step} completed`) } catch (error) { setNotice(message(error)) } finally { setBusy(false); await Promise.all([detailActions.refetch(), runActions.refetch(), comparisonActions.refetch(), issueActions.refetch()]) }
+  }
+  const submitMetric = async () => {
+    const id = selected(); const value = Number(paperValue()); if (!id || !Number.isFinite(value)) return setNotice("Paper value must be numeric.")
+    await client().metricsSubmit({ id, location: location(), metrics: [{ model: model(), dataset: dataset(), metric: metric(), value }] }); setNotice("Paper metric recorded with an explicit source context from this form."); setPaperValue("")
+  }
+  return <main class="flex h-full min-h-0 bg-background-stronger text-text-base"><aside class="flex w-[330px] shrink-0 flex-col border-r border-border-weak-base bg-background-base"><header class="border-b border-border-weak-base p-3"><h1 class="text-13-medium">Code reproduction</h1><p class="text-10-regular text-text-weak">Durable six-step experiment runs</p></header><form class="space-y-2 border-b border-border-weak-base p-3" onSubmit={(event) => { event.preventDefault(); void create() }}><input required class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={paperUrl()} onInput={(event) => setPaperUrl(event.currentTarget.value)} placeholder="Paper URL" /><input required class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={repoUrl()} onInput={(event) => setRepoUrl(event.currentTarget.value)} placeholder="Repository URL" /><div class="flex gap-2"><select class="h-8 min-w-0 flex-1 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={strategy()} onChange={(event) => setStrategy(event.currentTarget.value as typeof strategy extends () => infer T ? T : never)}><option value="auto">Auto environment</option><option value="venv">Python venv</option><option value="docker">Docker</option></select><Button type="submit" size="small" variant="primary" disabled={busy()}>Create run</Button></div></form><div class="min-h-0 flex-1 overflow-y-auto p-2"><For each={runs()} fallback={<p class="p-3 text-11-regular text-text-weak">No reproduction runs yet.</p>}>{(run) => <button class="mb-1 w-full rounded border p-2 text-left" classList={{ "border-border-focus bg-background-selected": selected() === run.id, "border-transparent": selected() !== run.id }} onClick={() => setSelected(run.id)}><div class="flex items-center justify-between"><span class="text-11-medium">{run.id.slice(0, 22)}</span><Status value={run.status} /></div><p class="mt-1 truncate text-10-regular text-text-weak">{run.repoUrl}</p></button>}</For></div></aside><section class="min-w-0 flex-1 overflow-y-auto p-5"><Show when={detail()} fallback={<div class="p-12 text-center text-12-regular text-text-weak">Select or create a run.</div>}>{(value) => <div class="mx-auto max-w-5xl"><header class="mb-4"><div class="flex items-center gap-2"><h2 class="text-16-medium">{value().run.id}</h2><Status value={value().run.status} /></div><p class="mt-1 text-11-regular text-text-weak">{notice()}</p><Show when={value().run.error}><p class="mt-2 rounded border border-border-weak-base bg-background-base p-2 text-11-regular">{value().run.error}</p></Show></header><div class="grid grid-cols-6 gap-2"><For each={value().steps}>{(step, index) => <button class="rounded-lg border p-3 text-left" classList={{ "border-border-focus": step.status === "running", "border-border-weak-base bg-background-base": step.status !== "running" }} disabled={busy() || step.status === "completed" || (index() > 0 && value().steps[index() - 1]?.status !== "completed")} onClick={() => void advance(step.name as Parameters<typeof advance>[0])}><span class="text-9-medium text-text-weak">0{step.seq}</span><p class="mt-1 text-11-medium">{step.name.replaceAll("_", " ")}</p><Status value={step.status} /></button>}</For></div><div class="mt-4 grid grid-cols-[minmax(0,1fr)_320px] gap-4"><div class="space-y-4"><article class="rounded-lg border border-border-weak-base bg-background-base"><h3 class="border-b border-border-weak-base px-3 py-2 text-11-medium">Step evidence</h3><For each={value().steps.filter((step) => step.log)}>{(step) => <details class="border-b border-border-weak-base p-3" open={step.status === "failed"}><summary class="cursor-pointer text-11-medium">{step.name} · {step.status}</summary><pre class="mt-2 max-h-60 overflow-auto whitespace-pre-wrap font-mono text-10-regular text-text-weak">{step.log}</pre></details>}</For></article><Comparison metrics={comparison() ?? []} /></div><aside class="space-y-4"><article class="rounded-lg border border-border-weak-base bg-background-base p-3"><h3 class="text-11-medium">Paper metric</h3><p class="mb-2 text-10-regular text-text-weak">Only enter values verified in the paper.</p><For each={[["Model", model, setModel], ["Dataset", dataset, setDataset], ["Metric", metric, setMetric], ["Value", paperValue, setPaperValue]] as const}>{(field) => <label class="mb-2 block text-10-regular text-text-weak">{field[0]}<input class="mt-1 h-7 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular text-text-base" value={field[1]()} onInput={(event) => field[2](event.currentTarget.value)} /></label>}</For><Button class="w-full" size="small" variant="secondary" onClick={() => void submitMetric()}>Record paper value</Button></article><IssueList issues={issues() ?? []} /></aside></div></div>}</Show></section></main>
 }
-
-export default ReproducePage
+function Status(props: { value: string }) { return <span class="rounded bg-background-stronger px-1.5 py-0.5 text-9-medium uppercase text-text-weak">{props.value}</span> }
+function Comparison(props: { metrics: ReadonlyArray<{ id: string; model: string; dataset: string; metric: string; paperValue?: number | string | null; reproValue?: number | string | null; tolerance: number | string; verdict: string }> }) { return <article class="rounded-lg border border-border-weak-base bg-background-base"><h3 class="border-b border-border-weak-base px-3 py-2 text-11-medium">Result comparison</h3><div class="overflow-x-auto"><table class="w-full text-left text-10-regular"><thead class="text-text-weak"><tr><th class="p-2">Model / dataset</th><th>Metric</th><th>Paper</th><th>Reproduced</th><th>Verdict</th></tr></thead><tbody><For each={props.metrics} fallback={<tr><td colspan="5" class="p-4 text-center text-text-weak">Submit paper metrics, run the experiment, then execute Compare.</td></tr>}>{(metric) => <tr class="border-t border-border-weak-base"><td class="p-2">{metric.model} / {metric.dataset}</td><td>{metric.metric}</td><td>{String(metric.paperValue ?? "—")}</td><td>{String(metric.reproValue ?? "—")}</td><td><Status value={metric.verdict} /></td></tr>}</For></tbody></table></div></article> }
+function IssueList(props: { issues: ReadonlyArray<{ id: string; category: string; severity: string; title: string; detail: string; evidence?: string | null }> }) { return <article class="rounded-lg border border-border-weak-base bg-background-base p-3"><h3 class="text-11-medium">Diagnostics ({props.issues.length})</h3><For each={props.issues} fallback={<p class="mt-2 text-10-regular text-text-weak">No diagnosed failures.</p>}>{(issue) => <details class="mt-2 rounded border border-border-weak-base p-2"><summary class="cursor-pointer text-10-medium">{issue.category} · {issue.title}</summary><p class="mt-1 text-10-regular text-text-weak">{issue.detail}</p><Show when={issue.evidence}><pre class="mt-2 max-h-32 overflow-auto whitespace-pre-wrap text-9-regular">{issue.evidence}</pre></Show></details>}</For></article> }
+function message(error: unknown) { return error instanceof Error ? error.message : String(error) }
