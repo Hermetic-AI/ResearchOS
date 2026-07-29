@@ -12,13 +12,13 @@
 | 包名 | 用途 | License | 引入版本 |
 |---|---|---|---|
 | `bun:sqlite` | SQLite 驱动（Bun 内置） | 内置 | — |
-| `sqlite-vec` | 向量检索虚拟表（`vec0`） | MIT | latest |
-| `@xenova/transformers`（transformers.js） | 本地嵌入推理（`bge-small-en-v1.5` ONNX） | Apache-2.0 | latest |
-| `pdfjs-dist` | PDF 文本提取 | Apache-2.0 | latest |
-| `citation-js` | 核心引用格式引擎 | MIT | latest |
-| `@citation-js/plugin-csl` | CSL 样式渲染 | MIT | latest |
-| `@citation-js/plugin-bibtex` | BibTeX 解析 | MIT | latest |
-| `@citation-js/plugin-ris` | RIS 解析 | MIT | latest |
+| `sqlite-vec` | 向量检索虚拟表（`vec0`） | MIT | 0.1.9 |
+| `@huggingface/transformers`（transformers.js，`@xenova/transformers` 的同项目新名） | 本地嵌入推理（`bge-small-en-v1.5` ONNX） | Apache-2.0 | 4.2.0 |
+| `pdfjs-dist` | PDF 文本提取 | Apache-2.0 | 6.1.200 |
+| `@citation-js/core` | 核心引用格式引擎 | MIT | 0.8.2 |
+| `@citation-js/plugin-csl` | CSL 样式渲染 | MIT | 0.8.2 |
+| `@citation-js/plugin-bibtex` | BibTeX 解析 | MIT | 0.8.2 |
+| `@citation-js/plugin-ris` | RIS 解析 | MIT | 0.8.2 |
 | `@modelcontextprotocol/sdk` | MCP stdio server 传输 | MIT | repo 已有 |
 | `zod` | 参数校验 | MIT | repo 已有 |
 
@@ -27,12 +27,12 @@
 | 包名 | 用途 | License | 引入版本 |
 |---|---|---|---|
 | `bun:sqlite` | 边表存储 + FTS5 | 内置 | — |
-| `sqlite-vec` | 向量检索 | MIT | latest |
-| `remark-parse`（unified 生态） | Markdown `[[...]]` AST 解析 | MIT | latest |
-| `d3-force` | 力导向图布局算法（SVG 渲染） | ISC | latest |
-| `d3-zoom` | 图谱缩放拖拽 | ISC | latest |
-| `@huggingface/transformers`（transformers.js） | 本地嵌入（all-MiniLM-L6-v2） | Apache-2.0 | latest |
-| `@modelcontextprotocol/sdk` | MCP stdio server | MIT | repo 已有 |
+| `sqlite-vec` | 向量检索 | MIT | 0.1.9 |
+| `mdast-util-from-markdown`（unified 生态，remark-parse 底层） | Markdown `[[...]]` AST 解析 | MIT | 2.0.3 |
+| `d3-force` | 力导向图布局算法（SVG 渲染） | ISC | 3.0.0 |
+| `d3-zoom`（含 `d3-selection` 3.0.0） | 图谱缩放拖拽 | ISC | 3.0.0 |
+| `@huggingface/transformers`（transformers.js） | 本地嵌入（bge-small-en-v1.5，与文献库统一） | Apache-2.0 | 4.2.0 |
+| `@modelcontextprotocol/sdk` | MCP stdio server | MIT | 1.29.0 |
 | Sigma.js + graphology + forceatlas2 | WebGL 大规模图谱（扩展路径） | MIT | 后续引入 |
 | Kuzu | 嵌入式图库（扩展路径，SQLite→Kuzu 升级） | MIT | 后续引入 |
 | `zod` | 参数校验 | MIT | repo 已有 |
@@ -41,9 +41,9 @@
 
 | 包名 | 用途 | License | 引入版本 |
 |---|---|---|---|
-| `monaco-editor` | 编辑器内核（复用 app 已有依赖） | MIT | repo 已有 |
-| `pdfjs-dist` | PDF 渲染 + SyncTeX 反向跳转 | Apache-2.0 | latest |
-| `@modelcontextprotocol/sdk` | MCP stdio server | MIT | repo 已有 |
+| `monaco-editor` | 编辑器内核、Monarch 高亮与 cite key 补全（app 直接依赖） | MIT | 0.52.2 |
+| `pdfjs-dist` | PDF 渲染 + SyncTeX 反向跳转（app 直接依赖） | Apache-2.0 | 6.1.200 |
+| `@modelcontextprotocol/sdk` | MCP stdio server | MIT | 1.29.0 |
 
 > 自研模块：Monarch tokenizer（LaTeX 语法高亮）、SyncTeX parser（`.synctex.gz` 解析）、BibTeX 轻量 parser、Tectonic 日志解析——无额外 npm 依赖。
 
@@ -52,7 +52,7 @@
 | 包名 | 用途 | License | 引入版本 |
 |---|---|---|---|
 | `bun:sqlite` | 产物库 SQLite | 内置 | — |
-| `better-sqlite3` | TS 侧 DB 访问 | MIT | latest |
+| ~~better-sqlite3~~ → 实际用 `bun:sqlite`（与 literature/graph 统一） | TS 侧 DB 访问 | MIT | 内置 |
 | `zod` | 参数校验 | MIT | repo 已有 |
 
 > 核心计算在 Python 侧（§二）。
@@ -61,9 +61,9 @@
 
 | 包名 | 用途 | License | 引入版本 |
 |---|---|---|---|
-| `papaparse` | CSV 解析 | MIT | latest |
-| `markdown-it` | Markdown→LaTeX token 流转换 | MIT | latest |
-| `diff`（jsdiff） | 词级 diff（润色 review 视图） | BSD-3-Clause | latest |
+| `papaparse` | CSV 解析 | MIT | 5.5.4 |
+| `markdown-it` | Markdown→LaTeX token 流转换 | MIT | 14.3.0 |
+| `diff`（jsdiff） | 词级 diff（润色 review 视图） | BSD-3-Clause | 9.0.0 |
 
 ### 1.6 代码复现（`@researchos/reproduce`）
 
@@ -79,8 +79,8 @@
 
 | 包名 | 用途 | License | 引入版本 |
 |---|---|---|---|
-| `mermaid`（npm） | Mermaid 前端 SVG 渲染 + 服务端 parse 校验 | MIT | latest |
-| `@hpcc-js/wasm` | Graphviz WASM 移植（DOT → SVG） | Apache-2.0 | latest |
+| `mermaid`（npm） | Mermaid 前端 SVG 渲染 + 服务端 parse 校验 | MIT | 11.12.0 |
+| `@hpcc-js/wasm` | Graphviz WASM 移植（DOT → SVG） | Apache-2.0 | 2.30.0 |
 
 > PlantUML 列为可选扩展（依赖 Java/服务器，首版不引入）。
 > draw.io（diagrams.net）以 iframe + postMessage 嵌入，不引入为 npm 依赖。
@@ -115,7 +115,7 @@
 
 | 包名 | 用途 | License |
 |---|---|---|
-| `mcp`（FastMCP） | MCP server 框架 | MIT |
+| `mcp`（FastMCP） | MCP server 框架 | MIT | 1.29.0（pin <2） |
 | `pymupdf` | PDF 文本提取（备选，主解析在 TS 侧 pdfjs） | AGPL-3.0 |
 | `requests` / `httpx` | API fetch | Apache-2.0 / BSD |
 
@@ -123,15 +123,15 @@
 
 | 包名 | 用途 | License |
 |---|---|---|
-| `mcp`（FastMCP） | MCP server 框架 | MIT |
-| `numpy` | 数值计算 | BSD-3 |
-| `pandas` | 数据处理 | BSD-3 |
-| `scipy` | 统计检验（`scipy.stats`） | BSD-3 |
+| `mcp`（FastMCP） | MCP server 框架 | MIT | 1.29.0（pin <2） |
+| `numpy` | 数值计算 | BSD-3 | 2.5.1 |
+| `pandas` | 数据处理 | BSD-3 | 3.0.5 |
+| `scipy` | 统计检验（`scipy.stats`） | BSD-3 | 1.18.0 |
 | `scikit-learn` | 机器学习（扩展） | BSD-3 |
-| `matplotlib` | 学术出图（矢量 PDF/SVG） | PSF |
-| `seaborn` | 统计可视化 | BSD-3 |
+| `matplotlib` | 学术出图（矢量 PDF/SVG） | PSF | 3.11.1 |
+| `seaborn` | 统计可视化 | BSD-3 | 0.13.2 |
 | `plotly` + `kaleido` | 交互预览 + 静态导出 | MIT |
-| `pyarrow` | Parquet 读写 | Apache-2.0 |
+| `pyarrow` | Parquet 读写 | Apache-2.0 | 25.0.0 |
 | `optuna` | 参数优化（扩展，v2） | MIT |
 | `jupyter_client` | Jupyter Kernel 模式（扩展，v2） | BSD-3 |
 
@@ -139,16 +139,16 @@
 
 | 包名 | 用途 | License |
 |---|---|---|
-| `mcp`（FastMCP） | MCP server 框架 | MIT |
-| `matplotlib` | 出版级图表渲染 | PSF |
-| `seaborn` | 统计可视化 | BSD-3 |
-| `scipy` | 显著性检验（`ttest_ind` / `f_oneway` / `mannwhitneyu`） | BSD-3 |
+| `mcp`（FastMCP） | MCP server 框架 | MIT | 1.29.0（pin <2） |
+| `matplotlib` | 出版级图表渲染 | PSF | 3.11.1 |
+| `seaborn` | 统计可视化 | BSD-3 | 0.13.2 |
+| `scipy` | 显著性检验（`ttest_ind` / `f_oneway` / `mannwhitneyu`） | BSD-3 | 1.18.0 |
 
 ### 2.4 translate MCP server
 
 | 包名 | 用途 | License |
 |---|---|---|
-| `mcp`（FastMCP） | MCP server 框架 | MIT |
+| `mcp`（FastMCP） | MCP server 框架 | MIT | 1.29.0（pin <2） |
 | `pymupdf`（`fitz`） | PDF 块级全文提取（`doc[i].get_text("dict")`） | AGPL-3.0 |
 
 ---
@@ -253,7 +253,7 @@
 | 组件 | 类型 | 文件路径约定 | 消费模块 |
 |---|---|---|---|
 | SQLite（bun:sqlite） | 文献库 | `{project}/.researchos/literature.db` | 模块一 |
-| SQLite（bun:sqlite） | 图谱边表 | `{project}/.researchos/graph.db` | 模块二 |
+| SQLite（bun:sqlite） | 图谱边表 | `{project}/.researchos/graph/graph.db` | 模块二 |
 | SQLite（bun:sqlite） | 产物关联库 | `{project}/.researchos/data.db` | 模块四 |
 | SQLite（bun:sqlite） | 复现记录库 | `{project}/.researchos/reproduce.db` | 模块六 |
 | SQLite（bun:sqlite） | 翻译任务/术语库 | `{project}/.researchos/translate.db`（或复用 literature.db） | 模块十 |

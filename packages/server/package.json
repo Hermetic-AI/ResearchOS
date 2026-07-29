@@ -14,8 +14,18 @@
   "dependencies": {
     "@opencode-ai/core": "workspace:*",
     "@opencode-ai/protocol": "workspace:*",
+    "@researchos/api-hub": "workspace:*",
+    "@researchos/graph": "workspace:*",
+    "@researchos/latex": "workspace:*",
+    "@researchos/literature": "workspace:*",
+    "@researchos/plot-core": "workspace:*",
+    "@researchos/reproduce": "workspace:*",
+    "@researchos/translate": "workspace:*",
+    "@researchos/writing": "workspace:*",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "jsonc-parser": "3.3.1",
+    "@researchos/data": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:",

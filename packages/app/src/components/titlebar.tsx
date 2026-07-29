@@ -22,6 +22,7 @@ import { TitlebarTabStrip } from "@/components/titlebar-tab-strip"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/components/titlebar-session-events"
+import { ResearchosModulesMenu } from "./researchos-modules-menu" // researchos
 import { useGlobal } from "@/context/global"
 import { ServerConnection, useServer } from "@/context/server"
 import { tabKey, useTabs } from "@/context/tabs"
@@ -488,6 +489,9 @@ export function Titlebar(props: { update?: TitlebarUpdate; debugTools?: { visibl
                     aria-pressed={layout.route().type === "home"}
                   />
                 </TooltipV2>
+                {/* researchos:start */}
+                <ResearchosModulesMenu />
+                {/* researchos:end */}
 
                 <TitlebarTabStrip
                   tabs={tabsStore}

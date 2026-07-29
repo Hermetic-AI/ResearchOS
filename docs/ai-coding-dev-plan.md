@@ -178,6 +178,8 @@ packages/
 ### Phase 3: LaTeX 编辑器 + 论文写作助手（P3）
 
 > **目标**：分支 `latex-editor` + `paper-writing` 两个子模块协同交付。两者共用一个前端页面 `/:dir/latex`（编辑器主区 + 写作助手侧栏）。
+>
+> **进度（2026-07-29）**：P3 主链完成。LaTeX 文件/PDF/构建历史数据通道、Monaco + PDF.js + SyncTeX + diagnostics、五标签写作侧栏、真实 deterministic writing HTTP、`latex-editor` agent 及标题/结构/引用三个 Skill 均已交付并通过相关测试、类型检查与生产构建。Tectonic 二进制随 Desktop 分发仍归 P6.5。
 
 #### P3.1 — LaTeX 编辑器（模块三）
 
@@ -186,6 +188,7 @@ packages/
 | P3a.1 | `packages/researchos-latex/` — 新包 | `@researchos/latex` | `bun typecheck && bun test` |
 | P3a.2 | protocol + handler + client generate | 数据通道 | — |
 | P3a.3 | `researchos-preset/skill/latex-troubleshoot/SKILL.md` | Skill | — |
+| P3a.3b | `researchos-preset/agent/latex-editor.md` | SubAgent | preset JSON 解析 |
 | P3a.4 | `packages/app/src/app.tsx` 追加 `/:dir/latex` | 路由 | — |
 | P3a.5 | `packages/app/src/pages/latex/` — Monaco + PDF 预览 + 编译日志 | 前端 | `bun typecheck` |
 
@@ -197,6 +200,7 @@ packages/
 | P3b.2 | `researchos-preset/agent/paper-writer.md` — Paper Writing SubAgent | SubAgent | — |
 | P3b.3 | `researchos-preset/skill/academic-polish/SKILL.md` | Skill | — |
 | P3b.4 | `researchos-preset/skill/algo2e/SKILL.md` | Skill | — |
+| P3b.4b | `paper-titles` / `paper-structure` / `cite-assist` | Skills | frontmatter 校验 |
 | P3b.5 | 写作助手侧栏标签页组件（挂载到 LaTeX 页面内） | 前端 | `bun typecheck` |
 
 **依赖**：P1（文献库，引用助手数据源）。
@@ -210,6 +214,8 @@ packages/
 
 #### P4.1 — 数据分析中心（模块四）
 
+> **进度（2026-07-29）**：P4.1 v1 完成。Notebook cells/run、MCP/HTTP 共用 kernel broker、单元格流、数据/检验/产物面板与实验关联已通过 TS/Python 测试、Client 契约校验和 App 生产构建。课题独立 venv 与 Jupyter/Optuna 保留为 v2，不阻塞当前清单。
+
 | 步骤 | 工作内容 | 产出 | 验证 |
 |---|---|---|---|
 | P4a.1 | `packages/researchos-data/` — TS 包（产物库/SQLite） | `@researchos/data` | `bun typecheck && bun test` |
@@ -221,6 +227,8 @@ packages/
 
 #### P4.2 — 科研绘图中心（模块七）
 
+> **进度（2026-07-29）**：P4.2 v1 完成。四模式 Plot Studio 已连接真实 Python/WASM/浏览器渲染链，draw.io 编辑结果可原子保存，产物图库可追踪论文引用；Protocol/Client、单测、类型检查与生产构建均已验收。离线自托管 draw.io 与 PlantUML 保留为增强项。
+
 | 步骤 | 工作内容 | 产出 | 验证 |
 |---|---|---|---|
 | P4b.1 | `packages/researchos-plot-core/` — plugin 包（spec/主题/TikZ 桥接） | `@researchos/plot-core` | `bun typecheck && bun test` |
@@ -231,6 +239,8 @@ packages/
 | P4b.6 | `packages/app/src/pages/plot/` — 四模式绘图工坊 | 前端 | `bun typecheck` |
 
 #### P4.3 — 代码复现中心（模块六）
+
+> **进度（2026-07-29）**：P4.3 v1 完成。硬编码 stub 与前端假进度已替换为 SQLite 六步状态机、显式实验命令、真实 Git/Python 集成链、指标比对、规则诊断、HTTP/Client、MCP、SubAgent/Skill 和历史 run 工作台。
 
 | 步骤 | 工作内容 | 产出 | 验证 |
 |---|---|---|---|
@@ -247,6 +257,8 @@ packages/
 
 ### Phase 5: 全文翻译中心（模块十）
 
+> **进度（2026-07-29）**：P5 v1 完成。已移除 TS/Python/前端全部翻译 stub，交付 PyMuPDF 提取、配置型真实翻译引擎、保真掩码、四类归档产物、HTTP/Client、Translator SubAgent 和双语阅读工作区。
+
 | 步骤 | 工作内容 | 产出 | 验证 |
 |---|---|---|---|
 | P5.1 | `packages/researchos-translate/` — TS 包（编排/术语库/SQLite） | `@researchos/translate` | `bun typecheck && bun test` |
@@ -261,6 +273,8 @@ packages/
 ---
 
 ### Phase 6: Dashboard + 侧栏 + Desktop 适配（整合阶段）
+
+> **进度（2026-07-29）**：P6 v1 完成。Dashboard 已改为真实模块计数，九入口 rail 与会话 Research assets 快捷条已接入；Desktop 可打包平台 Tectonic 资源并注入 sidecar。App 与 Desktop renderer/main/preload 生产构建通过。
 
 | 步骤 | 工作内容 | 产出 | 验证 |
 |---|---|---|---|

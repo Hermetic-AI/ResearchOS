@@ -2,7 +2,7 @@ import { useNavigate, useParams } from "@solidjs/router"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 
-const modules = [
+export const researchosModules = [
   { icon: "models" as const, label: "Overview", route: "overview" },
   { icon: "checklist" as const, label: "Literature", route: "literature" },
   { icon: "brain" as const, label: "Knowledge Graph", route: "graph" },
@@ -21,7 +21,7 @@ export function ResearchosModuleRail() {
   return (
     <div class="flex flex-col items-center gap-2 py-2">
       <div class="w-10 h-px bg-border-base" />
-      {modules.map((m) => (
+      {researchosModules.map((m) => (
         <Tooltip placement="right" value={m.label}>
           <IconButton
             icon={m.icon}

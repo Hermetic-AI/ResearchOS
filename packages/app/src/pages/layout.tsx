@@ -2249,14 +2249,19 @@ export default function LegacyLayout(props: ParentProps) {
   return (
     <div class="relative bg-background-base flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text">
       {autoselecting() ?? ""}
-      <Titlebar
-        update={titlebarUpdate}
-        debugTools={
-          import.meta.env.DEV && import.meta.env.VITE_DISABLE_DEBUG_BAR !== "1"
-            ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
-            : undefined
-        }
-      />
+      {/* researchos:start */}
+      {/* In new-layout mode NewLayout already renders a Titlebar above the outlet; suppress this duplicate. */}
+      <Show when={!settings.general.newLayoutDesigns()}>
+        <Titlebar
+          update={titlebarUpdate}
+          debugTools={
+            import.meta.env.DEV && import.meta.env.VITE_DISABLE_DEBUG_BAR !== "1"
+              ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
+              : undefined
+          }
+        />
+      </Show>
+      {/* researchos:end */}
       <Show when={updateVersion() !== undefined}>
         <UpdateAvailableToast version={updateVersion() ?? ""} install={installUpdate} language={language} />
       </Show>
@@ -2401,7 +2406,13 @@ export default function LegacyLayout(props: ParentProps) {
             </div>
           </div>
         </div>
-        {import.meta.env.DEV && import.meta.env.VITE_DISABLE_DEBUG_BAR !== "1" && state.debugTools && <DebugBar />}
+        {/* researchos:start */}
+        {/* In new-layout mode NewLayout renders the inline DebugBar; suppress this duplicate. */}
+        {import.meta.env.DEV &&
+          import.meta.env.VITE_DISABLE_DEBUG_BAR !== "1" &&
+          !settings.general.newLayoutDesigns() &&
+          state.debugTools && <DebugBar />}
+        {/* researchos:end */}
       </div>
       <TabsInfoPopup />
       <ToastRegion v2={false} />

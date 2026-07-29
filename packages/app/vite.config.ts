@@ -20,6 +20,8 @@ const sentry =
     : false
 
 export default defineConfig({
+  // Windows cloud placeholders may deny stat() before they are hydrated; CI keeps the normal public directory.
+  publicDir: process.env.RESEARCHOS_SKIP_PUBLIC === "1" ? false : "public",
   plugins: [desktopPlugin, sentry] as any,
   server: {
     host: "0.0.0.0",

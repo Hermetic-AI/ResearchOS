@@ -7,6 +7,7 @@ import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import type { Prompt, ReferenceInfo } from "@opencode-ai/sdk/v2/client"
 import { createEffect, createMemo, on, Show } from "solid-js"
+import { useNavigate, useParams } from "@solidjs/router"
 import { ModelSelectorPopoverV2 } from "@/components/dialog-select-model"
 import { DialogSelectModelUnpaidV2 } from "@/components/dialog-select-model-unpaid-v2"
 import type { PromptInputProps } from "@/components/prompt-input/contracts"
@@ -56,6 +57,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
 
   return (
     <div class="flex flex-col gap-3">
+      <ResearchosAssetShortcuts />
       <PromptInputV2
         controller={props.controller}
         borderUnderlay={props.borderUnderlay}
@@ -80,6 +82,15 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
       />
     </div>
   )
+}
+
+function ResearchosAssetShortcuts() {
+  const navigate = useNavigate()
+  const params = useParams<{ dir?: string }>()
+  if (!params.dir) return null
+  return <div class="flex items-center gap-1 px-1 text-10-regular text-text-weak"><span class="mr-1 text-9-medium uppercase tracking-wide">Research assets</span>{[
+    ["Agents", "assets"], ["Papers", "literature"], ["Data", "data"], ["Figures", "plot"],
+  ].map(([label, route]) => <button type="button" class="rounded border border-border-weak-base px-2 py-1 hover:bg-background-selected hover:text-text-base" onClick={() => navigate(`/${params.dir}/${route}`)}>{label}</button>)}</div>
 }
 
 const useEditHandler = (props: PromptInputV2ComposerProps) => {

@@ -2,7 +2,7 @@
   "mcp": {
     "researchos-literature": {
       "type": "local",
-      "command": ["uv", "run", "--directory", "packages/researchos-mcp/literature", "researchos-literature-mcp"]
+      "command": ["uv", "run", "--project", "packages/researchos-mcp/literature", "python", "packages/researchos-mcp/literature/src/server.py"]
     },
     "researchos-data": {
       "type": "local",
@@ -11,6 +11,18 @@
     "researchos-plot": {
       "type": "local",
       "command": ["uv", "run", "--directory", "packages/researchos-mcp/plot", "researchos-plot-mcp"]
+    },
+    "researchos-graph": {
+      "type": "local",
+      "command": ["bun", "run", "packages/researchos-graph/src/mcp.ts"]
+    },
+    "researchos-latex": {
+      "type": "local",
+      "command": ["bun", "run", "packages/researchos-latex/src/mcp.ts"]
+    },
+    "researchos-reproduce": {
+      "type": "local",
+      "command": ["bun", "run", "packages/researchos-reproduce/src/mcp.ts"]
     }
   },
   "plugin": ["@researchos/writing", "@researchos/plot-core"],
@@ -18,6 +30,10 @@
     "literature": { "file": "@researchos/preset/agent/literature.md", "color": "#61afef" },
     "graph": { "file": "@researchos/preset/agent/graph.md", "color": "#9d7cd8" },
     "paper-writer": { "file": "@researchos/preset/agent/paper-writer.md", "color": "#7fd88f" },
-    "data-analyst": { "file": "@researchos/preset/agent/data-analyst.md", "color": "#56b6c2" }
+    "latex-editor": { "file": "@researchos/preset/agent/latex-editor.md", "color": "#a78bfa" },
+    "data-analyst": { "file": "@researchos/preset/agent/data-analyst.md", "color": "#56b6c2" },
+    "plot": { "file": "@researchos/preset/agent/plot.md", "color": "#EC4899" },
+    "reproduce-doctor": { "file": "@researchos/preset/agent/reproduce-doctor.md", "color": "#f59e0b" },
+    "translator": { "file": "@researchos/preset/agent/translator.md", "color": "#c678dd" }
   }
 }

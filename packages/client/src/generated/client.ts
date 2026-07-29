@@ -112,6 +112,134 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ServerResearchosAssetsFileReadInput,
+  ServerResearchosAssetsFileReadOutput,
+  ServerResearchosAssetsListInput,
+  ServerResearchosAssetsListOutput,
+  ServerResearchosAssetsStatsInput,
+  ServerResearchosAssetsStatsOutput,
+  ServerResearchosAssetsTestInput,
+  ServerResearchosAssetsTestOutput,
+  ServerResearchosAssetsFileWriteInput,
+  ServerResearchosAssetsFileWriteOutput,
+  ServerResearchosAssetsPresetInstallInput,
+  ServerResearchosAssetsPresetInstallOutput,
+  ServerResearchosLiteratureSearchInput,
+  ServerResearchosLiteratureSearchOutput,
+  ServerResearchosLiteratureListInput,
+  ServerResearchosLiteratureListOutput,
+  ServerResearchosLiteratureGetInput,
+  ServerResearchosLiteratureGetOutput,
+  ServerResearchosLiteratureExportInput,
+  ServerResearchosLiteratureExportOutput,
+  ServerResearchosLiteratureImportInput,
+  ServerResearchosLiteratureImportOutput,
+  ServerResearchosLiteratureCitationsInput,
+  ServerResearchosLiteratureCitationsOutput,
+  ServerResearchosLiteratureSimilarInput,
+  ServerResearchosLiteratureSimilarOutput,
+  ServerResearchosGraphGetInput,
+  ServerResearchosGraphGetOutput,
+  ServerResearchosGraphNodeInput,
+  ServerResearchosGraphNodeOutput,
+  ServerResearchosGraphAskInput,
+  ServerResearchosGraphAskOutput,
+  ServerResearchosGraphSaveLayoutInput,
+  ServerResearchosGraphSaveLayoutOutput,
+  ServerResearchosLatexFilesInput,
+  ServerResearchosLatexFilesOutput,
+  ServerResearchosLatexSourceInput,
+  ServerResearchosLatexSourceOutput,
+  ServerResearchosLatexSourceWriteInput,
+  ServerResearchosLatexSourceWriteOutput,
+  ServerResearchosLatexPdfInput,
+  ServerResearchosLatexPdfOutput,
+  ServerResearchosLatexBuildsInput,
+  ServerResearchosLatexBuildsOutput,
+  ServerResearchosLatexCompileInput,
+  ServerResearchosLatexCompileOutput,
+  ServerResearchosLatexSynctexInput,
+  ServerResearchosLatexSynctexOutput,
+  ServerResearchosLatexFormatCheckInput,
+  ServerResearchosLatexFormatCheckOutput,
+  ServerResearchosWritingTableToLatexInput,
+  ServerResearchosWritingTableToLatexOutput,
+  ServerResearchosWritingMdToLatexInput,
+  ServerResearchosWritingMdToLatexOutput,
+  ServerResearchosWritingDiffInput,
+  ServerResearchosWritingDiffOutput,
+  ServerResearchosWritingApplyDiffInput,
+  ServerResearchosWritingApplyDiffOutput,
+  ServerResearchosWritingBibtexFromLibraryInput,
+  ServerResearchosWritingBibtexFromLibraryOutput,
+  ServerResearchosWritingBibtexUpsertInput,
+  ServerResearchosWritingBibtexUpsertOutput,
+  ServerResearchosWritingSuggestionRecordInput,
+  ServerResearchosWritingSuggestionRecordOutput,
+  ServerResearchosWritingSuggestionsInput,
+  ServerResearchosWritingSuggestionsOutput,
+  ServerResearchosDataNotebooksInput,
+  ServerResearchosDataNotebooksOutput,
+  ServerResearchosDataCellsInput,
+  ServerResearchosDataCellsOutput,
+  ServerResearchosDataCellCreateInput,
+  ServerResearchosDataCellCreateOutput,
+  ServerResearchosDataCellSaveInput,
+  ServerResearchosDataCellSaveOutput,
+  ServerResearchosDataCellRunInput,
+  ServerResearchosDataCellRunOutput,
+  ServerResearchosDataDatasetsInput,
+  ServerResearchosDataDatasetsOutput,
+  ServerResearchosDataArtifactsInput,
+  ServerResearchosDataArtifactsOutput,
+  ServerResearchosDataArtifactInput,
+  ServerResearchosDataArtifactOutput,
+  ServerResearchosDataArtifactFileInput,
+  ServerResearchosDataArtifactFileOutput,
+  ServerResearchosDataStatTestsInput,
+  ServerResearchosDataStatTestsOutput,
+  ServerResearchosDataLinkInput,
+  ServerResearchosDataLinkOutput,
+  ServerResearchosPlotCreateInput,
+  ServerResearchosPlotCreateOutput,
+  ServerResearchosPlotTuneInput,
+  ServerResearchosPlotTuneOutput,
+  ServerResearchosPlotAnnotateSignificanceInput,
+  ServerResearchosPlotAnnotateSignificanceOutput,
+  ServerResearchosPlotMermaidInput,
+  ServerResearchosPlotMermaidOutput,
+  ServerResearchosPlotGraphvizInput,
+  ServerResearchosPlotGraphvizOutput,
+  ServerResearchosPlotDiagramInput,
+  ServerResearchosPlotDiagramOutput,
+  ServerResearchosPlotDiagramSaveInput,
+  ServerResearchosPlotDiagramSaveOutput,
+  ServerResearchosPlotInsertToPaperInput,
+  ServerResearchosPlotInsertToPaperOutput,
+  ServerResearchosPlotArtifactsInput,
+  ServerResearchosPlotArtifactsOutput,
+  ServerResearchosPlotArtifactFileInput,
+  ServerResearchosPlotArtifactFileOutput,
+  ServerResearchosReproduceListInput,
+  ServerResearchosReproduceListOutput,
+  ServerResearchosReproduceCreateInput,
+  ServerResearchosReproduceCreateOutput,
+  ServerResearchosReproduceGetInput,
+  ServerResearchosReproduceGetOutput,
+  ServerResearchosReproduceAdvanceInput,
+  ServerResearchosReproduceAdvanceOutput,
+  ServerResearchosReproduceMetricsSubmitInput,
+  ServerResearchosReproduceMetricsSubmitOutput,
+  ServerResearchosReproduceComparisonInput,
+  ServerResearchosReproduceComparisonOutput,
+  ServerResearchosReproduceIssuesInput,
+  ServerResearchosReproduceIssuesOutput,
+  ServerResearchosReproduceCancelInput,
+  ServerResearchosReproduceCancelOutput,
+  ServerResearchosTranslateRunInput,
+  ServerResearchosTranslateRunOutput,
+  ServerResearchosTranslateGetInput,
+  ServerResearchosTranslateGetOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 
@@ -983,6 +1111,851 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-assets": {
+      fileRead: (input: ServerResearchosAssetsFileReadInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsFileReadOutput>(
+          {
+            method: "POST",
+            path: `/api/researchos-assets/file/read`,
+            query: { location: input["location"] },
+            body: { kind: input["kind"], scope: input["scope"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      list: (input?: ServerResearchosAssetsListInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsListOutput>(
+          {
+            method: "GET",
+            path: `/api/researchos-assets/api`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      stats: (input?: ServerResearchosAssetsStatsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsStatsOutput>(
+          {
+            method: "GET",
+            path: `/api/researchos-assets/api/stats`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      test: (input: ServerResearchosAssetsTestInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsTestOutput>(
+          {
+            method: "POST",
+            path: `/api/researchos-assets/api/test`,
+            query: { location: input["location"] },
+            body: { name: input["name"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      fileWrite: (input: ServerResearchosAssetsFileWriteInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsFileWriteOutput>(
+          {
+            method: "POST",
+            path: `/api/researchos-assets/file/write`,
+            query: { location: input["location"] },
+            body: { kind: input["kind"], name: input["name"], content: input["content"], scope: input["scope"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      presetInstall: (input: ServerResearchosAssetsPresetInstallInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsPresetInstallOutput>(
+          {
+            method: "POST",
+            path: `/api/researchos-assets/preset/install`,
+            query: { location: input["location"] },
+            body: { pack: input["pack"], target: input["target"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-literature": {
+      search: (input: ServerResearchosLiteratureSearchInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureSearchOutput>(
+          {
+            method: "POST",
+            path: `/api/literature/search`,
+            query: { location: input["location"] },
+            body: { query: input["query"], sources: input["sources"], limit: input["limit"], start: input["start"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      list: (input?: ServerResearchosLiteratureListInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureListOutput>(
+          {
+            method: "GET",
+            path: `/api/literature/papers`,
+            query: { location: input?.["location"], limit: input?.["limit"], offset: input?.["offset"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ServerResearchosLiteratureGetInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureGetOutput>(
+          {
+            method: "GET",
+            path: `/api/literature/papers/${encodeURIComponent(input.id)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      export: (input: ServerResearchosLiteratureExportInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureExportOutput>(
+          {
+            method: "GET",
+            path: `/api/literature/export`,
+            query: {
+              location: input["location"],
+              paperIds: input["paperIds"],
+              format: input["format"],
+              style: input["style"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      import: (input?: ServerResearchosLiteratureImportInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureImportOutput>(
+          {
+            method: "POST",
+            path: `/api/literature/import`,
+            query: { location: input?.["location"] },
+            body: { path: input?.["path"], url: input?.["url"], zoteroPath: input?.["zoteroPath"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      citations: (input: ServerResearchosLiteratureCitationsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureCitationsOutput>(
+          {
+            method: "GET",
+            path: `/api/literature/papers/${encodeURIComponent(input.id)}/citations`,
+            query: { location: input["location"], direction: input["direction"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      similar: (input: ServerResearchosLiteratureSimilarInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureSimilarOutput>(
+          {
+            method: "GET",
+            path: `/api/literature/papers/${encodeURIComponent(input.id)}/similar`,
+            query: { location: input["location"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-graph": {
+      get: (input?: ServerResearchosGraphGetInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosGraphGetOutput>(
+          {
+            method: "GET",
+            path: `/api/graph`,
+            query: { location: input?.["location"], type: input?.["type"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      node: (input: ServerResearchosGraphNodeInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosGraphNodeOutput>(
+          {
+            method: "GET",
+            path: `/api/graph/node`,
+            query: { location: input["location"], id: input["id"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      ask: (input: ServerResearchosGraphAskInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosGraphAskOutput>(
+          {
+            method: "POST",
+            path: `/api/graph/ask`,
+            query: { location: input["location"] },
+            body: { question: input["question"], center_node: input["center_node"], depth: input["depth"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      save_layout: (input: ServerResearchosGraphSaveLayoutInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosGraphSaveLayoutOutput>(
+          {
+            method: "POST",
+            path: `/api/graph/layout`,
+            query: { location: input["location"] },
+            body: { positions: input["positions"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-latex": {
+      files: (input?: ServerResearchosLatexFilesInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexFilesOutput>(
+          {
+            method: "GET",
+            path: `/api/latex/files`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      source: (input: ServerResearchosLatexSourceInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexSourceOutput>(
+          {
+            method: "GET",
+            path: `/api/latex/source`,
+            query: { location: input["location"], file: input["file"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      sourceWrite: (input: ServerResearchosLatexSourceWriteInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexSourceWriteOutput>(
+          {
+            method: "POST",
+            path: `/api/latex/source`,
+            query: { location: input["location"] },
+            body: { file: input["file"], content: input["content"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      pdf: (input: ServerResearchosLatexPdfInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexPdfOutput>(
+          {
+            method: "GET",
+            path: `/api/latex/pdf`,
+            query: { location: input["location"], mainFile: input["mainFile"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      builds: (input?: ServerResearchosLatexBuildsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexBuildsOutput>(
+          {
+            method: "GET",
+            path: `/api/latex/builds`,
+            query: { location: input?.["location"], limit: input?.["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      compile: (input: ServerResearchosLatexCompileInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexCompileOutput>(
+          {
+            method: "POST",
+            path: `/api/latex/compile`,
+            query: { location: input["location"] },
+            body: { mainFile: input["mainFile"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      synctex: (input?: ServerResearchosLatexSynctexInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexSynctexOutput>(
+          {
+            method: "GET",
+            path: `/api/latex/synctex`,
+            query: {
+              location: input?.["location"],
+              mainFile: input?.["mainFile"],
+              file: input?.["file"],
+              line: input?.["line"],
+              pdfPath: input?.["pdfPath"],
+              page: input?.["page"],
+              x: input?.["x"],
+              y: input?.["y"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      format_check: (input: ServerResearchosLatexFormatCheckInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLatexFormatCheckOutput>(
+          {
+            method: "POST",
+            path: `/api/latex/format-check`,
+            query: { location: input["location"] },
+            body: { mainFile: input["mainFile"], template: input["template"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-writing": {
+      tableToLatex: (input: ServerResearchosWritingTableToLatexInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingTableToLatexOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/table`,
+            query: { location: input["location"] },
+            body: { csv: input["csv"], caption: input["caption"], label: input["label"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      mdToLatex: (input: ServerResearchosWritingMdToLatexInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingMdToLatexOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/md2latex`,
+            query: { location: input["location"] },
+            body: { markdown: input["markdown"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      diff: (input: ServerResearchosWritingDiffInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingDiffOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/diff`,
+            query: { location: input["location"] },
+            body: { original: input["original"], revised: input["revised"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      applyDiff: (input: ServerResearchosWritingApplyDiffInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingApplyDiffOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/diff/apply`,
+            query: { location: input["location"] },
+            body: { original: input["original"], revised: input["revised"], accepted: input["accepted"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      bibtexFromLibrary: (input: ServerResearchosWritingBibtexFromLibraryInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingBibtexFromLibraryOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/bibtex/library`,
+            query: { location: input["location"] },
+            body: { paperIds: input["paperIds"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      bibtexUpsert: (input: ServerResearchosWritingBibtexUpsertInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingBibtexUpsertOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/bibtex/upsert`,
+            query: { location: input["location"] },
+            body: { bibFile: input["bibFile"], entries: input["entries"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      suggestionRecord: (input: ServerResearchosWritingSuggestionRecordInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingSuggestionRecordOutput>(
+          {
+            method: "POST",
+            path: `/api/writing/suggestions`,
+            query: { location: input["location"] },
+            body: {
+              kind: input["kind"],
+              targetFile: input["targetFile"],
+              inputExcerpt: input["inputExcerpt"],
+              output: input["output"],
+              status: input["status"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      suggestions: (input?: ServerResearchosWritingSuggestionsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosWritingSuggestionsOutput>(
+          {
+            method: "GET",
+            path: `/api/writing/suggestions`,
+            query: { location: input?.["location"], kind: input?.["kind"], limit: input?.["limit"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-data": {
+      notebooks: (input?: ServerResearchosDataNotebooksInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataNotebooksOutput>(
+          {
+            method: "GET",
+            path: `/api/data/notebooks`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      cells: (input: ServerResearchosDataCellsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataCellsOutput>(
+          {
+            method: "GET",
+            path: `/api/data/notebooks/${encodeURIComponent(input.id)}/cells`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      cellCreate: (input: ServerResearchosDataCellCreateInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataCellCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/data/notebooks/${encodeURIComponent(input.id)}/cells`,
+            query: { location: input["location"] },
+            body: { source: input["source"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      cellSave: (input: ServerResearchosDataCellSaveInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataCellSaveOutput>(
+          {
+            method: "POST",
+            path: `/api/data/cells/${encodeURIComponent(input.id)}`,
+            query: { location: input["location"] },
+            body: { source: input["source"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      cellRun: (input: ServerResearchosDataCellRunInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataCellRunOutput>(
+          {
+            method: "POST",
+            path: `/api/data/cells/${encodeURIComponent(input.id)}/run`,
+            query: { location: input["location"] },
+            body: { source: input["source"], workdir: input["workdir"], timeoutS: input["timeoutS"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      datasets: (input?: ServerResearchosDataDatasetsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataDatasetsOutput>(
+          {
+            method: "GET",
+            path: `/api/data/datasets`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      artifacts: (input?: ServerResearchosDataArtifactsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataArtifactsOutput>(
+          {
+            method: "GET",
+            path: `/api/data/artifacts`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      artifact: (input: ServerResearchosDataArtifactInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataArtifactOutput>(
+          {
+            method: "GET",
+            path: `/api/data/artifacts/${encodeURIComponent(input.id)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      artifactFile: (input: ServerResearchosDataArtifactFileInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataArtifactFileOutput>(
+          {
+            method: "GET",
+            path: `/api/data/artifacts/${encodeURIComponent(input.id)}/file`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      statTests: (input?: ServerResearchosDataStatTestsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataStatTestsOutput>(
+          {
+            method: "GET",
+            path: `/api/data/stat-tests`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      link: (input: ServerResearchosDataLinkInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataLinkOutput>(
+          {
+            method: "POST",
+            path: `/api/data/artifacts/${encodeURIComponent(input.id)}/link`,
+            query: { location: input["location"] },
+            body: { commit: input["commit"], texFile: input["texFile"], texSection: input["texSection"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-plot": {
+      create: (input: ServerResearchosPlotCreateInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/charts`,
+            query: { location: input["location"] },
+            body: { template: input["template"], data: input["data"], theme: input["theme"], spec: input["spec"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      tune: (input: ServerResearchosPlotTuneInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotTuneOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/charts/${encodeURIComponent(input.id)}/tune`,
+            query: { location: input["location"] },
+            body: { patch: input["patch"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      annotateSignificance: (input: ServerResearchosPlotAnnotateSignificanceInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotAnnotateSignificanceOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/charts/${encodeURIComponent(input.id)}/significance`,
+            query: { location: input["location"] },
+            body: { test: input["test"], groups: input["groups"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      mermaid: (input: ServerResearchosPlotMermaidInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotMermaidOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/mermaid`,
+            query: { location: input["location"] },
+            body: { code: input["code"], name: input["name"], theme: input["theme"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      graphviz: (input: ServerResearchosPlotGraphvizInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotGraphvizOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/graphviz`,
+            query: { location: input["location"] },
+            body: { dot: input["dot"], engine: input["engine"], name: input["name"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      diagram: (input: ServerResearchosPlotDiagramInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotDiagramOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/diagram`,
+            query: { location: input["location"] },
+            body: { action: input["action"], file: input["file"], stencilPack: input["stencilPack"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      diagramSave: (input: ServerResearchosPlotDiagramSaveInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotDiagramSaveOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/diagram/save`,
+            query: { location: input["location"] },
+            body: { file: input["file"], xml: input["xml"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      insertToPaper: (input: ServerResearchosPlotInsertToPaperInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotInsertToPaperOutput>(
+          {
+            method: "POST",
+            path: `/api/plot/insert`,
+            query: { location: input["location"] },
+            body: {
+              artifactPath: input["artifactPath"],
+              texFile: input["texFile"],
+              section: input["section"],
+              caption: input["caption"],
+              label: input["label"],
+            },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      artifacts: (input?: ServerResearchosPlotArtifactsInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotArtifactsOutput>(
+          {
+            method: "GET",
+            path: `/api/plot/artifacts`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      artifactFile: (input: ServerResearchosPlotArtifactFileInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosPlotArtifactFileOutput>(
+          {
+            method: "GET",
+            path: `/api/plot/artifacts/${encodeURIComponent(input.id)}/file`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-reproduce": {
+      list: (input?: ServerResearchosReproduceListInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceListOutput>(
+          {
+            method: "GET",
+            path: `/api/reproduce/runs`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      create: (input: ServerResearchosReproduceCreateInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceCreateOutput>(
+          {
+            method: "POST",
+            path: `/api/reproduce/runs`,
+            query: { location: input["location"] },
+            body: { paperUrl: input["paperUrl"], repoUrl: input["repoUrl"], envStrategy: input["envStrategy"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ServerResearchosReproduceGetInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceGetOutput>(
+          {
+            method: "GET",
+            path: `/api/reproduce/runs/${encodeURIComponent(input.id)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      advance: (input: ServerResearchosReproduceAdvanceInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceAdvanceOutput>(
+          {
+            method: "POST",
+            path: `/api/reproduce/runs/${encodeURIComponent(input.id)}/steps/${encodeURIComponent(input.step)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      metricsSubmit: (input: ServerResearchosReproduceMetricsSubmitInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceMetricsSubmitOutput>(
+          {
+            method: "POST",
+            path: `/api/reproduce/runs/${encodeURIComponent(input.id)}/metrics`,
+            query: { location: input["location"] },
+            body: { metrics: input["metrics"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      comparison: (input: ServerResearchosReproduceComparisonInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceComparisonOutput>(
+          {
+            method: "GET",
+            path: `/api/reproduce/runs/${encodeURIComponent(input.id)}/comparison`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      issues: (input: ServerResearchosReproduceIssuesInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceIssuesOutput>(
+          {
+            method: "GET",
+            path: `/api/reproduce/runs/${encodeURIComponent(input.id)}/issues`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      cancel: (input: ServerResearchosReproduceCancelInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosReproduceCancelOutput>(
+          {
+            method: "POST",
+            path: `/api/reproduce/runs/${encodeURIComponent(input.id)}/cancel`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    "server.researchos-translate": {
+      run: (input: ServerResearchosTranslateRunInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosTranslateRunOutput>(
+          {
+            method: "POST",
+            path: `/api/translate/run`,
+            query: { location: input["location"] },
+            body: { paperId: input["paperId"], sections: input["sections"], engine: input["engine"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: ServerResearchosTranslateGetInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosTranslateGetOutput>(
+          {
+            method: "GET",
+            path: `/api/translate/${encodeURIComponent(input.paperId)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
           },
           requestOptions,
         ),

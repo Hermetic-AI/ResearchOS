@@ -1,4 +1,5 @@
 import { dirname, join } from "node:path"
+import { existsSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { app, utilityProcess } from "electron"
 import type { Details } from "electron"
@@ -214,6 +215,8 @@ function createSidecarEnv(): Record<string, string> {
   delete env.DEBUG
   if (process.platform === "linux") delete env.LD_PRELOAD
   if (!app.isPackaged) env.OPENCODE_DISABLE_CHANNEL_DB = "1"
+  const tectonic = join(process.resourcesPath, "tectonic", `${process.platform}-${process.arch}`, process.platform === "win32" ? "tectonic.exe" : "tectonic")
+  if (!env.RESEARCHOS_TECTONIC && existsSync(tectonic)) env.RESEARCHOS_TECTONIC = tectonic
   return env
 }
 

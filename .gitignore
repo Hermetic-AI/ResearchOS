@@ -32,6 +32,8 @@ UPCOMING_CHANGELOG.md
 logs/
 *.bun-build
 tsconfig.tsbuildinfo
+**/__pycache__/
+*.py[cod]
 
 # Local third-party skill repos (each is its own git history, not part of ResearchOS)
 skills-repo/

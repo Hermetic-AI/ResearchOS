@@ -681,6 +681,817 @@ const adaptGroup17 = (raw: RawClient["server.projectCopy"]) => ({
   refresh: Endpoint17_2(raw),
 })
 
+type Endpoint18_0Request = Parameters<RawClient["server.researchos-assets"]["asset.fileRead"]>[0]
+type Endpoint18_0Input = {
+  readonly location?: Endpoint18_0Request["query"]["location"]
+  readonly kind: Endpoint18_0Request["payload"]["kind"]
+  readonly scope: Endpoint18_0Request["payload"]["scope"]
+}
+const Endpoint18_0 = (raw: RawClient["server.researchos-assets"]) => (input: Endpoint18_0Input) =>
+  raw["asset.fileRead"]({
+    query: { location: input["location"] },
+    payload: { kind: input["kind"], scope: input["scope"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint18_1Request = Parameters<RawClient["server.researchos-assets"]["api.list"]>[0]
+type Endpoint18_1Input = { readonly location?: Endpoint18_1Request["query"]["location"] }
+const Endpoint18_1 = (raw: RawClient["server.researchos-assets"]) => (input?: Endpoint18_1Input) =>
+  raw["api.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint18_2Request = Parameters<RawClient["server.researchos-assets"]["api.stats"]>[0]
+type Endpoint18_2Input = { readonly location?: Endpoint18_2Request["query"]["location"] }
+const Endpoint18_2 = (raw: RawClient["server.researchos-assets"]) => (input?: Endpoint18_2Input) =>
+  raw["api.stats"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint18_3Request = Parameters<RawClient["server.researchos-assets"]["api.test"]>[0]
+type Endpoint18_3Input = {
+  readonly location?: Endpoint18_3Request["query"]["location"]
+  readonly name: Endpoint18_3Request["payload"]["name"]
+}
+const Endpoint18_3 = (raw: RawClient["server.researchos-assets"]) => (input: Endpoint18_3Input) =>
+  raw["api.test"]({ query: { location: input["location"] }, payload: { name: input["name"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint18_4Request = Parameters<RawClient["server.researchos-assets"]["asset.fileWrite"]>[0]
+type Endpoint18_4Input = {
+  readonly location?: Endpoint18_4Request["query"]["location"]
+  readonly kind: Endpoint18_4Request["payload"]["kind"]
+  readonly name: Endpoint18_4Request["payload"]["name"]
+  readonly content: Endpoint18_4Request["payload"]["content"]
+  readonly scope: Endpoint18_4Request["payload"]["scope"]
+}
+const Endpoint18_4 = (raw: RawClient["server.researchos-assets"]) => (input: Endpoint18_4Input) =>
+  raw["asset.fileWrite"]({
+    query: { location: input["location"] },
+    payload: { kind: input["kind"], name: input["name"], content: input["content"], scope: input["scope"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint18_5Request = Parameters<RawClient["server.researchos-assets"]["asset.presetInstall"]>[0]
+type Endpoint18_5Input = {
+  readonly location?: Endpoint18_5Request["query"]["location"]
+  readonly pack: Endpoint18_5Request["payload"]["pack"]
+  readonly target: Endpoint18_5Request["payload"]["target"]
+}
+const Endpoint18_5 = (raw: RawClient["server.researchos-assets"]) => (input: Endpoint18_5Input) =>
+  raw["asset.presetInstall"]({
+    query: { location: input["location"] },
+    payload: { pack: input["pack"], target: input["target"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup18 = (raw: RawClient["server.researchos-assets"]) => ({
+  fileRead: Endpoint18_0(raw),
+  list: Endpoint18_1(raw),
+  stats: Endpoint18_2(raw),
+  test: Endpoint18_3(raw),
+  fileWrite: Endpoint18_4(raw),
+  presetInstall: Endpoint18_5(raw),
+})
+
+type Endpoint19_0Request = Parameters<RawClient["server.researchos-literature"]["literature.search"]>[0]
+type Endpoint19_0Input = {
+  readonly location?: Endpoint19_0Request["query"]["location"]
+  readonly query: Endpoint19_0Request["payload"]["query"]
+  readonly sources?: Endpoint19_0Request["payload"]["sources"]
+  readonly limit?: Endpoint19_0Request["payload"]["limit"]
+  readonly start?: Endpoint19_0Request["payload"]["start"]
+}
+const Endpoint19_0 = (raw: RawClient["server.researchos-literature"]) => (input: Endpoint19_0Input) =>
+  raw["literature.search"]({
+    query: { location: input["location"] },
+    payload: { query: input["query"], sources: input["sources"], limit: input["limit"], start: input["start"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint19_1Request = Parameters<RawClient["server.researchos-literature"]["literature.list"]>[0]
+type Endpoint19_1Input = {
+  readonly location?: Endpoint19_1Request["query"]["location"]
+  readonly limit?: Endpoint19_1Request["query"]["limit"]
+  readonly offset?: Endpoint19_1Request["query"]["offset"]
+}
+const Endpoint19_1 = (raw: RawClient["server.researchos-literature"]) => (input?: Endpoint19_1Input) =>
+  raw["literature.list"]({
+    query: { location: input?.["location"], limit: input?.["limit"], offset: input?.["offset"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint19_2Request = Parameters<RawClient["server.researchos-literature"]["literature.get"]>[0]
+type Endpoint19_2Input = {
+  readonly id: Endpoint19_2Request["params"]["id"]
+  readonly location?: Endpoint19_2Request["query"]["location"]
+}
+const Endpoint19_2 = (raw: RawClient["server.researchos-literature"]) => (input: Endpoint19_2Input) =>
+  raw["literature.get"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint19_3Request = Parameters<RawClient["server.researchos-literature"]["literature.export"]>[0]
+type Endpoint19_3Input = {
+  readonly location?: Endpoint19_3Request["query"]["location"]
+  readonly paperIds: Endpoint19_3Request["query"]["paperIds"]
+  readonly format: Endpoint19_3Request["query"]["format"]
+  readonly style?: Endpoint19_3Request["query"]["style"]
+}
+const Endpoint19_3 = (raw: RawClient["server.researchos-literature"]) => (input: Endpoint19_3Input) =>
+  raw["literature.export"]({
+    query: { location: input["location"], paperIds: input["paperIds"], format: input["format"], style: input["style"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint19_4Request = Parameters<RawClient["server.researchos-literature"]["literature.import"]>[0]
+type Endpoint19_4Input = {
+  readonly location?: Endpoint19_4Request["query"]["location"]
+  readonly path?: Endpoint19_4Request["payload"]["path"]
+  readonly url?: Endpoint19_4Request["payload"]["url"]
+  readonly zoteroPath?: Endpoint19_4Request["payload"]["zoteroPath"]
+}
+const Endpoint19_4 = (raw: RawClient["server.researchos-literature"]) => (input?: Endpoint19_4Input) =>
+  raw["literature.import"]({
+    query: { location: input?.["location"] },
+    payload: { path: input?.["path"], url: input?.["url"], zoteroPath: input?.["zoteroPath"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint19_5Request = Parameters<RawClient["server.researchos-literature"]["literature.citations"]>[0]
+type Endpoint19_5Input = {
+  readonly id: Endpoint19_5Request["params"]["id"]
+  readonly location?: Endpoint19_5Request["query"]["location"]
+  readonly direction: Endpoint19_5Request["query"]["direction"]
+}
+const Endpoint19_5 = (raw: RawClient["server.researchos-literature"]) => (input: Endpoint19_5Input) =>
+  raw["literature.citations"]({
+    params: { id: input["id"] },
+    query: { location: input["location"], direction: input["direction"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint19_6Request = Parameters<RawClient["server.researchos-literature"]["literature.similar"]>[0]
+type Endpoint19_6Input = {
+  readonly id: Endpoint19_6Request["params"]["id"]
+  readonly location?: Endpoint19_6Request["query"]["location"]
+  readonly limit?: Endpoint19_6Request["query"]["limit"]
+}
+const Endpoint19_6 = (raw: RawClient["server.researchos-literature"]) => (input: Endpoint19_6Input) =>
+  raw["literature.similar"]({
+    params: { id: input["id"] },
+    query: { location: input["location"], limit: input["limit"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup19 = (raw: RawClient["server.researchos-literature"]) => ({
+  search: Endpoint19_0(raw),
+  list: Endpoint19_1(raw),
+  get: Endpoint19_2(raw),
+  export: Endpoint19_3(raw),
+  import: Endpoint19_4(raw),
+  citations: Endpoint19_5(raw),
+  similar: Endpoint19_6(raw),
+})
+
+type Endpoint20_0Request = Parameters<RawClient["server.researchos-graph"]["graph.get"]>[0]
+type Endpoint20_0Input = {
+  readonly location?: Endpoint20_0Request["query"]["location"]
+  readonly type?: Endpoint20_0Request["query"]["type"]
+}
+const Endpoint20_0 = (raw: RawClient["server.researchos-graph"]) => (input?: Endpoint20_0Input) =>
+  raw["graph.get"]({ query: { location: input?.["location"], type: input?.["type"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint20_1Request = Parameters<RawClient["server.researchos-graph"]["graph.node"]>[0]
+type Endpoint20_1Input = {
+  readonly location?: Endpoint20_1Request["query"]["location"]
+  readonly id: Endpoint20_1Request["query"]["id"]
+}
+const Endpoint20_1 = (raw: RawClient["server.researchos-graph"]) => (input: Endpoint20_1Input) =>
+  raw["graph.node"]({ query: { location: input["location"], id: input["id"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint20_2Request = Parameters<RawClient["server.researchos-graph"]["graph.ask"]>[0]
+type Endpoint20_2Input = {
+  readonly location?: Endpoint20_2Request["query"]["location"]
+  readonly question: Endpoint20_2Request["payload"]["question"]
+  readonly center_node?: Endpoint20_2Request["payload"]["center_node"]
+  readonly depth?: Endpoint20_2Request["payload"]["depth"]
+}
+const Endpoint20_2 = (raw: RawClient["server.researchos-graph"]) => (input: Endpoint20_2Input) =>
+  raw["graph.ask"]({
+    query: { location: input["location"] },
+    payload: { question: input["question"], center_node: input["center_node"], depth: input["depth"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint20_3Request = Parameters<RawClient["server.researchos-graph"]["graph.save_layout"]>[0]
+type Endpoint20_3Input = {
+  readonly location?: Endpoint20_3Request["query"]["location"]
+  readonly positions: Endpoint20_3Request["payload"]["positions"]
+}
+const Endpoint20_3 = (raw: RawClient["server.researchos-graph"]) => (input: Endpoint20_3Input) =>
+  raw["graph.save_layout"]({ query: { location: input["location"] }, payload: { positions: input["positions"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+const adaptGroup20 = (raw: RawClient["server.researchos-graph"]) => ({
+  get: Endpoint20_0(raw),
+  node: Endpoint20_1(raw),
+  ask: Endpoint20_2(raw),
+  save_layout: Endpoint20_3(raw),
+})
+
+type Endpoint21_0Request = Parameters<RawClient["server.researchos-latex"]["latex.files"]>[0]
+type Endpoint21_0Input = { readonly location?: Endpoint21_0Request["query"]["location"] }
+const Endpoint21_0 = (raw: RawClient["server.researchos-latex"]) => (input?: Endpoint21_0Input) =>
+  raw["latex.files"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint21_1Request = Parameters<RawClient["server.researchos-latex"]["latex.source"]>[0]
+type Endpoint21_1Input = {
+  readonly location?: Endpoint21_1Request["query"]["location"]
+  readonly file: Endpoint21_1Request["query"]["file"]
+}
+const Endpoint21_1 = (raw: RawClient["server.researchos-latex"]) => (input: Endpoint21_1Input) =>
+  raw["latex.source"]({ query: { location: input["location"], file: input["file"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint21_2Request = Parameters<RawClient["server.researchos-latex"]["latex.sourceWrite"]>[0]
+type Endpoint21_2Input = {
+  readonly location?: Endpoint21_2Request["query"]["location"]
+  readonly file: Endpoint21_2Request["payload"]["file"]
+  readonly content: Endpoint21_2Request["payload"]["content"]
+}
+const Endpoint21_2 = (raw: RawClient["server.researchos-latex"]) => (input: Endpoint21_2Input) =>
+  raw["latex.sourceWrite"]({
+    query: { location: input["location"] },
+    payload: { file: input["file"], content: input["content"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint21_3Request = Parameters<RawClient["server.researchos-latex"]["latex.pdf"]>[0]
+type Endpoint21_3Input = {
+  readonly location?: Endpoint21_3Request["query"]["location"]
+  readonly mainFile: Endpoint21_3Request["query"]["mainFile"]
+}
+const Endpoint21_3 = (raw: RawClient["server.researchos-latex"]) => (input: Endpoint21_3Input) =>
+  raw["latex.pdf"]({ query: { location: input["location"], mainFile: input["mainFile"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint21_4Request = Parameters<RawClient["server.researchos-latex"]["latex.builds"]>[0]
+type Endpoint21_4Input = {
+  readonly location?: Endpoint21_4Request["query"]["location"]
+  readonly limit?: Endpoint21_4Request["query"]["limit"]
+}
+const Endpoint21_4 = (raw: RawClient["server.researchos-latex"]) => (input?: Endpoint21_4Input) =>
+  raw["latex.builds"]({ query: { location: input?.["location"], limit: input?.["limit"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint21_5Request = Parameters<RawClient["server.researchos-latex"]["latex.compile"]>[0]
+type Endpoint21_5Input = {
+  readonly location?: Endpoint21_5Request["query"]["location"]
+  readonly mainFile: Endpoint21_5Request["payload"]["mainFile"]
+}
+const Endpoint21_5 = (raw: RawClient["server.researchos-latex"]) => (input: Endpoint21_5Input) =>
+  raw["latex.compile"]({ query: { location: input["location"] }, payload: { mainFile: input["mainFile"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint21_6Request = Parameters<RawClient["server.researchos-latex"]["latex.synctex"]>[0]
+type Endpoint21_6Input = {
+  readonly location?: Endpoint21_6Request["query"]["location"]
+  readonly mainFile?: Endpoint21_6Request["query"]["mainFile"]
+  readonly file?: Endpoint21_6Request["query"]["file"]
+  readonly line?: Endpoint21_6Request["query"]["line"]
+  readonly pdfPath?: Endpoint21_6Request["query"]["pdfPath"]
+  readonly page?: Endpoint21_6Request["query"]["page"]
+  readonly x?: Endpoint21_6Request["query"]["x"]
+  readonly y?: Endpoint21_6Request["query"]["y"]
+}
+const Endpoint21_6 = (raw: RawClient["server.researchos-latex"]) => (input?: Endpoint21_6Input) =>
+  raw["latex.synctex"]({
+    query: {
+      location: input?.["location"],
+      mainFile: input?.["mainFile"],
+      file: input?.["file"],
+      line: input?.["line"],
+      pdfPath: input?.["pdfPath"],
+      page: input?.["page"],
+      x: input?.["x"],
+      y: input?.["y"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint21_7Request = Parameters<RawClient["server.researchos-latex"]["latex.format_check"]>[0]
+type Endpoint21_7Input = {
+  readonly location?: Endpoint21_7Request["query"]["location"]
+  readonly mainFile: Endpoint21_7Request["payload"]["mainFile"]
+  readonly template?: Endpoint21_7Request["payload"]["template"]
+}
+const Endpoint21_7 = (raw: RawClient["server.researchos-latex"]) => (input: Endpoint21_7Input) =>
+  raw["latex.format_check"]({
+    query: { location: input["location"] },
+    payload: { mainFile: input["mainFile"], template: input["template"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup21 = (raw: RawClient["server.researchos-latex"]) => ({
+  files: Endpoint21_0(raw),
+  source: Endpoint21_1(raw),
+  sourceWrite: Endpoint21_2(raw),
+  pdf: Endpoint21_3(raw),
+  builds: Endpoint21_4(raw),
+  compile: Endpoint21_5(raw),
+  synctex: Endpoint21_6(raw),
+  format_check: Endpoint21_7(raw),
+})
+
+type Endpoint22_0Request = Parameters<RawClient["server.researchos-writing"]["writing.tableToLatex"]>[0]
+type Endpoint22_0Input = {
+  readonly location?: Endpoint22_0Request["query"]["location"]
+  readonly csv: Endpoint22_0Request["payload"]["csv"]
+  readonly caption?: Endpoint22_0Request["payload"]["caption"]
+  readonly label?: Endpoint22_0Request["payload"]["label"]
+}
+const Endpoint22_0 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_0Input) =>
+  raw["writing.tableToLatex"]({
+    query: { location: input["location"] },
+    payload: { csv: input["csv"], caption: input["caption"], label: input["label"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint22_1Request = Parameters<RawClient["server.researchos-writing"]["writing.mdToLatex"]>[0]
+type Endpoint22_1Input = {
+  readonly location?: Endpoint22_1Request["query"]["location"]
+  readonly markdown: Endpoint22_1Request["payload"]["markdown"]
+}
+const Endpoint22_1 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_1Input) =>
+  raw["writing.mdToLatex"]({ query: { location: input["location"] }, payload: { markdown: input["markdown"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint22_2Request = Parameters<RawClient["server.researchos-writing"]["writing.diff"]>[0]
+type Endpoint22_2Input = {
+  readonly location?: Endpoint22_2Request["query"]["location"]
+  readonly original: Endpoint22_2Request["payload"]["original"]
+  readonly revised: Endpoint22_2Request["payload"]["revised"]
+}
+const Endpoint22_2 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_2Input) =>
+  raw["writing.diff"]({
+    query: { location: input["location"] },
+    payload: { original: input["original"], revised: input["revised"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint22_3Request = Parameters<RawClient["server.researchos-writing"]["writing.applyDiff"]>[0]
+type Endpoint22_3Input = {
+  readonly location?: Endpoint22_3Request["query"]["location"]
+  readonly original: Endpoint22_3Request["payload"]["original"]
+  readonly revised: Endpoint22_3Request["payload"]["revised"]
+  readonly accepted: Endpoint22_3Request["payload"]["accepted"]
+}
+const Endpoint22_3 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_3Input) =>
+  raw["writing.applyDiff"]({
+    query: { location: input["location"] },
+    payload: { original: input["original"], revised: input["revised"], accepted: input["accepted"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint22_4Request = Parameters<RawClient["server.researchos-writing"]["writing.bibtexFromLibrary"]>[0]
+type Endpoint22_4Input = {
+  readonly location?: Endpoint22_4Request["query"]["location"]
+  readonly paperIds: Endpoint22_4Request["payload"]["paperIds"]
+}
+const Endpoint22_4 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_4Input) =>
+  raw["writing.bibtexFromLibrary"]({
+    query: { location: input["location"] },
+    payload: { paperIds: input["paperIds"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint22_5Request = Parameters<RawClient["server.researchos-writing"]["writing.bibtexUpsert"]>[0]
+type Endpoint22_5Input = {
+  readonly location?: Endpoint22_5Request["query"]["location"]
+  readonly bibFile: Endpoint22_5Request["payload"]["bibFile"]
+  readonly entries: Endpoint22_5Request["payload"]["entries"]
+}
+const Endpoint22_5 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_5Input) =>
+  raw["writing.bibtexUpsert"]({
+    query: { location: input["location"] },
+    payload: { bibFile: input["bibFile"], entries: input["entries"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint22_6Request = Parameters<RawClient["server.researchos-writing"]["writing.suggestionRecord"]>[0]
+type Endpoint22_6Input = {
+  readonly location?: Endpoint22_6Request["query"]["location"]
+  readonly kind: Endpoint22_6Request["payload"]["kind"]
+  readonly targetFile?: Endpoint22_6Request["payload"]["targetFile"]
+  readonly inputExcerpt: Endpoint22_6Request["payload"]["inputExcerpt"]
+  readonly output: Endpoint22_6Request["payload"]["output"]
+  readonly status: Endpoint22_6Request["payload"]["status"]
+}
+const Endpoint22_6 = (raw: RawClient["server.researchos-writing"]) => (input: Endpoint22_6Input) =>
+  raw["writing.suggestionRecord"]({
+    query: { location: input["location"] },
+    payload: {
+      kind: input["kind"],
+      targetFile: input["targetFile"],
+      inputExcerpt: input["inputExcerpt"],
+      output: input["output"],
+      status: input["status"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint22_7Request = Parameters<RawClient["server.researchos-writing"]["writing.suggestions"]>[0]
+type Endpoint22_7Input = {
+  readonly location?: Endpoint22_7Request["query"]["location"]
+  readonly kind?: Endpoint22_7Request["query"]["kind"]
+  readonly limit?: Endpoint22_7Request["query"]["limit"]
+}
+const Endpoint22_7 = (raw: RawClient["server.researchos-writing"]) => (input?: Endpoint22_7Input) =>
+  raw["writing.suggestions"]({
+    query: { location: input?.["location"], kind: input?.["kind"], limit: input?.["limit"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup22 = (raw: RawClient["server.researchos-writing"]) => ({
+  tableToLatex: Endpoint22_0(raw),
+  mdToLatex: Endpoint22_1(raw),
+  diff: Endpoint22_2(raw),
+  applyDiff: Endpoint22_3(raw),
+  bibtexFromLibrary: Endpoint22_4(raw),
+  bibtexUpsert: Endpoint22_5(raw),
+  suggestionRecord: Endpoint22_6(raw),
+  suggestions: Endpoint22_7(raw),
+})
+
+type Endpoint23_0Request = Parameters<RawClient["server.researchos-data"]["data.notebooks"]>[0]
+type Endpoint23_0Input = { readonly location?: Endpoint23_0Request["query"]["location"] }
+const Endpoint23_0 = (raw: RawClient["server.researchos-data"]) => (input?: Endpoint23_0Input) =>
+  raw["data.notebooks"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_1Request = Parameters<RawClient["server.researchos-data"]["data.cells"]>[0]
+type Endpoint23_1Input = {
+  readonly id: Endpoint23_1Request["params"]["id"]
+  readonly location?: Endpoint23_1Request["query"]["location"]
+}
+const Endpoint23_1 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_1Input) =>
+  raw["data.cells"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint23_2Request = Parameters<RawClient["server.researchos-data"]["data.cellCreate"]>[0]
+type Endpoint23_2Input = {
+  readonly id: Endpoint23_2Request["params"]["id"]
+  readonly location?: Endpoint23_2Request["query"]["location"]
+  readonly source?: Endpoint23_2Request["payload"]["source"]
+}
+const Endpoint23_2 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_2Input) =>
+  raw["data.cellCreate"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { source: input["source"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_3Request = Parameters<RawClient["server.researchos-data"]["data.cellSave"]>[0]
+type Endpoint23_3Input = {
+  readonly id: Endpoint23_3Request["params"]["id"]
+  readonly location?: Endpoint23_3Request["query"]["location"]
+  readonly source: Endpoint23_3Request["payload"]["source"]
+}
+const Endpoint23_3 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_3Input) =>
+  raw["data.cellSave"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { source: input["source"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_4Request = Parameters<RawClient["server.researchos-data"]["data.cellRun"]>[0]
+type Endpoint23_4Input = {
+  readonly id: Endpoint23_4Request["params"]["id"]
+  readonly location?: Endpoint23_4Request["query"]["location"]
+  readonly source: Endpoint23_4Request["payload"]["source"]
+  readonly workdir?: Endpoint23_4Request["payload"]["workdir"]
+  readonly timeoutS?: Endpoint23_4Request["payload"]["timeoutS"]
+}
+const Endpoint23_4 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_4Input) =>
+  raw["data.cellRun"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { source: input["source"], workdir: input["workdir"], timeoutS: input["timeoutS"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_5Request = Parameters<RawClient["server.researchos-data"]["data.datasets"]>[0]
+type Endpoint23_5Input = { readonly location?: Endpoint23_5Request["query"]["location"] }
+const Endpoint23_5 = (raw: RawClient["server.researchos-data"]) => (input?: Endpoint23_5Input) =>
+  raw["data.datasets"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_6Request = Parameters<RawClient["server.researchos-data"]["data.artifacts"]>[0]
+type Endpoint23_6Input = { readonly location?: Endpoint23_6Request["query"]["location"] }
+const Endpoint23_6 = (raw: RawClient["server.researchos-data"]) => (input?: Endpoint23_6Input) =>
+  raw["data.artifacts"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_7Request = Parameters<RawClient["server.researchos-data"]["data.artifact"]>[0]
+type Endpoint23_7Input = {
+  readonly id: Endpoint23_7Request["params"]["id"]
+  readonly location?: Endpoint23_7Request["query"]["location"]
+}
+const Endpoint23_7 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_7Input) =>
+  raw["data.artifact"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint23_8Request = Parameters<RawClient["server.researchos-data"]["data.artifactFile"]>[0]
+type Endpoint23_8Input = {
+  readonly id: Endpoint23_8Request["params"]["id"]
+  readonly location?: Endpoint23_8Request["query"]["location"]
+}
+const Endpoint23_8 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_8Input) =>
+  raw["data.artifactFile"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint23_9Request = Parameters<RawClient["server.researchos-data"]["data.statTests"]>[0]
+type Endpoint23_9Input = { readonly location?: Endpoint23_9Request["query"]["location"] }
+const Endpoint23_9 = (raw: RawClient["server.researchos-data"]) => (input?: Endpoint23_9Input) =>
+  raw["data.statTests"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint23_10Request = Parameters<RawClient["server.researchos-data"]["data.link"]>[0]
+type Endpoint23_10Input = {
+  readonly id: Endpoint23_10Request["params"]["id"]
+  readonly location?: Endpoint23_10Request["query"]["location"]
+  readonly commit?: Endpoint23_10Request["payload"]["commit"]
+  readonly texFile?: Endpoint23_10Request["payload"]["texFile"]
+  readonly texSection?: Endpoint23_10Request["payload"]["texSection"]
+}
+const Endpoint23_10 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_10Input) =>
+  raw["data.link"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { commit: input["commit"], texFile: input["texFile"], texSection: input["texSection"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup23 = (raw: RawClient["server.researchos-data"]) => ({
+  notebooks: Endpoint23_0(raw),
+  cells: Endpoint23_1(raw),
+  cellCreate: Endpoint23_2(raw),
+  cellSave: Endpoint23_3(raw),
+  cellRun: Endpoint23_4(raw),
+  datasets: Endpoint23_5(raw),
+  artifacts: Endpoint23_6(raw),
+  artifact: Endpoint23_7(raw),
+  artifactFile: Endpoint23_8(raw),
+  statTests: Endpoint23_9(raw),
+  link: Endpoint23_10(raw),
+})
+
+type Endpoint24_0Request = Parameters<RawClient["server.researchos-plot"]["plot.create"]>[0]
+type Endpoint24_0Input = {
+  readonly location?: Endpoint24_0Request["query"]["location"]
+  readonly template: Endpoint24_0Request["payload"]["template"]
+  readonly data: Endpoint24_0Request["payload"]["data"]
+  readonly theme?: Endpoint24_0Request["payload"]["theme"]
+  readonly spec?: Endpoint24_0Request["payload"]["spec"]
+}
+const Endpoint24_0 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_0Input) =>
+  raw["plot.create"]({
+    query: { location: input["location"] },
+    payload: { template: input["template"], data: input["data"], theme: input["theme"], spec: input["spec"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_1Request = Parameters<RawClient["server.researchos-plot"]["plot.tune"]>[0]
+type Endpoint24_1Input = {
+  readonly id: Endpoint24_1Request["params"]["id"]
+  readonly location?: Endpoint24_1Request["query"]["location"]
+  readonly patch: Endpoint24_1Request["payload"]["patch"]
+}
+const Endpoint24_1 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_1Input) =>
+  raw["plot.tune"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { patch: input["patch"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_2Request = Parameters<RawClient["server.researchos-plot"]["plot.annotateSignificance"]>[0]
+type Endpoint24_2Input = {
+  readonly id: Endpoint24_2Request["params"]["id"]
+  readonly location?: Endpoint24_2Request["query"]["location"]
+  readonly test: Endpoint24_2Request["payload"]["test"]
+  readonly groups: Endpoint24_2Request["payload"]["groups"]
+}
+const Endpoint24_2 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_2Input) =>
+  raw["plot.annotateSignificance"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { test: input["test"], groups: input["groups"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_3Request = Parameters<RawClient["server.researchos-plot"]["plot.mermaid"]>[0]
+type Endpoint24_3Input = {
+  readonly location?: Endpoint24_3Request["query"]["location"]
+  readonly code: Endpoint24_3Request["payload"]["code"]
+  readonly name?: Endpoint24_3Request["payload"]["name"]
+  readonly theme?: Endpoint24_3Request["payload"]["theme"]
+}
+const Endpoint24_3 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_3Input) =>
+  raw["plot.mermaid"]({
+    query: { location: input["location"] },
+    payload: { code: input["code"], name: input["name"], theme: input["theme"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_4Request = Parameters<RawClient["server.researchos-plot"]["plot.graphviz"]>[0]
+type Endpoint24_4Input = {
+  readonly location?: Endpoint24_4Request["query"]["location"]
+  readonly dot: Endpoint24_4Request["payload"]["dot"]
+  readonly engine?: Endpoint24_4Request["payload"]["engine"]
+  readonly name?: Endpoint24_4Request["payload"]["name"]
+}
+const Endpoint24_4 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_4Input) =>
+  raw["plot.graphviz"]({
+    query: { location: input["location"] },
+    payload: { dot: input["dot"], engine: input["engine"], name: input["name"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_5Request = Parameters<RawClient["server.researchos-plot"]["plot.diagram"]>[0]
+type Endpoint24_5Input = {
+  readonly location?: Endpoint24_5Request["query"]["location"]
+  readonly action: Endpoint24_5Request["payload"]["action"]
+  readonly file?: Endpoint24_5Request["payload"]["file"]
+  readonly stencilPack?: Endpoint24_5Request["payload"]["stencilPack"]
+}
+const Endpoint24_5 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_5Input) =>
+  raw["plot.diagram"]({
+    query: { location: input["location"] },
+    payload: { action: input["action"], file: input["file"], stencilPack: input["stencilPack"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_6Request = Parameters<RawClient["server.researchos-plot"]["plot.diagramSave"]>[0]
+type Endpoint24_6Input = {
+  readonly location?: Endpoint24_6Request["query"]["location"]
+  readonly file: Endpoint24_6Request["payload"]["file"]
+  readonly xml: Endpoint24_6Request["payload"]["xml"]
+}
+const Endpoint24_6 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_6Input) =>
+  raw["plot.diagramSave"]({
+    query: { location: input["location"] },
+    payload: { file: input["file"], xml: input["xml"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_7Request = Parameters<RawClient["server.researchos-plot"]["plot.insertToPaper"]>[0]
+type Endpoint24_7Input = {
+  readonly location?: Endpoint24_7Request["query"]["location"]
+  readonly artifactPath: Endpoint24_7Request["payload"]["artifactPath"]
+  readonly texFile: Endpoint24_7Request["payload"]["texFile"]
+  readonly section?: Endpoint24_7Request["payload"]["section"]
+  readonly caption: Endpoint24_7Request["payload"]["caption"]
+  readonly label?: Endpoint24_7Request["payload"]["label"]
+}
+const Endpoint24_7 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_7Input) =>
+  raw["plot.insertToPaper"]({
+    query: { location: input["location"] },
+    payload: {
+      artifactPath: input["artifactPath"],
+      texFile: input["texFile"],
+      section: input["section"],
+      caption: input["caption"],
+      label: input["label"],
+    },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_8Request = Parameters<RawClient["server.researchos-plot"]["plot.artifacts"]>[0]
+type Endpoint24_8Input = { readonly location?: Endpoint24_8Request["query"]["location"] }
+const Endpoint24_8 = (raw: RawClient["server.researchos-plot"]) => (input?: Endpoint24_8Input) =>
+  raw["plot.artifacts"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint24_9Request = Parameters<RawClient["server.researchos-plot"]["plot.artifactFile"]>[0]
+type Endpoint24_9Input = {
+  readonly id: Endpoint24_9Request["params"]["id"]
+  readonly location?: Endpoint24_9Request["query"]["location"]
+}
+const Endpoint24_9 = (raw: RawClient["server.researchos-plot"]) => (input: Endpoint24_9Input) =>
+  raw["plot.artifactFile"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+const adaptGroup24 = (raw: RawClient["server.researchos-plot"]) => ({
+  create: Endpoint24_0(raw),
+  tune: Endpoint24_1(raw),
+  annotateSignificance: Endpoint24_2(raw),
+  mermaid: Endpoint24_3(raw),
+  graphviz: Endpoint24_4(raw),
+  diagram: Endpoint24_5(raw),
+  diagramSave: Endpoint24_6(raw),
+  insertToPaper: Endpoint24_7(raw),
+  artifacts: Endpoint24_8(raw),
+  artifactFile: Endpoint24_9(raw),
+})
+
+type Endpoint25_0Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.list"]>[0]
+type Endpoint25_0Input = { readonly location?: Endpoint25_0Request["query"]["location"] }
+const Endpoint25_0 = (raw: RawClient["server.researchos-reproduce"]) => (input?: Endpoint25_0Input) =>
+  raw["reproduce.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_1Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.create"]>[0]
+type Endpoint25_1Input = {
+  readonly location?: Endpoint25_1Request["query"]["location"]
+  readonly paperUrl: Endpoint25_1Request["payload"]["paperUrl"]
+  readonly repoUrl: Endpoint25_1Request["payload"]["repoUrl"]
+  readonly envStrategy?: Endpoint25_1Request["payload"]["envStrategy"]
+}
+const Endpoint25_1 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_1Input) =>
+  raw["reproduce.create"]({
+    query: { location: input["location"] },
+    payload: { paperUrl: input["paperUrl"], repoUrl: input["repoUrl"], envStrategy: input["envStrategy"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_2Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.get"]>[0]
+type Endpoint25_2Input = {
+  readonly id: Endpoint25_2Request["params"]["id"]
+  readonly location?: Endpoint25_2Request["query"]["location"]
+}
+const Endpoint25_2 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_2Input) =>
+  raw["reproduce.get"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint25_3Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.advance"]>[0]
+type Endpoint25_3Input = {
+  readonly id: Endpoint25_3Request["params"]["id"]
+  readonly step: Endpoint25_3Request["params"]["step"]
+  readonly location?: Endpoint25_3Request["query"]["location"]
+}
+const Endpoint25_3 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_3Input) =>
+  raw["reproduce.advance"]({
+    params: { id: input["id"], step: input["step"] },
+    query: { location: input["location"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_4Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.metricsSubmit"]>[0]
+type Endpoint25_4Input = {
+  readonly id: Endpoint25_4Request["params"]["id"]
+  readonly location?: Endpoint25_4Request["query"]["location"]
+  readonly metrics: Endpoint25_4Request["payload"]["metrics"]
+}
+const Endpoint25_4 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_4Input) =>
+  raw["reproduce.metricsSubmit"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { metrics: input["metrics"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint25_5Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.comparison"]>[0]
+type Endpoint25_5Input = {
+  readonly id: Endpoint25_5Request["params"]["id"]
+  readonly location?: Endpoint25_5Request["query"]["location"]
+}
+const Endpoint25_5 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_5Input) =>
+  raw["reproduce.comparison"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint25_6Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.issues"]>[0]
+type Endpoint25_6Input = {
+  readonly id: Endpoint25_6Request["params"]["id"]
+  readonly location?: Endpoint25_6Request["query"]["location"]
+}
+const Endpoint25_6 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_6Input) =>
+  raw["reproduce.issues"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint25_7Request = Parameters<RawClient["server.researchos-reproduce"]["reproduce.cancel"]>[0]
+type Endpoint25_7Input = {
+  readonly id: Endpoint25_7Request["params"]["id"]
+  readonly location?: Endpoint25_7Request["query"]["location"]
+}
+const Endpoint25_7 = (raw: RawClient["server.researchos-reproduce"]) => (input: Endpoint25_7Input) =>
+  raw["reproduce.cancel"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+const adaptGroup25 = (raw: RawClient["server.researchos-reproduce"]) => ({
+  list: Endpoint25_0(raw),
+  create: Endpoint25_1(raw),
+  get: Endpoint25_2(raw),
+  advance: Endpoint25_3(raw),
+  metricsSubmit: Endpoint25_4(raw),
+  comparison: Endpoint25_5(raw),
+  issues: Endpoint25_6(raw),
+  cancel: Endpoint25_7(raw),
+})
+
+type Endpoint26_0Request = Parameters<RawClient["server.researchos-translate"]["translate.run"]>[0]
+type Endpoint26_0Input = {
+  readonly location?: Endpoint26_0Request["query"]["location"]
+  readonly paperId: Endpoint26_0Request["payload"]["paperId"]
+  readonly sections?: Endpoint26_0Request["payload"]["sections"]
+  readonly engine?: Endpoint26_0Request["payload"]["engine"]
+}
+const Endpoint26_0 = (raw: RawClient["server.researchos-translate"]) => (input: Endpoint26_0Input) =>
+  raw["translate.run"]({
+    query: { location: input["location"] },
+    payload: { paperId: input["paperId"], sections: input["sections"], engine: input["engine"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+type Endpoint26_1Request = Parameters<RawClient["server.researchos-translate"]["translate.get"]>[0]
+type Endpoint26_1Input = {
+  readonly paperId: Endpoint26_1Request["params"]["paperId"]
+  readonly location?: Endpoint26_1Request["query"]["location"]
+}
+const Endpoint26_1 = (raw: RawClient["server.researchos-translate"]) => (input: Endpoint26_1Input) =>
+  raw["translate.get"]({ params: { paperId: input["paperId"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+const adaptGroup26 = (raw: RawClient["server.researchos-translate"]) => ({
+  run: Endpoint26_0(raw),
+  get: Endpoint26_1(raw),
+})
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -700,6 +1511,15 @@ const adaptClient = (raw: RawClient) => ({
   questions: adaptGroup15(raw["server.question"]),
   references: adaptGroup16(raw["server.reference"]),
   projectCopies: adaptGroup17(raw["server.projectCopy"]),
+  "server.researchos-assets": adaptGroup18(raw["server.researchos-assets"]),
+  "server.researchos-literature": adaptGroup19(raw["server.researchos-literature"]),
+  "server.researchos-graph": adaptGroup20(raw["server.researchos-graph"]),
+  "server.researchos-latex": adaptGroup21(raw["server.researchos-latex"]),
+  "server.researchos-writing": adaptGroup22(raw["server.researchos-writing"]),
+  "server.researchos-data": adaptGroup23(raw["server.researchos-data"]),
+  "server.researchos-plot": adaptGroup24(raw["server.researchos-plot"]),
+  "server.researchos-reproduce": adaptGroup25(raw["server.researchos-reproduce"]),
+  "server.researchos-translate": adaptGroup26(raw["server.researchos-translate"]),
 })
 
 export const make = (options?: { readonly baseUrl?: URL | string }) =>

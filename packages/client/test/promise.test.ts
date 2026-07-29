@@ -23,6 +23,15 @@ test("exposes every standard HTTP API group", () => {
     "questions",
     "references",
     "projectCopies",
+    "server.researchos-assets",
+    "server.researchos-literature",
+    "server.researchos-graph",
+    "server.researchos-latex",
+    "server.researchos-writing",
+    "server.researchos-data",
+    "server.researchos-plot",
+    "server.researchos-reproduce",
+    "server.researchos-translate",
   ])
   expect(Object.keys(client.messages)).toEqual(["list"])
   expect(Object.keys(client.integrations)).toEqual([
