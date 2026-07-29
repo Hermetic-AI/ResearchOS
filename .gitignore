@@ -35,5 +35,12 @@ tsconfig.tsbuildinfo
 **/__pycache__/
 *.py[cod]
 
+# ResearchOS local state and generated diagnostics
+.researchos/
+**/.researchos/
+.sisyphus/sessions/
+docs/screens/
+**/.tmp-workspace-*/
+
 # Local third-party skill repos (each is its own git history, not part of ResearchOS)
 skills-repo/
