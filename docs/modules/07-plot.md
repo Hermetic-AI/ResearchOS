@@ -3,6 +3,8 @@
 > 对标 Prism / Origin / Visio。上游依据：`docs/ResearchOS最终方案.md` 模块七、技术选型表、接口定义 5.6 节；UI 依据：`docs/ResearchOS-UI设计.md` 3.9 节（科研绘图工坊）。
 > 落地形态遵守"低侵入原则"：全部能力以 MCP server / plugin tool / SubAgent / Skill / `@researchos/*` 新包 / app 前端路由页面的形式外挂，不改 OpenCode 核心。
 
+> 实现状态（2026-07-29）：P4b.1–P4b.6 已完成。除 plot-core、Python FastMCP、共享产物库、HTTP/Client 与 Plot Agent/Skill 外，App 已交付统计图三栏工作区、1/2/4 子图画布、draw.io 嵌入保存、Mermaid/Graphviz 代码图和可插入论文的产物图库。draw.io 新增 XML 原子保存端点，完整 HTTP 契约为十端点。
+
 ## 1. 模块概述与目标
 
 科研绘图中心为 ResearchOS 提供"面向出版"的绘图闭环：Prism 风格统计图表模板库（分组柱状误差棒、散点回归、箱线/小提琴、生存曲线、热图，含显著性星标与 Nature/Science/IEEE 期刊主题）、Origin 风格多子图画布与可视化调参（面板与代码双向同步）、draw.io 嵌入做 Visio 类示意图、Mermaid/Graphviz/PlantUML 代码即图、TikZ/PGFPlots 导出，以及 AI 自然语言生成图和一键"插入论文"（自动生成 `\includegraphics` + caption + label）。目标：用户从 CSV 到期刊级 Figure、从一句话到架构示意图，全程不出 ResearchOS，产物进 Git、可复现、与论文 LaTeX 源码联动。
