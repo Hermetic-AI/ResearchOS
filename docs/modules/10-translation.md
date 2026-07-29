@@ -1,5 +1,7 @@
 # 模块十：全文翻译中心（Translation）技术落地文档
 
+> 实现状态（2026-07-29）：P5 v1 已完成。归档 PDF 由 PyMuPDF 真实提取，TS 管线执行章节切分与公式/数值/引用保护，并调用用户配置的 LibreTranslate 兼容端点；未配置引擎时明确失败或交由 Translator SubAgent，不生成伪译文。App 已提供原文/译文/双语视图与归档加载。
+
 对应总体方案《ResearchOS最终方案.md》§三 模块十、§五 5.9 接口契约；UI 对应《ResearchOS-UI设计.md》§3.3 末尾「全文翻译」部分；依赖模块一（文献库，见 `docs/modules/01-literature.md`）与模块九（API Hub，见 `docs/modules/09-api-hub.md`）。
 
 ## 1. 模块概述与目标

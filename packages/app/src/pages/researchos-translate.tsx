@@ -1,47 +1,14 @@
-import { createSignal, type Component } from "solid-js"
-import { useParams } from "@solidjs/router"
-
-const TranslatePage: Component = () => {
-  const params = useParams<{ dir: string }>()
-  const [paperId, setPaperId] = createSignal("")
-  const [translating, setTranslating] = createSignal(false)
-  const [result, setResult] = createSignal("")
-
-  const translate = async () => {
-    setTranslating(true)
-    setResult("Extracting PDF...\nTranslating with LibreTranslate...\nPolishing with LLM...")
-    await new Promise((r) => setTimeout(r, 1500))
-    setTranslating(false)
-    setResult(`# Translation Result\n\n## Abstract\n\n[译] This is the translated abstract of paper ${paperId()}.\n\n## Introduction\n\n[译] Translated introduction content...\n\n---\n\n**术语对照表**\n| English | 中文 |\n|---|---|\n| attention | 注意力 |\n| transformer | 变换器 |`)
-  }
-
-  return (
-    <div style={{ display: "flex", "flex-direction": "column", height: "100%" }}>
-      <div style={{ padding: "8px 16px", display: "flex", gap: "8px", "align-items": "center", "border-bottom": "1px solid var(--color-border)" }}>
-        <span style={{ "font-size": "13px", "font-weight": "600" }}>Translation Center · {params.dir}</span>
-        <span style={{ "font-size": "11px", color: "var(--color-text-weak)" }}>EN → ZH · API + LLM Pipeline</span>
-      </div>
-      <div style={{ flex: "1", display: "flex", padding: "24px", gap: "16px" }}>
-        <div style={{ width: "300px", display: "flex", "flex-direction": "column", gap: "8px" }}>
-          <input value={paperId()} onInput={(e) => setPaperId(e.currentTarget.value)} placeholder="Paper ID or DOI" style={{ padding: "8px 12px", "font-size": "13px", "border-radius": "4px", border: "1px solid var(--color-border)", background: "var(--color-surface-base)", color: "var(--color-text)" }} />
-          <select style={{ padding: "8px 12px", "font-size": "13px", "border-radius": "4px", border: "1px solid var(--color-border)", background: "var(--color-surface-base)", color: "var(--color-text)" }}>
-            <option value="all">All Sections</option>
-            <option value="abstract">Abstract Only</option>
-          </select>
-          <button onClick={translate} disabled={translating()} style={{ padding: "8px 16px", "font-size": "13px", "border-radius": "4px", border: "none", background: "var(--color-primary)", color: "#000", cursor: "pointer" }}>
-            {translating() ? "Translating..." : "Start Translation"}
-          </button>
-          <div style={{ "font-size": "11px", color: "var(--color-text-weak)", "margin-top": "8px" }}>
-            <p>⚙ Pipeline: <strong>PDF Extract → API Translate → LLM Polish</strong></p>
-            <p>🔒 Formulas and data preserved as-is</p>
-          </div>
-        </div>
-        <div style={{ flex: "1", padding: "16px", background: "var(--color-surface-base)", "border-radius": "4px", "border": "1px solid var(--color-border)", "font-size": "13px", "line-height": "1.6", "white-space": "pre-wrap", "overflow-y": "auto" }}>
-          {result() || "Translation result will appear here..."}
-        </div>
-      </div>
-    </div>
-  )
+import { Button } from "@opencode-ai/ui/button"
+import { For, Show, createMemo, createSignal } from "solid-js"
+import { usePlatform } from "@/context/platform"
+import { useSDK } from "@/context/sdk"
+import { useServerSDK } from "@/context/server-sdk"
+import { createResearchosClient } from "@/utils/researchos-client"
+export default function TranslatePage() {
+  const sdk = useSDK(); const platform = usePlatform(); const serverSDK = useServerSDK()
+  const client = createMemo(() => createResearchosClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-translate"])
+  const [paperId, setPaperId] = createSignal(""); const [selection, setSelection] = createSignal<"all" | "abstract">("all"); const [mode, setMode] = createSignal<"bilingual" | "source" | "target">("bilingual"); const [busy, setBusy] = createSignal(false); const [status, setStatus] = createSignal("Requires an archived literature PDF and configured LIBRETRANSLATE_URL."); const [result, setResult] = createSignal<{ paperId: string; sections: ReadonlyArray<{ type: string; title: string; original: ReadonlyArray<string>; translated: ReadonlyArray<string> }>; glossary: ReadonlyArray<{ en: string; zh: string }> }>()
+  const run = async () => { setBusy(true); setStatus("Extracting PDF blocks with PyMuPDF and translating protected paragraphs…"); try { const response = await client().run({ location: { directory: sdk().directory }, paperId: paperId(), engine: "auto", ...(selection() === "abstract" ? { sections: ["abstract"] } : {}) }); setResult(response.data); setStatus(`Archived bilingual translation for ${response.data.paperId}.`) } catch (error) { setStatus(error instanceof Error ? error.message : String(error)) } finally { setBusy(false) } }
+  const load = async () => { try { const response = await client().get({ paperId: paperId(), location: { directory: sdk().directory } }); setResult(response.data); setStatus("Loaded archived translation.") } catch (error) { setStatus(error instanceof Error ? error.message : String(error)) } }
+  return <main class="flex h-full min-h-0 flex-col bg-background-stronger text-text-base"><header class="flex h-11 items-center gap-3 border-b border-border-weak-base bg-background-base px-3"><div><h1 class="text-13-medium">Academic translation</h1><p class="text-10-regular text-text-weak">PDF blocks · protected formulas · bilingual archive</p></div><input class="ml-4 h-7 w-64 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={paperId()} onInput={(event) => setPaperId(event.currentTarget.value)} placeholder="Archived paper ID" /><select class="h-7 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={selection()} onChange={(event) => setSelection(event.currentTarget.value as "all" | "abstract")}><option value="all">Full paper</option><option value="abstract">Abstract only</option></select><Button size="small" variant="primary" disabled={busy() || !paperId()} onClick={() => void run()}>{busy() ? "Translating…" : "Translate"}</Button><Button size="small" variant="secondary" disabled={!paperId()} onClick={() => void load()}>Load archive</Button><div class="ml-auto flex gap-1"><For each={["source", "target", "bilingual"] as const}>{(item) => <button class="rounded px-2 py-1 text-10-medium" classList={{ "bg-background-selected": mode() === item }} onClick={() => setMode(item)}>{item}</button>}</For></div></header><div class="border-b border-border-weak-base px-4 py-2 text-10-regular text-text-weak">{status()}</div><section class="min-h-0 flex-1 overflow-y-auto p-5"><div class="mx-auto max-w-6xl"><For each={result()?.sections} fallback={<div class="rounded-lg border border-dashed border-border-weak-base p-12 text-center text-11-regular text-text-weak">A real translation or archived result will appear here. No placeholder text is generated.</div>}>{(section) => <article class="mb-6"><h2 class="mb-2 border-b border-border-weak-base pb-2 text-14-medium">{section.title}</h2><For each={section.original}>{(source, index) => <div class="grid gap-5 border-b border-border-weak-base py-3 text-12-regular leading-relaxed" style={{ "grid-template-columns": mode() === "bilingual" ? "1fr 1fr" : "1fr" }}><Show when={mode() !== "target"}><p class="text-text-weak">{source}</p></Show><Show when={mode() !== "source"}><p>{section.translated[index()] ?? ""}</p></Show></div>}</For></article>}</For><Show when={(result()?.glossary.length ?? 0) > 0}><article><h2 class="text-14-medium">Terminology</h2><For each={result()?.glossary}>{(term) => <p class="py-1 text-11-regular">{term.en} → {term.zh}</p>}</For></article></Show></div></section></main>
 }
-
-export default TranslatePage

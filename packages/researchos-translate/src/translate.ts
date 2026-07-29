@@ -1,69 +1,25 @@
-import type { Section, GlossaryEntry, TranslationResult } from "./types"
+import type { GlossaryEntry, Section, TranslationResult } from "./types"
 
+const headings: Record<string, Section["type"]> = { abstract: "abstract", introduction: "introduction", "related work": "related_work", method: "method", methodology: "method", experiments: "experiments", results: "experiments", conclusion: "conclusion" }
 export function splitIntoSections(text: string): Section[] {
-  const sections: Section[] = []
-  const sectionRegex = /^(Abstract|Introduction|Related Work|Method|Experiments|Conclusion)s?\s*$/gim
-  const parts = text.split(sectionRegex)
-
-  if (parts.length < 2) {
-    sections.push({ type: "abstract", title: "Full Text", paragraphs: text.split(/\n\n+/).filter(Boolean) })
-    return sections
-  }
-
-  return sections
-}
-
-export function preserveFormula(text: string): { text: string; formulas: string[] } {
-  const formulas: string[] = []
-  const preserved = text.replace(/(\$\$.+?\$\$|\$.+?\$)/gs, (match) => {
-    formulas.push(match)
-    return `{{FORMULA_${formulas.length - 1}}}`
+  const result: Section[] = []
+  let current: Section = { type: "abstract", title: "Full Text", paragraphs: [] }
+  text.split(/\n+/).map((line) => line.trim()).filter(Boolean).forEach((line) => {
+    const normalized = line.toLowerCase().replace(/^\d+(\.\d+)*\s*/, "").replace(/s$/, "")
+    const type = headings[normalized]
+    if (type) { if (current.paragraphs.length) result.push(current); current = { type, title: line, paragraphs: [] }; return }
+    current.paragraphs.push(line)
   })
+  if (current.paragraphs.length) result.push(current)
+  return result
+}
+export function preserveFormula(text: string) {
+  const formulas: string[] = []
+  const preserved = text.replace(/(\$\$.+?\$\$|\$.+?\$|\\\[.+?\\\]|(?:Fig\.?|Figure|Table|Equation)\s+\d+[a-z]?|\d+(?:\.\d+)?\s*(?:%|ms|GB|MB|Hz))/gis, (match) => { formulas.push(match); return `__RESEARCHOS_PROTECTED_${formulas.length - 1}__` })
   return { text: preserved, formulas }
 }
-
-export function restoreFormula(text: string, formulas: string[]): string {
-  return text.replace(/\{\{FORMULA_(\d+)\}\}/g, (_, i) => formulas[parseInt(i)])
-}
-
-export function stubTranslate(text: string): string {
-  return `[译] ${text}`
-}
-
-export function extractGlossary(translated: string): GlossaryEntry[] {
-  return [{ en: "attention", zh: "注意力", domain: "ML" }, { en: "transformer", zh: "变换器", domain: "ML" }]
-}
-
-export function buildTranslationResult(
-  paperId: string,
-  sections: Section[],
-): TranslationResult {
-  return {
-    paperId,
-    sections: sections.map((s) => ({
-      type: s.type,
-      title: s.title,
-      original: s.paragraphs,
-      translated: s.paragraphs.map(stubTranslate),
-    })),
-    glossary: [
-      { en: "attention", zh: "注意力" },
-      { en: "transformer", zh: "变换器" },
-    ],
-  }
-}
-
-export function toBilingualHtml(result: TranslationResult): string {
-  let html = "<html><body>"
-  for (const sec of result.sections) {
-    html += `<h2>${sec.title}</h2>`
-    for (let i = 0; i < sec.original.length; i++) {
-      html += `<div style="display:flex;gap:16px;margin-bottom:8px">`
-      html += `<div style="flex:1;font-size:12px">${sec.original[i]}</div>`
-      html += `<div style="flex:1;font-size:12px">${sec.translated[i] || ""}</div>`
-      html += `</div>`
-    }
-  }
-  html += "</body></html>"
-  return html
-}
+export function restoreFormula(text: string, formulas: string[]) { return text.replace(/__RESEARCHOS_PROTECTED_(\d+)__/g, (match, index) => formulas[Number(index)] ?? match) }
+export function extractGlossary(_translated: string): GlossaryEntry[] { return [] }
+export function buildTranslationResult(paperId: string, sections: Section[], translated?: string[][]): TranslationResult { return { paperId, sections: sections.map((section, index) => ({ type: section.type, title: section.title, original: section.paragraphs, translated: translated?.[index] ?? [] })), glossary: [] } }
+export function toBilingualHtml(result: TranslationResult) { return `<!doctype html><meta charset="utf-8"><title>${escape(result.paperId)}</title><style>body{font:14px system-ui;max-width:1200px;margin:auto;padding:24px}.row{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:12px 0;border-bottom:1px solid #ddd}</style>${result.sections.map((section) => `<h2>${escape(section.title)}</h2>${section.original.map((source, index) => `<div class="row"><div>${escape(source)}</div><div>${escape(section.translated[index] ?? "")}</div></div>`).join("")}`).join("")}` }
+function escape(value: string) { return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;") }
