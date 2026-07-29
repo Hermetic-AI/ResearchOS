@@ -39,6 +39,7 @@ describe("LiteratureDB", () => {
     expect(result).not.toBeNull()
     expect(result!.title).toBe("Attention Is All You Need")
     expect(result!.year).toBe(2017)
+    expect(result!.authors.map((author) => author.name)).toEqual(["Ashish Vaswani", "Noam Shazeer"])
   })
 
   test("lists papers", () => {
@@ -53,7 +54,7 @@ describe("LiteratureDB", () => {
     db.insertPaper(importPaperSync({ id: "p2", title: "BERT: Pre-training", year: 2018, source: "arxiv" }))
     const results = db.searchLocal("Attention")
     expect(results.length).toBe(1)
-    expect(results[0].title).toBe("Attention Is All You Need")
+    expect(results[0]!.title).toBe("Attention Is All You Need")
   })
 })
 

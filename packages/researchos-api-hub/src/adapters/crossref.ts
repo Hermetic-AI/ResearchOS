@@ -32,13 +32,19 @@ export const crossrefAdapter: ApiAdapter<CrossrefSearchReq, z.infer<typeof Cross
     rateLimit: { rps: 10 },
     cacheTtlS: 7200,
     enabled: true,
+    testPath: "/works?rows=1",
   },
-  buildRequest: (req) => ({
+  buildRequest: (req, credential) => ({
     path: "/works",
     params: {
       query: req.query,
       rows: String(req.rows ?? 10),
+      ...(credential.mailto ? { mailto: credential.mailto } : {}),
     },
+  }),
+  testRequest: (credential) => ({
+    path: "/works",
+    params: { rows: "1", ...(credential.mailto ? { mailto: credential.mailto } : {}) },
   }),
   schema: CrossrefResponse,
 }

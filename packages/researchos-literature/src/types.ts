@@ -49,7 +49,7 @@ export const SearchResult = z.object({
   authors: z.array(z.object({ name: z.string() })).default([]),
   abstract: z.string().nullish(),
   citationCount: z.number().default(0),
-  source: z.string(),
+  source: z.enum(["arxiv", "semantic_scholar", "crossref", "pubmed", "zotero", "manual"]),
 })
 
 export type SearchResult = z.infer<typeof SearchResult>
@@ -62,6 +62,29 @@ export const CitationEdge = z.object({
 })
 
 export type CitationEdge = z.infer<typeof CitationEdge>
+
+export const CitationDirection = z.enum(["references", "cited_by"])
+export type CitationDirection = z.infer<typeof CitationDirection>
+
+export const CitationEntry = z.object({
+  id: z.string(),
+  title: z.string().nullish(),
+  year: z.number().nullish(),
+  doi: z.string().nullish(),
+  source: z.enum(["pdf", "grobid", "semantic_scholar"]),
+  inLibrary: z.boolean(),
+})
+
+export type CitationEntry = z.infer<typeof CitationEntry>
+
+export const ScoredPaper = PaperCard.extend({ score: z.number() })
+export type ScoredPaper = z.infer<typeof ScoredPaper>
+
+export const RecommendResult = z.object({
+  results: z.array(ScoredPaper),
+  degraded: z.boolean(),
+})
+export type RecommendResult = z.infer<typeof RecommendResult>
 
 export const ExportFormat = z.enum(["bibtex", "ris", "endnote", "json", "markdown"])
 export type ExportFormat = z.infer<typeof ExportFormat>

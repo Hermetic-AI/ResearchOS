@@ -1,85 +1,121 @@
-import type { ApiAdapter, ApiDescriptor, ApiHub, ApiStatus } from "./registry"
+import { mkdirSync } from "fs"
+import type { ApiAdapter, ApiCredential, ApiDescriptor, ApiHub, ApiStatus } from "./registry"
 import { RateLimiter } from "./rate-limiter"
 import { ResponseCache } from "./cache"
 import { withRetry } from "./retry"
 import { StatsCollector } from "./stats"
+import { apiCachePath, apiHubDir } from "./paths"
+
+export interface HubOptions {
+  projectRoot?: string
+  cachePath?: string
+  credentials?: Record<string, ApiCredential>
+  fetch?: Fetcher
+}
+
+type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>
+
+export class ApiHubError extends Error {
+  constructor(
+    readonly adapter: string,
+    message: string,
+    readonly retryable: boolean,
+    readonly status?: number,
+  ) {
+    super(`${adapter}: ${message}`)
+    this.name = "ApiHubError"
+  }
+}
 
 export class HubImpl implements ApiHub {
   private limiters = new Map<string, RateLimiter>()
-  private cache = new ResponseCache()
+  private cache: ResponseCache
   private stats = new StatsCollector()
   private adapters = new Map<string, ApiDescriptor>()
+  private tests = new Map<string, (credential: ApiCredential) => { path: string; params?: Record<string, string>; headers?: Record<string, string> }>()
+  private credentials: Record<string, ApiCredential>
+  private fetcher: Fetcher
 
-  register(adapter: ApiAdapter<unknown, unknown>): void {
-    const d = adapter.descriptor
-    this.adapters.set(d.name, d)
-    this.limiters.set(d.name, new RateLimiter(d.rateLimit.rps))
+  constructor(options: HubOptions = {}) {
+    if (options.projectRoot) mkdirSync(apiHubDir(options.projectRoot), { recursive: true })
+    this.cache = new ResponseCache(options.cachePath ?? (options.projectRoot ? apiCachePath(options.projectRoot) : ":memory:"))
+    this.credentials = options.credentials ?? {}
+    this.fetcher = options.fetch ?? fetch
+  }
+
+  register<TReq, TRes>(adapter: ApiAdapter<TReq, TRes>): void {
+    const descriptor = adapter.descriptor
+    this.adapters.set(descriptor.name, descriptor)
+    this.limiters.set(descriptor.name, new RateLimiter(descriptor.rateLimit.rps, descriptor.rateLimit.burst ?? 1))
+    if (adapter.testRequest) this.tests.set(descriptor.name, adapter.testRequest)
   }
 
   async call<TReq, TRes>(adapter: ApiAdapter<TReq, TRes>, req: TReq): Promise<TRes> {
-    const name = adapter.descriptor.name
-    this.stats.recordCall(name)
+    const descriptor = adapter.descriptor
+    if (!this.adapters.has(descriptor.name)) this.register(adapter)
+    const credential = this.credential(descriptor.name)
+    if (!descriptor.enabled || credential.enabled === false) {
+      throw new ApiHubError(descriptor.name, "adapter is disabled", false)
+    }
+    this.stats.recordCall(descriptor.name)
 
-    const params = JSON.stringify(req)
-    const cached = this.cache.get(name, params)
-    if (cached) return cached.value as TRes
+    const request = adapter.buildRequest(req, credential)
+    const url = this.url(credential.url ?? descriptor.baseUrl, request.path, request.params)
+    const cached = this.cache.get(descriptor.name, url.toString())
+    if (cached) {
+      this.stats.recordSuccess(descriptor.name)
+      return adapter.schema.parse(cached.value)
+    }
 
-    const limiter = this.limiters.get(name)!
+    const limiter = this.limiters.get(descriptor.name)
+    if (!limiter) throw new ApiHubError(descriptor.name, "adapter is not registered", false)
     await limiter.acquire()
 
     try {
       const result = await withRetry(async () => {
-        const { path, params: queryParams } = adapter.buildRequest(req)
-        const url = new URL(path, adapter.descriptor.baseUrl)
-        if (queryParams) {
-          for (const [k, v] of Object.entries(queryParams)) {
-            url.searchParams.set(k, v)
-          }
-        }
-
-        const response = await fetch(url.toString(), {
-          headers: adapter.headers ? adapter.headers(req) : {},
+        const response = await this.fetcher(url, {
+          headers: adapter.headers?.(req, credential),
           signal: AbortSignal.timeout(15000),
         })
-
         if (!response.ok) {
-          if (response.status === 429) {
-            throw new Error(`${name}: rate limited (429)`)
-          }
-          throw new Error(`${name}: HTTP ${response.status}`)
+          throw new ApiHubError(
+            descriptor.name,
+            response.status === 429 ? "rate limited" : `HTTP ${response.status}`,
+            response.status === 429 || response.status >= 500,
+            response.status,
+          )
         }
+        const payload = adapter.decode ? await adapter.decode(response) : await response.json()
+        return adapter.schema.parse(payload)
+      }, 3, 1000, (error) => error instanceof ApiHubError && error.retryable)
 
-        const json = await response.json()
-        return adapter.schema.parse(json) as TRes
-      })
-
-      const ttl = adapter.descriptor.cacheTtlS
-      if (ttl > 0) {
-        this.cache.set(name, params, result, ttl)
-      }
-      this.stats.recordSuccess(name)
+      if (descriptor.cacheTtlS > 0) this.cache.set(descriptor.name, url.toString(), result, descriptor.cacheTtlS)
+      this.stats.recordSuccess(descriptor.name)
       return result
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      this.stats.recordError(name, message)
-      throw err
+    } catch (error) {
+      const wrapped = error instanceof ApiHubError
+        ? error
+        : new ApiHubError(descriptor.name, error instanceof Error ? error.message : String(error), false)
+      this.stats.recordError(descriptor.name, wrapped.message)
+      throw wrapped
     }
   }
 
   status(name: string): ApiStatus {
-    const d = this.adapters.get(name)
-    const limiter = this.limiters.get(name)
+    const descriptor = this.adapters.get(name)
+    const callsTotal = this.stats.getCallsTotal(name)
     const lastError = this.stats.getLastError(name)
-    const lastCall = this.stats.getLastCallAt(name)
-    const lastSuccess = this.stats.getLastSuccessAt(name)
+    const disabled = descriptor?.enabled === false || this.credential(name).enabled === false
+    const state = disabled ? "disabled" : lastError ? "failed" : callsTotal > 0 ? "healthy" : "idle"
     return {
       name,
-      healthy: lastError === undefined || lastSuccess > (lastError ? this.stats.getLastCallAt(name) : 0),
+      healthy: state === "healthy",
+      state,
       lastError,
-      lastCallAt: lastCall,
-      callsTotal: this.stats.getCallsTotal(name),
+      lastCallAt: this.stats.getLastCallAt(name) || undefined,
+      callsTotal,
       cacheHitRate: this.cache.hitRate(name),
-      rpmCurrent: limiter?.availableTokens ?? 0,
+      availableTokens: this.limiters.get(name)?.availableTokens ?? 0,
     }
   }
 
@@ -88,14 +124,59 @@ export class HubImpl implements ApiHub {
   }
 
   async test(name: string): Promise<{ ok: boolean; latencyMs: number; error?: string }> {
-    const d = this.adapters.get(name)
-    if (!d) return { ok: false, latencyMs: 0, error: `Unknown adapter: ${name}` }
+    const descriptor = this.adapters.get(name)
+    if (!descriptor) return { ok: false, latencyMs: 0, error: `Unknown adapter: ${name}` }
+    const credential = this.credential(name)
+    if (!descriptor.enabled || credential.enabled === false) return { ok: false, latencyMs: 0, error: "Adapter is disabled" }
+    const request = this.tests.get(name)?.(credential) ?? { path: descriptor.testPath }
     const start = Date.now()
+    this.stats.recordCall(name)
+    await this.limiters.get(name)?.acquire()
     try {
-      const response = await fetch(d.baseUrl, { signal: AbortSignal.timeout(10000) })
-      return { ok: response.ok, latencyMs: Date.now() - start }
-    } catch (err) {
-      return { ok: false, latencyMs: Date.now() - start, error: String(err) }
+      const response = await this.fetcher(this.url(credential.url ?? descriptor.baseUrl, request.path, request.params), {
+        headers: request.headers,
+        signal: AbortSignal.timeout(10000),
+      })
+      if (response.ok) {
+        this.stats.recordSuccess(name)
+        return { ok: true, latencyMs: Date.now() - start }
+      }
+      const error = `HTTP ${response.status}`
+      this.stats.recordError(name, error)
+      return { ok: false, latencyMs: Date.now() - start, error }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      this.stats.recordError(name, message)
+      return { ok: false, latencyMs: Date.now() - start, error: message }
     }
   }
+
+  close(): void {
+    this.cache.close()
+  }
+
+  private credential(name: string): ApiCredential {
+    const credential = this.credentials[name] ?? {}
+    return {
+      key: resolveSecret(credential.key),
+      mailto: resolveSecret(credential.mailto),
+      url: credential.url,
+      enabled: credential.enabled,
+    }
+  }
+
+  private url(baseUrl: string, path: string, params?: Record<string, string>) {
+    const url = new URL(path, baseUrl)
+    Object.entries(params ?? {}).forEach(([key, value]) => url.searchParams.set(key, value))
+    return url
+  }
+}
+
+export function resolveSecret(value?: string) {
+  if (!value) return undefined
+  const match = /^\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value)
+  if (!match) return value
+  const name = match[1]
+  if (!name) return undefined
+  return process.env[name]
 }

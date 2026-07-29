@@ -1,4 +1,5 @@
-import type { PaperMeta } from "./types"
+import { formatCitations } from "./cite"
+import type { CitationStyle, PaperMeta } from "./types"
 
 interface BibtexEntry {
   type: string
@@ -71,4 +72,10 @@ export function toMarkdown(paper: PaperMeta): string {
     lines.push("", "## Abstract", "", paper.abstract)
   }
   return lines.join("\n")
+}
+
+// format 与 style 同时给时，markdown 输出为 CSL 渲染后的编号引用列表（§6.3）
+export async function toStyledMarkdown(papers: PaperMeta[], style: CitationStyle): Promise<string> {
+  const lines = await formatCitations(papers, style)
+  return ["# References", "", ...lines.map((line, index) => `${index + 1}. ${line}`)].join("\n")
 }

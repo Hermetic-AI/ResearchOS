@@ -8,6 +8,8 @@
 
 ## 2. 功能清单与范围边界
 
+> 交付状态（2026-07-27）：W1–W4 全部交付并接通 Protocol/Server/Client/MCP/前端（MCP 六工具契约已齐）。剩余未做：导入任务进度、虚拟滚动等前端增强（W6 范围内）。
+
 **做：**
 
 - 文献智能搜索：四源并行检索、结果去重（DOI / arXiv ID / 标题归一化）、统一为 `PaperMeta`。
@@ -414,10 +416,10 @@ description: 精读一篇文献并生成结构化阅读笔记（研究问题/方
 
 | 周 | 任务 | 依赖 |
 | --- | --- | --- |
-| W1 | 建 `packages/researchos-literature` 骨架（schema.sql、db.ts 迁移、types.ts）；四源 API client + 单测（fixture 响应）；`search` 端到端可跑 | 无 |
-| W2 | PDF 文本提取与元数据补全链路（extract/metadata/references 规则解析）；`import_pdf`、`get_metadata`；PDF 归档目录约定落地 | W1 |
-| W3 | 格式转换与 CSL 引用渲染（citation-js 集成，五种样式快照测试）；`export`；Zotero DB 导入器 | W1 |
-| W4 | sqlite-vec 集成 + transformers.js 嵌入管线（模型缓存到 models/）；`recommend_similar` 与降级路径；`get_citations`（含 S2 cited_by 补全） | W1、W2 |
+| W1 | 建 `packages/researchos-literature` 骨架（schema.sql、db.ts 迁移、types.ts）；四源 API client + 单测（fixture 响应）；`search` 端到端可跑 — **已交付** | 无 |
+| W2 | PDF 文本提取与元数据补全链路（extract/metadata/references 规则解析）；`import_pdf`、`get_metadata`；PDF 归档目录约定落地 — **已交付** | W1 |
+| W3 | 格式转换与 CSL 引用渲染（citation-js 集成，五种样式快照测试）；`export`；Zotero DB 导入器 — **已交付** | W1 |
+| W4 | sqlite-vec 集成 + transformers.js 嵌入管线（模型缓存到 models/）；`recommend_similar` 与降级路径；`get_citations`（含 S2 cited_by 补全） — **已交付** | W1、W2 |
 | W5 | `packages/researchos-mcp-literature` stdio server 封装六工具；`opencode.json` 接线；`.opencode/agent/literature.md` 与 `paper-reading` Skill 联调 | W2–W4 |
 | W6 | protocol group + server handler + client generate；前端三栏页面与侧栏入口；导入/导出交互闭环 | W3（导出）、W5 |
 
@@ -446,9 +448,9 @@ GROBID 不测真容器：对 `grobid.ts` 只测其 TEI XML 解析函数（fixtur
 ## 11. 风险与开放问题
 
 - **API 限流**：Semantic Scholar 无 key 约 100 req/5min，PubMed 无 key 3 req/s。薄 client 内置串行队列 + 指数退避；配置项预留 `semantic_scholar`/`ncbi` API key。四源 schema 可能漂移——靠集成冒烟测试兜底。
-- **sqlite-vec 加载**：`bun:sqlite` 的 `loadExtension` 需要平台对应的 sqlite-vec 预编译二进制（win/linux/mac 三端分发问题待验证）；若某端不可用，推荐功能降级路径必须可用，不能影响核心链路。
-- **嵌入模型体积与首载**：`bge-small-en-v1.5` ONNX 约 100MB，首次下载慢；缓存在项目 `.researchos/literature/models/`，并考虑全局缓存复用。中文摘要召回一般，若中文需求变重要，开放问题：是否换 multilingual-e5-small。
-- **规则解析引用关系的准确率**：无 GROBID 时参考文献切条对双栏排版/无编号格式召回有限，预期 70–85%；GROBID 需 Docker，作为可选增强，安装引导后续做进设置页。
+- **sqlite-vec 加载**：W4 实测 npm 包 `sqlite-vec`（win32-x64 预编译二进制）在 Windows + `bun:sqlite` 下 `loadExtension` 成功，vec0 建表/KNN 可用；加载失败时 `vecAvailable=false`，推荐功能走关键词降级路径，核心链路不受影响。linux/mac 两端未实测，CI 需补验证。
+- **嵌入模型体积与首载**：`bge-small-en-v1.5` ONNX 约 100MB，首次下载慢；缓存在项目 `.researchos/literature/models/`，并考虑全局缓存复用。中文摘要召回一般，若中文需求变重要，开放问题：是否换 multilingual-e5-small。注：实际集成用 `@huggingface/transformers`（`@xenova/transformers` 的同项目新名，后者已停更）。
+- **规则解析引用关系的准确率**：规则解析已随 W2 落地（`pdf/references.ts`）；无 GROBID 时参考文献切条对双栏排版/无编号格式召回有限，预期 70–85%；GROBID 需 Docker，作为可选增强（`RESEARCHOS_GROBID_URL` 开启），安装引导后续做进设置页。
 - **Zotero 库版本差异**：不同 Zotero 版本 schema 有细微差异，导入器按核心表/字段做防御式读取，读不到的字段跳过并汇总报告。
 - **openalex 备选**：若 Crossref/S2 覆盖不足，OpenAlex（免费、CC0）可作为第五源追加，client 结构已按 source 插件化，追加成本低。
 - **待总体方案确认**：知识图谱模块与本模块共用 `citation_edge`/`external_paper` 表还是各自建表（建议共用同库，待模块二文档对齐）；`插入引用到论文` 与 LaTeX 模块的 BibTeX 文件落点约定（建议 `<project>/references.bib` 单文件，导出时增量合并去重）。
