@@ -1,51 +1,58 @@
 import type { BibtexEntry } from "./types"
 
 export function parseBibtex(content: string): BibtexEntry[] {
-  const entries: BibtexEntry[] = []
-  const clean = content.replace(/%.*/g, "")
-  const entryRegex = /@(\w+)\s*\{\s*(\w+)\s*,\s*\n([\s\S]*?)\n\s*\}/g
-  for (const match of clean.matchAll(entryRegex)) {
-    const type = match[1].toLowerCase()
-    const key = match[2]
-    const fieldsBody = match[3]
-    const fields: Record<string, string> = {}
-    const fieldRegex = /\s*(\w+)\s*=\s*\{([^}]*)\}/g
-    for (const fm of fieldsBody.matchAll(fieldRegex)) {
-      fields[fm[1].toLowerCase()] = fm[2]
+  const cleaned = content.replace(/(?<!\\)%.*$/gm, "")
+  return entryBodies(cleaned).map(({ type, body }) => {
+    const comma = body.indexOf(",")
+    return {
+      type,
+      key: (comma === -1 ? body : body.slice(0, comma)).trim(),
+      fields: parseFields(comma === -1 ? "" : body.slice(comma + 1)),
     }
-    entries.push({ type, key, fields })
-  }
-  return entries
+  }).filter((entry) => entry.key.length > 0)
 }
+
+// 扫描 @type{...} 并做花括号配对（跳过转义），比纯正则对嵌套括号健壮
+function entryBodies(content: string): Array<{ type: string; body: string }> {
+  const out: Array<{ type: string; body: string }> = []
+  const marker = /@(\w+)\s*\{/g
+  let match = marker.exec(content)
+  while (match) {
+    const type = match[1]?.toLowerCase() ?? "misc"
+    const start = match.index + match[0].length
+    let depth = 1
+    let index = start
+    while (index < content.length && depth > 0) {
+      const char = content[index]
+      if (char === "\\") index += 1
+      if (char === "{") depth += 1
+      if (char === "}") depth -= 1
+      index += 1
+    }
+    out.push({ type, body: content.slice(start, index - 1) })
+    marker.lastIndex = index
+    match = marker.exec(content)
+  }
+  return out
+}
+
+function parseFields(body: string): Record<string, string> {
+  const fields: Record<string, string> = {}
+  const pattern = /(\w+)\s*=\s*(?:\{((?:[^{}]|\{[^{}]*\})*)\}|"([^"]*)"|([^,\n]+))/g
+  Array.from(body.matchAll(pattern)).forEach((match) => {
+    const name = match[1]
+    const value = match[2] ?? match[3] ?? match[4]
+    if (name && value !== undefined) fields[name.toLowerCase()] = value.trim()
+  })
+  return fields
+}
+
+const CITE_COMMANDS = /\\(?:cite|citet|citep|citealp|parencite|textcite)(?:\[[^\]]*\])*\{([^}]+)\}/g
 
 export function extractCiteKeys(content: string): string[] {
   const keys = new Set<string>()
-  const citeRegex = /\\cite\{([^}]+)\}/g
-  for (const match of content.matchAll(citeRegex)) {
-    for (const k of match[1].split(",")) {
-      keys.add(k.trim())
-    }
-  }
+  Array.from(content.matchAll(CITE_COMMANDS)).forEach((match) => {
+    ;(match[1] ?? "").split(",").map((key) => key.trim()).filter(Boolean).forEach((key) => keys.add(key))
+  })
   return Array.from(keys)
-}
-
-export function formatCheck(content: string, template?: string): Array<{ file: string; line: number; rule: string; message: string }> {
-  const issues: Array<{ file: string; line: number; rule: string; message: string }> = []
-  const lines = content.split("\n")
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    if (line.includes("\\begin{document}") && !content.includes("\\title{")) {
-      issues.push({ file: "", line: i + 1, rule: "missing-title", message: "Paper has no \\title declaration" })
-    }
-    if (line.includes("\\cite{") && !line.includes("\\bibliography{")) {
-      issues.push({ file: "", line: i + 1, rule: "cite-before-bib", message: "\\cite used but no \\bibliography found" })
-    }
-  }
-
-  if (template === "ieee" && !content.includes("\\documentclass[conference]{IEEEtran}")) {
-    issues.push({ file: "", line: 0, rule: "ieee-class", message: "IEEE template requires IEEEtran documentclass" })
-  }
-
-  return issues
 }

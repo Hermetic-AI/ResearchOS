@@ -1,5 +1,7 @@
 # 模块五：论文写作助手（Paper Writing）技术落地文档
 
+> 交付状态（2026-07-29）：P3.2 页面主链已交付。写作 HTTP 契约已从回显 stub 替换为真实 CSV/Markdown 转换、词级 diff、句级 hunk 应用、文献库 BibTeX 解析/原子合并与建议记录；LaTeX 页内已挂标题、结构、润色、排版、引用五标签侧栏。AI 标题/结构通过可审阅的 `paper-writer` 会话提示进入模型链路，不在浏览器伪造结果；润色须逐 hunk 审核后才写回编辑缓冲区。`paper-titles`、`paper-structure`、`cite-assist` Skill 已补齐并通过 frontmatter 校验。
+
 > 对应总体方案「模块五」与接口定义 5.5 节；UI 对应设计文档 3.7 节。
 > 开发阶段归属 **P3（LaTeX + 写作）**，其中引用助手依赖 P1（文献中心）的文献库。
 

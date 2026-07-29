@@ -1,30 +1,42 @@
-import { z } from "zod"
+export interface LatexError {
+  file: string
+  line: number
+  message: string
+  severity: "error" | "warning"
+}
 
-export const CompileRequest = z.object({
-  mainFile: z.string(),
-  engine: z.enum(["tectonic"]).default("tectonic"),
-  workdir: z.string().optional(),
-})
+export interface CompileResult {
+  ok: boolean
+  pdfPath?: string
+  log: string
+  errors: LatexError[]
+  durationMs: number
+}
 
-export const CompileResult = z.object({
-  ok: z.boolean(),
-  pdfPath: z.string().optional(),
-  log: z.string(),
-  errors: z.array(z.object({ file: z.string(), line: z.number(), message: z.string() })),
-})
+// tectonic 缺失时返回诚实的不可用状态（含安装指引），绝不假装编译成功
+export type CompileResponse =
+  | { available: false; message: string; installHint: string }
+  | ({ available: true } & CompileResult)
 
-export type CompileResult = z.infer<typeof CompileResult>
+export interface BibtexEntry {
+  type: string
+  key: string
+  fields: Record<string, string>
+}
 
-export const BibtexEntry = z.object({
-  type: z.string(),
-  key: z.string(),
-  fields: z.record(z.string()),
-})
+export interface OutlineItem {
+  level: number
+  title: string
+  line: number
+}
 
-export type BibtexEntry = z.infer<typeof BibtexEntry>
+export interface FormatIssue {
+  file: string
+  line: number
+  rule: string
+  severity: "error" | "warning" | "info"
+  message: string
+}
 
-export const FormatCheckResult = z.object({
-  issues: z.array(z.object({ file: z.string(), line: z.number(), rule: z.string(), message: z.string() })),
-})
-
-export type FormatCheckResult = z.infer<typeof FormatCheckResult>
+export type SynctexForwardResult = { page: number; x: number; y: number }
+export type SynctexInverseResult = { file: string; line: number }

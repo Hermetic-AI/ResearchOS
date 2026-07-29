@@ -7,3 +7,7 @@ export function latexDir(projectRoot: string): string {
 export function buildDir(projectRoot: string): string {
   return join(latexDir(projectRoot), "build")
 }
+
+export function binDir(projectRoot: string): string {
+  return join(latexDir(projectRoot), "bin")
+}

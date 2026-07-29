@@ -1,20 +1,8 @@
-import { z } from "zod"
+export const REWRITE_STYLES = ["academic", "concise", "passive"] as const
+export type RewriteStyle = (typeof REWRITE_STYLES)[number]
 
-export const RewriteStyle = z.enum(["academic", "concise", "passive"])
-export type RewriteStyle = z.infer<typeof RewriteStyle>
+export const SUGGESTION_KINDS = ["title", "structure", "rewrite", "algorithm", "table", "md", "cite"] as const
+export type SuggestionKind = (typeof SUGGESTION_KINDS)[number]
 
-export const RewriteRequest = z.object({
-  text: z.string(),
-  style: RewriteStyle,
-})
-
-export const TitleRequest = z.object({
-  abstract: z.string(),
-  keywords: z.array(z.string()).optional(),
-  count: z.number().default(5),
-})
-
-export const StructureRequest = z.object({
-  topic: z.string(),
-  venue: z.string().optional(),
-})
+export const SUGGESTION_STATUSES = ["pending", "accepted", "rejected", "partial"] as const
+export type SuggestionStatus = (typeof SUGGESTION_STATUSES)[number]

@@ -1,5 +1,7 @@
 # 模块三：本地 LaTeX 编辑器 —— 技术落地文档
 
+> 交付状态（2026-07-29）：P3.1 主链已交付。除原有编译/SyncTeX/format_check 三工具外，新增受限源码列表、读取、原子保存、PDF 与构建历史 HTTP 通道；`latex_build` / `latex_format_issue` 已落 SQLite；Monaco、BibTeX cite key 补全、PDF.js、正反向 SyncTeX、诊断面板与最近构建恢复已接入 `/:dir/latex`；`latex-editor` SubAgent 已登记。Tectonic 未安装时仍返回明确不可用状态，不伪造 PDF。
+
 > 对应总体方案：`docs/ResearchOS最终方案.md` 模块三 + 接口 5.3 节。
 > 对应 UI 设计：`docs/ResearchOS-UI设计.md` 3.5 节（LaTeX 编辑器）、3.7 节（写作助手共生面板，接口归模块五，本模块仅预留面板挂载点）。
 
