@@ -5,7 +5,7 @@ export const DataProfile = z.object({
   rows: z.number(),
   columns: z.number(),
   schema: z.array(z.object({ name: z.string(), type: z.string(), nullable: z.boolean() })),
-  stats: z.record(z.object({ count: z.number(), mean: z.number().optional(), std: z.number().optional(), min: z.number().optional(), max: z.number().optional() })),
+  stats: z.record(z.string(), z.object({ count: z.number(), mean: z.number().optional(), std: z.number().optional(), min: z.number().optional(), max: z.number().optional() })),
   anomalies: z.array(z.object({ column: z.string(), row: z.number(), issue: z.string() })),
 })
 

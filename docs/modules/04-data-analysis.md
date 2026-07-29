@@ -1,5 +1,7 @@
 # 模块四：实验数据分析中心（Data Analysis）技术落地文档
 
+> 交付状态（2026-07-29）：P4.1 Notebook 主链已交付。新增项目级持久 kernel broker（MCP 与 HTTP bridge 共享命名空间、随机 token、启动锁、串行执行、空闲退出）、notebook/cell 持久化与 cells save/run HTTP 端点；前端已替换为真实单元格流，支持保存、Ctrl/Cmd+Enter 执行、stdout/stderr/耗时、数据集画像、统计检验卡、产物安全预览与 artifact↔commit↔LaTeX 关联。`data-analysis` Skill 已补齐。课题级独立 venv 自举仍未交付（当前 uv 环境复用锁定 Python 依赖）；jupyter_client/Optuna 属 v2 扩展。
+
 > 对应总体方案 `docs/ResearchOS最终方案.md` 模块四（3.4 节）与接口契约 5.4 节；UI 对应 `docs/ResearchOS-UI设计.md` 3.6 节。
 > 与模块七（科研绘图）的分工：本模块负责"算"——数据清洗、统计检验、探索性出图、实验关联；出版级精修图表、示意图走模块七。两者共享 Python 沙盒与产物库（`.researchos/artifacts/`）。
 
