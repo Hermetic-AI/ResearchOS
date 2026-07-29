@@ -1,31 +1,17 @@
 ---
 name: graph-rag
-description: Graph RAG methodology — retrieve relevant subgraph via vector similarity then expand via k-hop traversal to answer research questions grounded in the knowledge graph.
-version: 1.0.0
+description: 基于课题知识图谱做语义查询（Graph RAG）。当用户提问涉及"哪些文献/概念/代码之间有关联""找出关于 X 的所有相关工作"时使用。
 ---
 
-# Graph RAG Skill
+# Graph RAG 查询范式
 
-## Goal
-
-Answer research questions by retrieving relevant nodes from the knowledge graph using a two-stage process: vector similarity search followed by k-hop subgraph expansion.
-
-## Workflow
-
-1. Convert the user query to a vector embedding.
-2. Search the node vector index for the top-K semantically similar nodes.
-3. Expand from each candidate node via k-hop traversal (default: k=2).
-4. Collect all nodes and edges in the expanded subgraph.
-5. Package the subgraph context (node labels, types, edge relations) into a compact prompt.
-6. Generate an answer grounded in the retrieved subgraph, citing source nodes.
-
-## Configuration
-
-- Default k-hop depth: 2
-- Default top-K: 5
-- Edge traversal directions: both incoming and outgoing
-
-## Tips
-
-- Narrow queries work best (specific concepts, papers, or methods).
-- For broad questions ("summarize this field"), use `literature_search` first, then narrow with Graph RAG.
+1. 先调用 `researchos-graph_query`，传入用户原始问题；如涉及以某篇论文/概念为中心的探索，填 `scope.center_node`，`depth` 默认 1，跨主题探索用 2。
+2. 工具返回 `{ subgraph, contextPack, seeds, degraded }`：
+   - `seeds` 是向量/全文召回的种子节点，`subgraph` 是 k-hop 扩展结果，`contextPack` 是按边上下文拼好的证据片段。
+   - `degraded: true` 表示 sqlite-vec 或嵌入模型不可用，召回走了 FTS 全文降级，结果相关性弱于向量召回，作答时向用户说明。
+3. 作答要求：
+   - 只依据 `contextPack` 与 `subgraph` 作答，不得引入图谱外的臆测。
+   - 每个论断后用 `[[节点 label]]` 标注来源节点。
+   - 列出子图中 `implements` 边指向的 repo 节点作为"对应代码实现"。
+   - 若 `seeds` 为空，明确告知"图谱中尚无相关内容"，并建议先导入文献或让 graph SubAgent 建链。
+4. 需要查看某节点全文时，用 Read 工具读其 `source_path` 对应文件，不要凭 label 猜测内容。
