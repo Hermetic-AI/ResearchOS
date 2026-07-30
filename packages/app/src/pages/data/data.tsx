@@ -5,6 +5,7 @@ import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { createResearchosClient } from "@/utils/researchos-client"
+import { useDirectoryPicker } from "@/components/directory-picker"
 import { DataPanel } from "./data-panel"
 import { NotebookCell, type NotebookCellRow } from "./notebook-cell"
 
@@ -29,6 +30,11 @@ export default function DataPage() {
     ...(artifact.latexSnippet ? { latexSnippet: artifact.latexSnippet } : {}),
   }))))
   const [tests, testActions] = createResource(() => sdk().directory, async () => client().statTests({ location: location() }).then((result) => result.data.map((test) => ({ ...test, statistic: finite(test.statistic), pValue: finite(test.pValue) }))))
+  const [registerPath, setRegisterPath] = createSignal("")
+  const [registerName, setRegisterName] = createSignal("")
+  const [registering, setRegistering] = createSignal(false)
+  const [registerError, setRegisterError] = createSignal<string>()
+  const pickFile = useDirectoryPicker()
   const [status, setStatus] = createSignal("Persistent Python kernel · workspace sandbox · 120 s timeout")
 
   createEffect(() => { if (!notebookId() && notebooks()?.[0]) setNotebookId(notebooks()![0]!.id) })
@@ -45,6 +51,19 @@ export default function DataPage() {
     setStatus(`Saved ${id}`)
   }
 
+  const registerDataset = async () => {
+    const path = registerPath().trim()
+    if (!path) return
+    setRegistering(true); setRegisterError(undefined)
+    try {
+      await client().datasetRegister({ location: location(), path, ...(registerName().trim() ? { name: registerName().trim() } : {}) })
+      setRegisterPath(""); setRegisterName("")
+      await Promise.all([datasetActions.refetch()])
+    } catch (error) {
+      setRegisterError(error instanceof Error ? error.message : String(error))
+    } finally { setRegistering(false) }
+  }
+
   const runCell = async (id: string, source: string) => {
     setStatus(`Running ${id} in the shared kernel…`)
     await client().cellRun({ id, location: location(), source, timeoutS: 120 }).then((result) => {
@@ -58,6 +77,10 @@ export default function DataPage() {
       <header class="flex h-11 shrink-0 items-center gap-3 border-b border-border-weak-base bg-background-base px-3">
         <div><h1 class="text-13-medium">Data analysis notebook</h1><p class="text-10-regular text-text-weak">{status()}</p></div>
         <span class="rounded border border-border-weak-base px-2 py-1 text-10-medium text-text-weak">Python sandbox</span>
+        <input class="ml-2 h-7 w-40 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={registerPath()} onInput={(e) => setRegisterPath(e.currentTarget.value)} placeholder="data/experiment.csv" />
+        <input class="ml-1 h-7 w-28 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={registerName()} onInput={(e) => setRegisterName(e.currentTarget.value)} placeholder="Name (optional)" />
+        <Button size="small" variant="secondary" disabled={registering() || !registerPath().trim()} onClick={() => void registerDataset()}>{registering() ? "…" : "Register dataset"}</Button>
+        <Show when={registerError()}><span class="ml-2 text-10-regular text-text-on-critical-strong">{registerError()}</span></Show>
         <select class="ml-auto h-7 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={notebookId()} onChange={(event) => setNotebookId(event.currentTarget.value)}><For each={notebooks()}>{(notebook) => <option value={notebook.id}>{notebook.title}</option>}</For></select>
         <Button size="small" variant="primary" disabled={!notebookId()} onClick={() => void addCell()}>+ Code cell</Button>
       </header>

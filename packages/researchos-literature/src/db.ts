@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite"
+import { Database, type SQLQueryBindings } from "bun:sqlite"
 import { mkdirSync } from "fs"
 import { getLoadablePath } from "sqlite-vec"
 import { SCHEMA } from "./schema"
@@ -227,6 +227,18 @@ export class LiteratureDB {
       const paper = this.getPaper(id)
       return paper ? [paper] : []
     })
+  }
+
+  updatePaperFlags(id: string, flags: { isRead?: boolean; isFavorite?: boolean }): void {
+    const clauses: string[] = []
+    const values: SQLQueryBindings[] = []
+    if (flags.isRead !== undefined) { clauses.push("is_read = ?"); values.push(flags.isRead ? 1 : 0) }
+    if (flags.isFavorite !== undefined) { clauses.push("is_favorite = ?"); values.push(flags.isFavorite ? 1 : 0) }
+    if (!clauses.length) return
+    clauses.push("updated_at = ?")
+    values.push(Date.now())
+    values.push(id)
+    this.db.run(`UPDATE paper SET ${clauses.join(", ")} WHERE id = ?`, values)
   }
 
   private getPaperAuthors(paperId: string): Array<{ name: string }> {

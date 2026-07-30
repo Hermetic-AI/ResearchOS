@@ -832,6 +832,20 @@ const Endpoint19_6 = (raw: RawClient["server.researchos-literature"]) => (input:
     query: { location: input["location"], limit: input["limit"] },
   }).pipe(Effect.mapError(mapClientError))
 
+type Endpoint19_7Request = Parameters<RawClient["server.researchos-literature"]["literature.update"]>[0]
+type Endpoint19_7Input = {
+  readonly id: Endpoint19_7Request["params"]["id"]
+  readonly location?: Endpoint19_7Request["query"]["location"]
+  readonly isRead?: Endpoint19_7Request["payload"]["isRead"]
+  readonly isFavorite?: Endpoint19_7Request["payload"]["isFavorite"]
+}
+const Endpoint19_7 = (raw: RawClient["server.researchos-literature"]) => (input: Endpoint19_7Input) =>
+  raw["literature.update"]({
+    params: { id: input["id"] },
+    query: { location: input["location"] },
+    payload: { isRead: input["isRead"], isFavorite: input["isFavorite"] },
+  }).pipe(Effect.mapError(mapClientError))
+
 const adaptGroup19 = (raw: RawClient["server.researchos-literature"]) => ({
   search: Endpoint19_0(raw),
   list: Endpoint19_1(raw),
@@ -840,6 +854,7 @@ const adaptGroup19 = (raw: RawClient["server.researchos-literature"]) => ({
   import: Endpoint19_4(raw),
   citations: Endpoint19_5(raw),
   similar: Endpoint19_6(raw),
+  update: Endpoint19_7(raw),
 })
 
 type Endpoint20_0Request = Parameters<RawClient["server.researchos-graph"]["graph.get"]>[0]
@@ -1215,6 +1230,18 @@ const Endpoint23_10 = (raw: RawClient["server.researchos-data"]) => (input: Endp
     payload: { commit: input["commit"], texFile: input["texFile"], texSection: input["texSection"] },
   }).pipe(Effect.mapError(mapClientError))
 
+type Endpoint23_11Request = Parameters<RawClient["server.researchos-data"]["data.datasetRegister"]>[0]
+type Endpoint23_11Input = {
+  readonly location?: Endpoint23_11Request["query"]["location"]
+  readonly path: Endpoint23_11Request["payload"]["path"]
+  readonly name?: Endpoint23_11Request["payload"]["name"]
+}
+const Endpoint23_11 = (raw: RawClient["server.researchos-data"]) => (input: Endpoint23_11Input) =>
+  raw["data.datasetRegister"]({
+    query: { location: input["location"] },
+    payload: { path: input["path"], name: input["name"] },
+  }).pipe(Effect.mapError(mapClientError))
+
 const adaptGroup23 = (raw: RawClient["server.researchos-data"]) => ({
   notebooks: Endpoint23_0(raw),
   cells: Endpoint23_1(raw),
@@ -1227,6 +1254,7 @@ const adaptGroup23 = (raw: RawClient["server.researchos-data"]) => ({
   artifactFile: Endpoint23_8(raw),
   statTests: Endpoint23_9(raw),
   link: Endpoint23_10(raw),
+  datasetRegister: Endpoint23_11(raw),
 })
 
 type Endpoint24_0Request = Parameters<RawClient["server.researchos-plot"]["plot.create"]>[0]

@@ -2,7 +2,7 @@ import { Button } from "@opencode-ai/ui/button"
 import { Spinner } from "@opencode-ai/ui/spinner"
 import { Tag } from "@opencode-ai/ui/tag"
 import { useSearchParams } from "@solidjs/router"
-import { createMemo, createResource, For, Match, Show, Switch } from "solid-js"
+import { createMemo, createResource, createSignal, For, Match, Show, Switch } from "solid-js"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
@@ -80,6 +80,9 @@ export default function AssetsPage() {
     plugin: snapshot()?.plugins.length ?? 0,
     api: snapshot()?.api.length ?? 0,
   }))
+  const [editor, setEditor] = createSignal<EditorState>({ open: false, kind: "skill", name: "", content: "", scope: "project", mode: "create" })
+  const openEditor = (kind: EditorKind, mode: "create" | "edit", name = "", content = "") => setEditor({ open: true, kind, name, content, scope: "project", mode })
+  const closeEditor = () => setEditor((e) => ({ ...e, open: false }))
   const failedMcp = createMemo(() => Object.values(snapshot()?.mcp ?? {}).some((item) => item.status === "failed"))
   const testApi = async (name: string) => {
     const result = await assetClient()["server.researchos-assets"].test({
@@ -145,16 +148,19 @@ export default function AssetsPage() {
             {(data) => (
               <Switch>
                 <Match when={active() === "skill"}>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("skill", "create")}>+ New skill</Button></div>
                   <AssetList entries={data().skills.map((item) => ({ title: item.name, detail: item.description ?? "No description", meta: item.location }))} empty="No skills are active for this project." />
                 </Match>
                 <Match when={active() === "agent"}>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("agent", "create")}>+ New agent</Button></div>
                   <AssetList entries={data().agents.filter((item) => item.mode !== "primary").map((item) => ({ title: item.id, detail: item.description ?? "No description", meta: item.mode }))} empty="No SubAgents are active for this project." />
                 </Match>
                 <Match when={active() === "command"}>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("command", "create")}>+ New command</Button></div>
                   <AssetList entries={data().commands.map((item) => ({ title: `/${item.name}`, detail: item.description ?? "Custom command", meta: item.subtask ? "subtask" : "command" }))} empty="No custom commands are active for this project." />
                 </Match>
                 <Match when={active() === "mcp"}>
-                  <AssetList entries={Object.entries(data().mcp).map(([name, item]) => ({ title: name, detail: item.status === "failed" ? item.error : `Connection state: ${item.status}`, meta: item.status, danger: item.status === "failed" }))} empty="No MCP servers are configured." />
+                  <McpPanel mcp={data().mcp} onRefresh={() => void snapshotActions.refetch()} />
                 </Match>
                 <Match when={active() === "model"}>
                   <AssetList entries={data().models.map((item) => ({ title: item.name, detail: `${data().providers.find((provider) => provider.id === item.providerID)?.name ?? item.providerID} · ${item.limit.context.toLocaleString()} context`, meta: item.enabled ? item.status : "disabled" }))} empty="No models are available from connected providers." />
@@ -163,6 +169,7 @@ export default function AssetsPage() {
                   <AssetList entries={data().plugins.map((item) => ({ title: typeof item === "string" ? item : item[0], detail: "Loaded through the native plugin configuration", meta: "plugin" }))} empty="No plugins are configured." />
                 </Match>
                 <Match when={active() === "rules"}>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("rules", "edit", "", data().rules.content)}>Edit rules</Button></div>
                   <RulesPanel rules={data().rules} />
                 </Match>
                 <Match when={active() === "api"}>
@@ -173,6 +180,7 @@ export default function AssetsPage() {
           </Show>
         </div>
       </main>
+      <Show when={editor().open}><AssetEditor state={editor()} onClose={closeEditor} onSaved={() => void snapshotActions.refetch()} /></Show>
     </div>
   )
 }
@@ -226,4 +234,73 @@ function EmptyState(props: { readonly title: string; readonly detail: string }) 
       <p class="mt-1 max-w-xl text-12-regular text-text-weak">{props.detail}</p>
     </div>
   )
+}
+
+function McpPanel(props: { mcp: Record<string, { status: string; error?: string }>; onRefresh: () => void }) {
+  const sdk = useSDK()
+  const serverSDK = useServerSDK()
+  const platform = usePlatform()
+  const [showForm, setShowForm] = createSignal(false)
+  const [name, setName] = createSignal("")
+  const [serverType, setServerType] = createSignal<"local" | "remote">("local")
+  const [command, setCommand] = createSignal("")
+  const [url, setUrl] = createSignal("")
+  const [busy, setBusy] = createSignal(false)
+  const [error, setError] = createSignal<string>()
+  const client = () => sdk().client
+  const save = async () => {
+    if (!name().trim()) return setError("Name is required")
+    setBusy(true); setError(undefined)
+    try {
+      const patch: Record<string, unknown> = serverType() === "local"
+        ? { type: "local", command: command().split(/\s+/).filter(Boolean), enabled: true }
+        : { type: "remote", url: url().trim(), enabled: true }
+      const result = await client().config.get()
+      const current = result.data as Record<string, unknown>
+      const mcp = { ...((current.mcp as Record<string, unknown>) ?? {}) }
+      mcp[name().trim()] = patch
+      await (client().config as any).patch({ mcp })
+      await (client().mcp as any).add({ name: name().trim(), ...patch })
+      setName(""); setCommand(""); setUrl(""); setShowForm(false); props.onRefresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally { setBusy(false) }
+  }
+  return (
+    <div class="space-y-3">
+      <Show when={showForm()}><div class="rounded-lg border border-border-weak-base bg-surface-base p-3 space-y-2"><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder="Server name" /><div class="flex gap-2"><button class="rounded px-2 py-1 text-11-medium" classList={{ "bg-background-selected": serverType() === "local" }} onClick={() => setServerType("local")}>Local</button><button class="rounded px-2 py-1 text-11-medium" classList={{ "bg-background-selected": serverType() === "remote" }} onClick={() => setServerType("remote")}>Remote</button></div><Show when={serverType() === "local"}><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={command()} onInput={(e) => setCommand(e.currentTarget.value)} placeholder="bun run path/to/server.ts" /></Show><Show when={serverType() === "remote"}><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={url()} onInput={(e) => setUrl(e.currentTarget.value)} placeholder="https://mcp.example.com/sse" /></Show><Show when={error()}><p class="text-11-regular text-text-on-critical-strong">{error()}</p></Show><div class="flex gap-2"><Button size="small" variant="primary" disabled={busy()} onClick={() => void save()}>{busy() ? "Saving…" : "Save"}</Button><Button size="small" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button></div></div></Show>
+      <div class="flex justify-end"><Button size="small" variant="secondary" onClick={() => setShowForm(!showForm())}>{showForm() ? "Cancel" : "+ Add MCP server"}</Button></div>
+      <AssetList entries={Object.entries(props.mcp).map(([n, item]) => ({ title: n, detail: (item.status === "failed" ? item.error : `Connection state: ${item.status}`) ?? "", meta: item.status, danger: item.status === "failed" }))} empty="No MCP servers are configured." />
+    </div>
+  )
+}
+
+type EditorKind = "skill" | "agent" | "command" | "rules"
+type EditorState = { open: boolean; kind: EditorKind; name: string; content: string; scope: "project" | "global"; mode: "create" | "edit" }
+
+function AssetEditor(props: { state: EditorState; onClose: () => void; onSaved: () => void }) {
+  const sdk = useSDK()
+  const platform = usePlatform()
+  const serverSDK = useServerSDK()
+  const assetClient = createMemo(() => createAssetClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-assets"])
+  const [name, setName] = createSignal(props.state.name)
+  const [content, setContent] = createSignal(props.state.content)
+  const [saving, setSaving] = createSignal(false)
+  const [error, setError] = createSignal<string>()
+  const kindLabel = () => ({ skill: "Skill", agent: "SubAgent", command: "Command", rules: "Rules" }[props.state.kind])
+  const save = async () => {
+    if (props.state.kind !== "rules" && !name().trim()) return setError("Name is required")
+    setSaving(true); setError(undefined)
+    try {
+      if (props.state.kind === "rules") {
+        await (assetClient() as any).fileWrite({ location: { directory: sdk().directory }, kind: "rules", name: "_rules", content: content(), scope: props.state.scope })
+      } else {
+        await (assetClient() as any).fileWrite({ location: { directory: sdk().directory }, kind: props.state.kind, name: name().trim(), content: content(), scope: props.state.scope })
+      }
+      props.onSaved(); props.onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally { setSaving(false) }
+  }
+  return <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={props.onClose}><div class="w-full max-w-2xl rounded-xl border border-border-base bg-background-base p-6 shadow-xl" onClick={(e) => e.stopPropagation()}><div class="mb-4 flex items-center justify-between"><h2 class="text-16-medium">{props.state.mode === "create" ? "New" : "Edit"} {kindLabel()}</h2><Button size="small" variant="ghost" onClick={props.onClose}>Close</Button></div><Show when={props.state.kind !== "rules"}><label class="mb-3 block text-11-regular text-text-weak">Name<input class="mt-1 h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder={props.state.kind === "skill" ? "my-skill" : props.state.kind === "agent" ? "my-agent" : "my-command"} /></label></Show><label class="mb-1 block text-11-regular text-text-weak">{props.state.kind === "rules" ? "AGENTS.md content" : "File content (with frontmatter)"}</label><textarea class="mb-3 h-72 w-full rounded border border-border-weak-base bg-background-stronger p-3 font-mono text-11-regular" value={content()} onInput={(e) => setContent(e.currentTarget.value)} placeholder={props.state.kind === "skill" ? "---\ndescription: What this skill does\n---\n\n# Skill instructions..." : props.state.kind === "rules" ? "# Project Rules\n\nInstructions for the AI agent..." : "---\ndescription: What this agent does\nmode: subagent\n---\n\nYou are a..."} /><Show when={error()}><p class="mb-2 text-11-regular text-text-on-critical-strong">{error()}</p></Show><div class="flex items-center justify-between"><select class="h-7 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={props.state.scope} onChange={(e) => { props.state.scope = e.currentTarget.value as "project" | "global" }}><option value="project">Project</option><option value="global">Global</option></select><Button size="small" variant="primary" disabled={saving()} onClick={() => void save()}>{saving() ? "Saving…" : "Save"}</Button></div></div></div>
 }

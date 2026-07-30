@@ -24,7 +24,11 @@ export default Runtime.handler(
         return yield* Effect.never
       }),
     )
-  }),
+  }) as (input: {
+    readonly hostname: string
+    readonly port: Option.Option<number>
+    readonly register: boolean
+  }) => Effect.Effect<void, unknown, Daemon.Service>,
 )
 
 function listen(hostname: string, port: Option.Option<number>, password: string) {

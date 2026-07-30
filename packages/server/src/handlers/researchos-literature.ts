@@ -68,7 +68,15 @@ export const ResearchosLiteratureHandler = HttpApiBuilder.group(
           degraded: result.degraded,
           results: result.results.map((paper) => ({ ...wirePaper(paper), score: paper.score })),
         })),
-      ))),
+      )))
+      .handle("literature.update", ({ params, payload }) => response(withLibrary((library) => {
+        const updated = library.updatePaper(params.id, {
+          ...(payload.isRead !== undefined ? { isRead: payload.isRead } : {}),
+          ...(payload.isFavorite !== undefined ? { isFavorite: payload.isFavorite } : {}),
+        })
+        if (!updated) throw new InvalidRequestError({ message: `Unknown paper: ${params.id}` })
+        return Promise.resolve(wirePaper(updated))
+      }))),
 )
 
 function withLibrary<T>(run: (library: LiteratureService) => Promise<T>) {

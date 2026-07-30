@@ -175,6 +175,23 @@ export const ResearchosLiteratureGroup = HttpApiGroup.make("server.researchos-li
         description: "Rank library papers by abstract embedding KNN plus co-citation bonus; degraded to keyword overlap when sqlite-vec is unavailable.",
       })),
   )
+  .add(
+    HttpApiEndpoint.post("literature.update", "/api/literature/papers/:id", {
+      params: { id: Schema.String },
+      query: LocationQuery,
+      payload: Schema.Struct({
+        isRead: Schema.optional(Schema.Boolean),
+        isFavorite: Schema.optional(Schema.Boolean),
+      }),
+      success: Location.response(Paper),
+      error: [InvalidRequestError, UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({
+        identifier: "v2.literature.update",
+        summary: "Update paper flags (read/favorite)",
+      })),
+  )
   .annotateMerge(OpenApi.annotations({
     title: "researchos-literature",
     description: "ResearchOS project-local literature library.",

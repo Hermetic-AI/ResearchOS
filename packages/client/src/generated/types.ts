@@ -3233,6 +3233,40 @@ export type ServerResearchosLiteratureSimilarOutput = {
   }
 }
 
+export type ServerResearchosLiteratureUpdateInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly isRead?: { readonly isRead?: boolean | undefined; readonly isFavorite?: boolean | undefined }["isRead"]
+  readonly isFavorite?: {
+    readonly isRead?: boolean | undefined
+    readonly isFavorite?: boolean | undefined
+  }["isFavorite"]
+}
+
+export type ServerResearchosLiteratureUpdateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly doi?: string | null
+    readonly arxivId?: string | null
+    readonly title: string
+    readonly year?: number | "Infinity" | "-Infinity" | "NaN" | null
+    readonly venue?: string | null
+    readonly authors: ReadonlyArray<{ readonly name: string }>
+    readonly abstract?: string | null
+    readonly citationCount: number | "Infinity" | "-Infinity" | "NaN"
+    readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+    readonly isRead?: boolean | null
+    readonly isFavorite?: boolean | null
+  }
+}
+
 export type ServerResearchosGraphGetInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -4204,6 +4238,31 @@ export type ServerResearchosDataLinkOutput = {
     readonly project: { readonly id: string; readonly directory: string }
   }
   readonly data: { readonly ok: true; readonly warning?: string | null }
+}
+
+export type ServerResearchosDataDatasetRegisterInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly path: { readonly path: string; readonly name?: string | undefined }["path"]
+  readonly name?: { readonly path: string; readonly name?: string | undefined }["name"]
+}
+
+export type ServerResearchosDataDatasetRegisterOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly path: string
+    readonly format: string
+    readonly sizeBytes: number | "Infinity" | "-Infinity" | "NaN"
+    readonly profileJson?: string | null
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+  }
 }
 
 export type ServerResearchosPlotCreateInput = {

@@ -6,7 +6,7 @@ import { Icon } from "@opencode-ai/ui/v2/icon"
 import { KeybindV2 } from "@opencode-ai/ui/v2/keybind-v2"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
 import type { Prompt, ReferenceInfo } from "@opencode-ai/sdk/v2/client"
-import { createEffect, createMemo, on, Show } from "solid-js"
+import { createEffect, createMemo, createResource, For, on, Show } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import { ModelSelectorPopoverV2 } from "@/components/dialog-select-model"
 import { DialogSelectModelUnpaidV2 } from "@/components/dialog-select-model-unpaid-v2"
@@ -87,10 +87,22 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
 function ResearchosAssetShortcuts() {
   const navigate = useNavigate()
   const params = useParams<{ dir?: string }>()
+  const prompt = usePrompt()
+  const sdk = useSDK()
+  const [assets] = createResource(() => sdk().directory, async () => {
+    const client = sdk().client
+    const [skills, agents] = await Promise.all([client.v2.skill.list(), client.v2.agent.list()])
+    return { skills: skills.data?.data ?? [], agents: agents.data?.data ?? [] }
+  })
+  const skills = createMemo(() => (assets()?.skills ?? []).slice(0, 4))
+  const agents = createMemo(() => (assets()?.agents ?? []).filter((a: any) => a.mode !== "primary" && !a.hidden).slice(0, 3))
+  const insert = (text: string) => {
+    const current = prompt.current().map((p) => ("content" in p ? p.content : "")).join("")
+    const full = current + text
+    prompt.set([{ type: "text" as const, content: full, start: 0, end: full.length }], full.length)
+  }
   if (!params.dir) return null
-  return <div class="flex items-center gap-1 px-1 text-10-regular text-text-weak"><span class="mr-1 text-9-medium uppercase tracking-wide">Research assets</span>{[
-    ["Agents", "assets"], ["Papers", "literature"], ["Data", "data"], ["Figures", "plot"],
-  ].map(([label, route]) => <button type="button" class="rounded border border-border-weak-base px-2 py-1 hover:bg-background-selected hover:text-text-base" onClick={() => navigate(`/${params.dir}/${route}`)}>{label}</button>)}</div>
+  return <div class="flex flex-wrap items-center gap-1 px-1 text-10-regular text-text-weak"><span class="mr-1 text-9-medium uppercase tracking-wide text-text-weaker">Research</span><For each={skills()}>{skill => <button type="button" title={(skill as any).description || (skill as any).name} class="rounded border border-border-weak-base px-1.5 py-0.5 hover:bg-background-selected hover:text-text-base" onClick={() => insert(`/${(skill as any).name} `)}>/{(skill as any).name}</button>}</For><For each={agents()}>{agent => <button type="button" title={(agent as any).description || (agent as any).name} class="rounded border border-border-weak-base px-1.5 py-0.5 hover:bg-background-selected hover:text-text-base" onClick={() => insert(`@${(agent as any).name} `)}>@{(agent as any).name}</button>}</For><button type="button" class="rounded border border-border-weak-base px-1.5 py-0.5 hover:bg-background-selected hover:text-text-base" onClick={() => navigate(`/${params.dir}/assets`)}>+ Manage</button></div>
 }
 
 const useEditHandler = (props: PromptInputV2ComposerProps) => {
@@ -345,6 +357,22 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       resource,
     })),
   )
+  // researchos:start — @skill mention source
+  const [skillList] = createResource(() => sdk().directory, async () => {
+    const result = await sdk().client.v2.skill.list()
+    return result.data?.data ?? []
+  })
+  const researchosSkillSuggestions = createMemo<PromptInputV2Suggestion[]>(() =>
+    (skillList() ?? []).slice(0, 8).map((skill) => ({
+      id: `researchos-skill:${skill.name}`,
+      kind: "command" as const,
+      label: `@${skill.name}`,
+      title: skill.name,
+      description: skill.description,
+      mention: { type: "file" as const, path: skill.name, content: `/${skill.name} `, start: 0, end: 0 },
+    })),
+  )
+  // researchos:end
   const context = createMemo<PromptInputV2Suggestion[]>(() => [
     ...references(),
     ...props.controls.agents.available
@@ -364,6 +392,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       recent: true,
       mention: { type: "file" as const, path, content: `@${path}`, start: 0, end: 0 },
     })),
+    ...researchosSkillSuggestions(),
   ])
   const slashCommands = createMemo(() => [
     ...sync().data.command.map((item) => ({

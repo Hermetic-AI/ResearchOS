@@ -138,6 +138,8 @@ import type {
   ServerResearchosLiteratureCitationsOutput,
   ServerResearchosLiteratureSimilarInput,
   ServerResearchosLiteratureSimilarOutput,
+  ServerResearchosLiteratureUpdateInput,
+  ServerResearchosLiteratureUpdateOutput,
   ServerResearchosGraphGetInput,
   ServerResearchosGraphGetOutput,
   ServerResearchosGraphNodeInput,
@@ -200,6 +202,8 @@ import type {
   ServerResearchosDataStatTestsOutput,
   ServerResearchosDataLinkInput,
   ServerResearchosDataLinkOutput,
+  ServerResearchosDataDatasetRegisterInput,
+  ServerResearchosDataDatasetRegisterOutput,
   ServerResearchosPlotCreateInput,
   ServerResearchosPlotCreateOutput,
   ServerResearchosPlotTuneInput,
@@ -1285,6 +1289,19 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      update: (input: ServerResearchosLiteratureUpdateInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureUpdateOutput>(
+          {
+            method: "POST",
+            path: `/api/literature/papers/${encodeURIComponent(input.id)}`,
+            query: { location: input["location"] },
+            body: { isRead: input["isRead"], isFavorite: input["isFavorite"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     "server.researchos-graph": {
       get: (input?: ServerResearchosGraphGetInput, requestOptions?: RequestOptions) =>
@@ -1690,6 +1707,19 @@ export function make(options: ClientOptions) {
             path: `/api/data/artifacts/${encodeURIComponent(input.id)}/link`,
             query: { location: input["location"] },
             body: { commit: input["commit"], texFile: input["texFile"], texSection: input["texSection"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      datasetRegister: (input: ServerResearchosDataDatasetRegisterInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosDataDatasetRegisterOutput>(
+          {
+            method: "POST",
+            path: `/api/data/datasets/register`,
+            query: { location: input["location"] },
+            body: { path: input["path"], name: input["name"] },
             successStatus: 200,
             declaredStatuses: [400, 500, 401],
             empty: false,

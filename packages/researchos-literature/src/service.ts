@@ -117,6 +117,11 @@ export class LiteratureService {
     return this.db.getPaper(id)
   }
 
+  updatePaper(id: string, flags: { isRead?: boolean; isFavorite?: boolean }) {
+    this.db.updatePaperFlags(id, flags)
+    return this.db.getPaper(id)
+  }
+
   async export(ids: string[], format: ExportFormat, style?: CitationStyle) {
     const papers = this.db.getPapers(ids)
     if (format === "json") return JSON.stringify(papers, null, 2)

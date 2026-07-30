@@ -3,6 +3,8 @@ import { Spinner } from "@opencode-ai/ui/spinner"
 import { Tag } from "@opencode-ai/ui/tag"
 import type { ServerResearchosLiteratureCitationsOutput, ServerResearchosLiteratureSimilarOutput } from "@opencode-ai/client"
 import { createMemo, createResource, createSignal, For, Show } from "solid-js"
+import { useNavigate, useParams } from "@solidjs/router"
+import { base64Encode } from "@opencode-ai/core/util/encode"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
@@ -19,6 +21,8 @@ export default function LiteraturePage() {
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const platform = usePlatform()
+  const navigate = useNavigate()
+  const params = useParams<{ dir: string }>()
   const client = createMemo(() => createResearchosClient({
     baseUrl: sdk().url,
     fetch: platform.fetch,
@@ -99,6 +103,30 @@ export default function LiteraturePage() {
 
   const [exportFormat, setExportFormat] = createSignal<ExportFormat>("bibtex")
   const [exportStyle, setExportStyle] = createSignal<CitationStyle | "none">("none")
+
+  const toggleFlag = async (flag: "isRead" | "isFavorite") => {
+    const id = selectedId()
+    if (!id) return
+    const paper = papers()?.find((p) => p.id === id)
+    if (!paper) return
+    const value = flag === "isRead" ? !paper.isRead : !paper.isFavorite
+    try {
+      await client().update({ id, location: { directory: sdk().directory }, ...(flag === "isRead" ? { isRead: value } : { isFavorite: value }) })
+      papersActions.mutate((papers() ?? []).map((p) => p.id === id ? { ...p, [flag]: value } : p))
+    } catch (error) {
+      // silent fail — flag toggle is non-critical
+    }
+  }
+
+  const insertCitation = async () => {
+    const paper = selected()
+    if (!paper) return
+    const bib = await client().export({ location: { directory: sdk().directory }, paperIds: paper.id, format: "bibtex" })
+    const match = /@\w+\{([^,]+),/.exec(bib.data.content)
+    const key = match?.[1] ?? paper.id
+    const citation = `\\cite{${key}}`
+    await navigator.clipboard?.writeText(`${citation}\n\n${bib.data.content}`)
+  }
 
   const exportPaper = async () => {
     const paper = selected()
@@ -356,6 +384,16 @@ export default function LiteraturePage() {
                   <option value="springer">Springer</option>
                 </select>
                 <Button size="small" variant="secondary" onClick={() => void exportPaper()}>Export</Button>
+                <Button size="small" variant="ghost" onClick={() => void insertCitation()}>Insert citation</Button>
+                <Button size="small" variant="ghost" onClick={() => void toggleFlag("isRead")}>
+                  {selected()?.isRead ? "Mark unread" : "Mark read"}
+                </Button>
+                <Button size="small" variant="ghost" onClick={() => void toggleFlag("isFavorite")}>
+                  {selected()?.isFavorite ? "Unfavorite" : "Favorite"}
+                </Button>
+                <Button size="small" variant="ghost" onClick={() => {
+                  if (params.dir && selectedId()) navigate(`/${base64Encode(params.dir)}/translate?paperId=${encodeURIComponent(selectedId()!)}`)
+                }}>Translate</Button>
                 <Button size="small" variant="ghost" onClick={() => void papersActions.refetch()}>Return to local library</Button>
               </div>
 

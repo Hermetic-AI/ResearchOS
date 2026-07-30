@@ -201,6 +201,22 @@ export const ResearchosDataGroup = HttpApiGroup.make("server.researchos-data")
         summary: "Link an artifact to a git commit and a LaTeX section",
       })),
   )
+  .add(
+    HttpApiEndpoint.post("data.datasetRegister", "/api/data/datasets/register", {
+      query: LocationQuery,
+      payload: Schema.Struct({
+        path: Schema.String,
+        name: Schema.optional(Schema.String),
+      }),
+      success: Location.response(Dataset),
+      error: [InvalidRequestError, UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({
+        identifier: "v2.data.dataset_register",
+        summary: "Register a workspace file (CSV/Parquet/JSON) as a dataset",
+      })),
+  )
   .annotateMerge(OpenApi.annotations({
     title: "researchos-data",
     description: "ResearchOS data analysis artifact store.",

@@ -97,7 +97,32 @@ export const ResearchosDataHandler = HttpApiBuilder.group(
           ...(payload.texFile ? { texFile: payload.texFile } : {}),
           ...(payload.texSection ? { texSection: payload.texSection } : {}),
         })),
-      ))),
+      )))
+      .handle("data.datasetRegister", ({ payload }) => response(withStore(async (store, directory) => {
+        const { stat } = await import("fs/promises")
+        const { resolve, basename, extname } = await import("path")
+        const { path: filePath } = payload
+        const absolute = resolve(directory, filePath)
+        if (!absolute.startsWith(directory)) throw new InvalidRequestError({ message: "Path must be within the project workspace" })
+        const info = await stat(absolute).catch(() => { throw new InvalidRequestError({ message: `File not found: ${filePath}` }) })
+        const ext = extname(filePath).toLowerCase()
+        const format = ({ ".csv": "csv", ".tsv": "tsv", ".parquet": "parquet", ".json": "json", ".jsonl": "jsonl", ".xlsx": "xlsx" } as Record<string, string>)[ext] ?? ext.slice(1)
+        const dataset = store.registerDataset({
+          path: filePath,
+          name: payload.name || basename(filePath, ext),
+          format,
+          sizeBytes: info.size,
+        })
+        return {
+          id: dataset.id,
+          name: dataset.name,
+          path: dataset.path,
+          format: dataset.format,
+          sizeBytes: dataset.sizeBytes,
+          ...(dataset.profileJson ? { profileJson: dataset.profileJson } : {}),
+          createdAt: dataset.createdAt,
+        }
+      }))),
 )
 
 function withStore<T>(run: (store: DataStore, directory: string) => Promise<T>) {
