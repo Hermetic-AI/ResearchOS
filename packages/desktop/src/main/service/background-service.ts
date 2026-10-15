@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs"
+import { join } from "node:path"
 import { app } from "electron"
 import { Context, Effect, FileSystem, Layer, Path } from "effect"
 import { BackgroundServiceState } from "./background-service-state"
@@ -39,6 +41,20 @@ const connect = Effect.fn("BackgroundService.connect")(function* (mode: "initial
   const version = mode === "initial" ? cli.version : undefined
 
   if (isolated) process.env.XDG_STATE_HOME = app.getPath("userData")
+
+  // researchos: the server subprocess inherits this env, so expose the packaged Tectonic
+  // binary before ensure() spawns the CLI. `resources/tectonic` ships only a README unless a
+  // build stages the per-platform binary, in which case existsSync guards the no-op.
+  if (!process.env.RESEARCHOS_TECTONIC) {
+    const tectonic = join(
+      process.resourcesPath,
+      "tectonic",
+      `${process.platform}-${process.arch}`,
+      process.platform === "win32" ? "tectonic.exe" : "tectonic",
+    )
+    if (existsSync(tectonic)) process.env.RESEARCHOS_TECTONIC = tectonic
+  }
+
   const client = yield* Effect.promise(() => import("@opencode/client/service"))
 
   const ensure = () =>

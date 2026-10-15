@@ -115,6 +115,11 @@ const getBase = (appId: string): Configuration => {
         to: "",
         filter: ["opencode-cli", "opencode-cli.exe", "opencode-cli.version"],
       },
+      {
+        from: "resources/tectonic/",
+        to: "tectonic/",
+        filter: ["**/*"],
+      },
     ],
     afterPack: async (context) => {
       const arch = Arch[context.arch]

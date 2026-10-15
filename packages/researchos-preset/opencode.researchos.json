@@ -29,7 +29,7 @@
       "command": ["uv", "run", "--project", "packages/researchos-mcp/translate", "python", "packages/researchos-mcp/translate/src/server.py"]
     }
   },
-  "plugin": ["@researchos/writing", "@researchos/plot-core"],
+  "plugins": ["@researchos/writing", "@researchos/plot-core"],
   "agent": {
     "literature": { "file": "@researchos/preset/agent/literature.md", "color": "#61afef" },
     "graph": { "file": "@researchos/preset/agent/graph.md", "color": "#9d7cd8" },
