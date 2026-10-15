@@ -19,7 +19,7 @@ import { Effect } from "effect"
 import { FetchHttpClient } from "effect/http"
 
 const program = Effect.gen(function* () {
-  const client = yield* OpenCode.make({ baseUrl: "http://localhost:4096" })
+  const client = yield* OpenCode.make({ baseUrl: "http://localhost:14096" })
   const session = yield* client.session.create({
     location: Location.Ref.make({ directory: AbsolutePath.make("/workspace") }),
   })

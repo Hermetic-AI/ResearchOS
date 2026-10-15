@@ -126,7 +126,7 @@ import { FetchHttpClient } from "effect/http"
 import { Acme } from "opencode-acme-plugin/rpc"
 
 const program = Effect.gen(function* () {
-  const client = yield* OpenCode.make({ baseUrl: "http://localhost:4096" })
+  const client = yield* OpenCode.make({ baseUrl: "http://localhost:14096" })
   const acme = client.rpc(Acme)
   return yield* acme.search({ query: "hello" })
 })
