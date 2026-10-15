@@ -16,6 +16,7 @@
     "@opencode/plugin": "workspace:*",
     "@researchos/literature": "workspace:*",
     "diff": "9.0.0",
+    "effect": "catalog:",
     "markdown-it": "14.3.0",
     "papaparse": "5.5.4"
   },

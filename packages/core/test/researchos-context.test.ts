@@ -4,40 +4,35 @@ import { Effect, Layer } from "effect"
 import fs from "fs/promises"
 import path from "path"
 import { AppNodeBuilder } from "@opencode/core/effect/app-node-builder"
-import { LayerNode } from "@opencode/core/effect/layer-node"
+import { AbsolutePath } from "@opencode/core/schema"
 import { Location } from "@opencode/core/location"
 import { ResearchOSContext } from "@opencode/core/researchos-context"
-import { AbsolutePath } from "@opencode/core/schema"
-import { SystemContext } from "@opencode/core/system-context"
-import { SystemContextRegistry } from "@opencode/core/system-context/registry"
-import { location } from "./fixture/location.js"
-import { tmpdir } from "./fixture/tmpdir.js"
-import { testEffect } from "./lib/effect.js"
+import { location } from "./fixture/location"
+import { tmpdir } from "./fixture/tmpdir"
+import { readInitial, readUpdate } from "./lib/instructions"
+import { testEffect } from "./lib/effect"
 
 const it = testEffect(Layer.empty)
 
-const researchosLayer = (locationServiceLayer: Layer.Layer<Location.Service>) =>
-  AppNodeBuilder.build(LayerNode.group([SystemContextRegistry.node, ResearchOSContext.node]), [
-    [Location.node, locationServiceLayer],
-  ])
+const locationLayer = (project: string) =>
+  Layer.succeed(
+    Location.Service,
+    Location.Service.of(location(Location.Ref.make({ directory: AbsolutePath.make(project) }))),
+  )
+
+const load = (project: string) =>
+  Effect.gen(function* () {
+    const context = yield* ResearchOSContext.Service
+    return yield* context.load()
+  }).pipe(
+    Effect.provide(AppNodeBuilder.build(ResearchOSContext.node, [Location.node.replace(locationLayer(project))])),
+  )
 
 const withTmpdir = <A, E, R>(run: (tmp: { path: string }) => Effect.Effect<A, E, R>) =>
   Effect.acquireRelease(
     Effect.promise(() => tmpdir()),
     (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
   ).pipe(Effect.flatMap(run))
-
-const locationLayer = (project: string) =>
-  Layer.succeed(
-    Location.Service,
-    Location.Service.of(location({ directory: AbsolutePath.make(project) })),
-  )
-
-const loadContext = (project: string) =>
-  SystemContextRegistry.Service.pipe(
-    Effect.flatMap((service) => service.load()),
-    Effect.provide(researchosLayer(locationLayer(project))),
-  )
 
 function createDatabase(file: string) {
   const db = new Database(file)
@@ -70,11 +65,13 @@ function insertPaper(db: Database, paper: { id: string; title: string; year?: nu
   ])
 }
 
+const libraryDir = (tmp: { path: string }) => path.join(tmp.path, ".researchos", "literature")
+
 describe("ResearchOSContext", () => {
   it.live("renders the library baseline from the literature database", () =>
     withTmpdir((tmp) =>
       Effect.gen(function* () {
-        const dir = path.join(tmp.path, ".researchos", "literature")
+        const dir = libraryDir(tmp)
         yield* Effect.promise(() => fs.mkdir(dir, { recursive: true }))
         const db = createDatabase(path.join(dir, "literature.db"))
         insertPaper(db, { id: "p1", title: "Title A", year: 2024, created_at: 100 })
@@ -83,20 +80,20 @@ describe("ResearchOSContext", () => {
         db.run("INSERT INTO paper_collection (paper_id, collection_id) VALUES (?, ?)", ["p1", 1])
         db.close()
 
-        const initialized = yield* SystemContext.initialize(yield* loadContext(tmp.path))
-        expect(initialized.baseline).toBe(
+        const initialized = yield* readInitial(yield* load(tmp.path))
+        expect(initialized.text).toBe(
           'Literature library: 2 papers. Collections: "Transformers" (1). Recently imported: "Title B" (2023), "Title A" (2024).',
         )
       }),
     ),
   )
 
-  it.live("registers no library source when the database is absent", () =>
+  it.live("renders nothing when the database and selection file are absent", () =>
     withTmpdir((tmp) =>
       Effect.gen(function* () {
-        const initialized = yield* SystemContext.initialize(yield* loadContext(tmp.path))
-        expect(initialized.baseline).toBe("")
-        expect(initialized.snapshot).toEqual({})
+        const initialized = yield* readInitial(yield* load(tmp.path))
+        expect(initialized.text).toBe("")
+        expect(initialized.values).toEqual({})
       }),
     ),
   )
@@ -104,7 +101,7 @@ describe("ResearchOSContext", () => {
   it.live("renders a library update diff after a paper is added", () =>
     withTmpdir((tmp) =>
       Effect.gen(function* () {
-        const dir = path.join(tmp.path, ".researchos", "literature")
+        const dir = libraryDir(tmp)
         yield* Effect.promise(() => fs.mkdir(dir, { recursive: true }))
         const file = path.join(dir, "literature.db")
         const db = createDatabase(file)
@@ -112,8 +109,8 @@ describe("ResearchOSContext", () => {
         insertPaper(db, { id: "p2", title: "Title B", created_at: 200 })
         db.close()
 
-        const initialized = yield* SystemContext.initialize(yield* loadContext(tmp.path))
-        expect(initialized.baseline).toBe(
+        const initialized = yield* readInitial(yield* load(tmp.path))
+        expect(initialized.text).toBe(
           'Literature library: 2 papers. Recently imported: "Title B", "Title A" (2024).',
         )
 
@@ -121,11 +118,8 @@ describe("ResearchOSContext", () => {
         insertPaper(next, { id: "p3", title: "Title C", year: 2025, created_at: 300 })
         next.close()
 
-        expect(yield* SystemContext.reconcile(yield* loadContext(tmp.path), initialized.snapshot)).toEqual({
-          _tag: "Updated",
-          text: 'Literature library updated: 3 papers (was 2). New: "Title C" (2025).',
-          snapshot: expect.any(Object),
-        })
+        const update = yield* readUpdate(yield* load(tmp.path), initialized)
+        expect(update.text).toBe('Literature library updated: 3 papers (was 2). New: "Title C" (2025).')
       }),
     ),
   )
@@ -140,29 +134,24 @@ describe("ResearchOSContext", () => {
           await fs.writeFile(file, JSON.stringify({ paperId: "p1", title: "Paper One" }))
         })
 
-        const initialized = yield* SystemContext.initialize(yield* loadContext(tmp.path))
-        expect(initialized.baseline).toBe(
+        const initialized = yield* readInitial(yield* load(tmp.path))
+        expect(initialized.text).toBe(
           'The user is currently viewing paper "Paper One" (p1) in the ResearchOS literature module.',
         )
 
         yield* Effect.promise(() => fs.writeFile(file, JSON.stringify({ paperId: "p2", title: "Paper Two" })))
-        expect(yield* SystemContext.reconcile(yield* loadContext(tmp.path), initialized.snapshot)).toEqual({
-          _tag: "Updated",
-          text: 'The user\'s focus changed to paper "Paper Two" (p2).',
-          snapshot: expect.any(Object),
-        })
+        const focused = yield* readUpdate(yield* load(tmp.path), initialized)
+        expect(focused.text).toBe('The user\'s focus changed to paper "Paper Two" (p2).')
 
         yield* Effect.promise(() => fs.rm(file))
-        expect(yield* SystemContext.reconcile(yield* loadContext(tmp.path), initialized.snapshot)).toEqual({
-          _tag: "Updated",
-          text: "The user is no longer focused on a specific paper.",
-          snapshot: {},
-        })
+        expect((yield* readUpdate(yield* load(tmp.path), focused)).text).toBe(
+          "The user is no longer focused on a specific paper.",
+        )
       }),
     ),
   )
 
-  it.live("treats a malformed selection file as unavailable", () =>
+  it.live("blocks initialization when the selection file is malformed", () =>
     withTmpdir((tmp) =>
       Effect.gen(function* () {
         const dir = path.join(tmp.path, ".researchos")
@@ -171,18 +160,8 @@ describe("ResearchOSContext", () => {
           await fs.writeFile(path.join(dir, "selection.json"), "not json")
         })
 
-        const context = yield* loadContext(tmp.path)
-        const initialized = yield* SystemContext.initialize(context).pipe(Effect.exit)
+        const initialized = yield* readInitial(yield* load(tmp.path)).pipe(Effect.exit)
         expect(initialized._tag).toBe("Failure")
-
-        expect(
-          yield* SystemContext.reconcile(context, {
-            "researchos/selection": {
-              value: { paperId: "p1", title: "Paper One" },
-              removed: "The user is no longer focused on a specific paper.",
-            },
-          }),
-        ).toEqual({ _tag: "Unchanged" })
       }),
     ),
   )

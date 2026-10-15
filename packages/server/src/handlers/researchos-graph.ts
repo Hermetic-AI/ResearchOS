@@ -1,13 +1,12 @@
 import { Location } from "@opencode/core/location"
 import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
-import { checkBoltBackend, citeKeyResolver, createEmbedder, embedGraphNodes, graphRag, loadGraphBackend, modelsDir, openRepository, openStore, parseFile, type Embedder, type GraphEdge, type GraphNode, type GraphRepository, type Store, type Subgraph } from "@researchos/graph"
+import { checkBoltBackend, citeKeyResolver, createEmbedder, embedGraphNodes, graphRag, loadGraphBackend, modelsDir, openRepository, parseFile, type Embedder, type GraphEdge, type GraphNode, type GraphRepository, type Subgraph } from "@researchos/graph"
 import { dbPath, LiteratureDB } from "@researchos/literature"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/http-api"
 import { Api } from "../api"
 import { response } from "../location"
 
-const stores = new Map<string, Store>()
 const repositories = new Map<string, Promise<GraphRepository>>()
 const embedders = new Map<string, Embedder | null>()
 
@@ -127,19 +126,6 @@ function withRepository<T>(run: (repository: GraphRepository, directory: string)
     const repository = yield* Effect.tryPromise({ try: () => existing ?? openRepository(location.directory), catch: serverError })
     if (!existing) repositories.set(location.directory, Promise.resolve(repository))
     return yield* Effect.tryPromise({ try: () => run(repository, location.directory), catch: serverError })
-  })
-}
-
-function withStore<T>(run: (store: Store) => Promise<T>) {
-  return Effect.gen(function* () {
-    const location = yield* Location.Service
-    const existing = stores.get(location.directory)
-    const store = existing ?? openStore(location.directory)
-    if (!existing) stores.set(location.directory, store)
-    return yield* Effect.tryPromise({
-      try: async () => run(store),
-      catch: serverError,
-    })
   })
 }
 

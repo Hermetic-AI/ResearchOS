@@ -14,6 +14,7 @@ import { Location } from "../location.js"
 import { McpInstructions } from "../mcp/instructions.js"
 import { McpTool } from "../tool/mcp.js"
 import { ReferenceInstructions } from "../reference/instructions.js"
+import { ResearchOSContext } from "../researchos-context.js"
 import { SkillInstructions } from "../skill/instructions.js"
 import { Tool } from "../tool.js"
 import { AgentNotFoundError } from "./error.js"
@@ -86,6 +87,7 @@ const layer = Layer.effect(
     const models = yield* SessionRunnerModel.Service
     const request = yield* SessionModelRequest.Service
     const referenceInstructions = yield* ReferenceInstructions.Service
+    const researchos = yield* ResearchOSContext.Service
     const skillInstructions = yield* SkillInstructions.Service
     const store = yield* SessionStore.Service
     const registry = yield* Tool.Service
@@ -136,6 +138,7 @@ const layer = Layer.effect(
           discovery: discovery.load(),
           skills: skillInstructions.load(permissions),
           references: referenceInstructions.load(),
+          researchos: researchos.load(),
           mcp: mcpInstructions.load(permissions),
           entries: entries.load(sessionID),
         },
@@ -155,6 +158,7 @@ const layer = Layer.effect(
           loaded.discovery,
           loaded.builtins,
           loaded.entries,
+          loaded.researchos,
         ]),
         tools: loaded.tools,
       }
@@ -199,6 +203,7 @@ export const node = makeLocationNode({
     McpInstructions.node,
     McpTool.node,
     ReferenceInstructions.node,
+    ResearchOSContext.node,
     SessionRunnerModel.node,
     SessionModelRequest.node,
     SessionStore.node,

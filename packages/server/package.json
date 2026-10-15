@@ -41,7 +41,8 @@
     "@researchos/reproduce": "workspace:*",
     "@researchos/translate": "workspace:*",
     "@researchos/writing": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "jsonc-parser": "3.3.1"
   },
   "devDependencies": {
     "@opencode-ai/pty": "0.2.0",

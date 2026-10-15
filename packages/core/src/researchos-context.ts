@@ -1,12 +1,11 @@
 export * as ResearchOSContext from "./researchos-context.js"
 
-import { Effect, Layer, Schema } from "effect"
+import { makeLocationNode } from "@opencode/util/effect/app-node"
+import { FSUtil } from "@opencode/util/fs-util"
+import { Context, Effect, Layer, Schema } from "effect"
 import { join } from "path"
-import { FSUtil } from "./fs-util"
+import { Instructions } from "./instructions/index.js"
 import { Location } from "./location.js"
-import { SystemContext } from "./system-context/index"
-import { SystemContextRegistry } from "./system-context/registry"
-import { makeLocationNode } from "./effect/app-node"
 
 class Collection extends Schema.Class<Collection>("ResearchOSContext.Collection")({
   name: Schema.String,
@@ -35,38 +34,23 @@ const SelectionFile = Schema.Struct({
   title: Schema.optional(Schema.String),
 })
 
-const libraryKey = SystemContext.Key.make("researchos/library")
-const selectionKey = SystemContext.Key.make("researchos/selection")
+const libraryKey = Instructions.Key.make("researchos/library")
+const selectionKey = Instructions.Key.make("researchos/selection")
 
-const layer = Layer.effectDiscard(
+export interface Interface {
+  readonly load: () => Effect.Effect<Instructions.List>
+}
+
+export class Service extends Context.Service<Service, Interface>()("@opencode/ResearchOSContext") {}
+
+const layer = Layer.effect(
+  Service,
   Effect.gen(function* () {
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
-    const registry = yield* SystemContextRegistry.Service
 
-    const librarySource = (value: Library | SystemContext.Unavailable) =>
-      SystemContext.make({
-        key: libraryKey,
-        codec: Schema.toCodecJson(Library),
-        load: Effect.succeed(value),
-        baseline: renderLibrary,
-        update: updateLibrary,
-        removed: () => "The literature library is no longer available.",
-      })
-
-    const selectionSource = (value: Selection | SystemContext.Unavailable) =>
-      SystemContext.make({
-        key: selectionKey,
-        codec: Schema.toCodecJson(Selection),
-        load: Effect.succeed(value),
-        baseline: (selection) =>
-          `The user is currently viewing ${describe(selection)} in the ResearchOS literature module.`,
-        update: (_previous, selection) => `The user's focus changed to ${describe(selection)}.`,
-        removed: () => "The user is no longer focused on a specific paper.",
-      })
-
-    // Returns undefined when the library database is absent; failures throw and
-    // become `unavailable` at the registration boundary below.
+    // Returns undefined when the observed file is absent; failures throw and
+    // become `unavailable` at the read boundary below.
     const observeLibrary = Effect.fn("ResearchOSContext.observeLibrary")(function* () {
       const path = join(location.project.directory, ".researchos", "literature", "literature.db")
       if (!(yield* fs.isFile(path))) return undefined
@@ -92,30 +76,49 @@ const layer = Layer.effectDiscard(
       return new Selection({ paperId: file.paperId, title: file.title ?? null })
     })
 
-    yield* registry.register({
+    const librarySource = Instructions.make({
       key: libraryKey,
-      load: observeLibrary().pipe(
-        Effect.map((value) => (value === undefined ? SystemContext.empty : librarySource(value))),
-        Effect.catch(() => Effect.succeed(librarySource(SystemContext.unavailable))),
-        Effect.catchDefect(() => Effect.succeed(librarySource(SystemContext.unavailable))),
+      codec: Schema.toCodecJson(Library),
+      read: observeLibrary().pipe(
+        Effect.matchEffect({
+          onFailure: () => Effect.succeed(Instructions.unavailable),
+          onSuccess: (value) => Effect.succeed(value ?? Instructions.removed),
+        }),
       ),
+      render: {
+        initial: renderLibrary,
+        changed: updateLibrary,
+        removed: () => "The literature library is no longer available.",
+      },
     })
 
-    yield* registry.register({
+    const selectionSource = Instructions.make({
       key: selectionKey,
-      load: observeSelection().pipe(
-        Effect.map((value) => (value === undefined ? SystemContext.empty : selectionSource(value))),
-        Effect.catch(() => Effect.succeed(selectionSource(SystemContext.unavailable))),
-        Effect.catchDefect(() => Effect.succeed(selectionSource(SystemContext.unavailable))),
+      codec: Schema.toCodecJson(Selection),
+      read: observeSelection().pipe(
+        Effect.matchEffect({
+          onFailure: () => Effect.succeed(Instructions.unavailable),
+          onSuccess: (value) => Effect.succeed(value ?? Instructions.removed),
+        }),
       ),
+      render: {
+        initial: (selection) =>
+          `The user is currently viewing ${describe(selection)} in the ResearchOS literature module.`,
+        changed: (_previous, selection) => `The user's focus changed to ${describe(selection)}.`,
+        removed: () => "The user is no longer focused on a specific paper.",
+      },
+    })
+
+    return Service.of({
+      load: () => Effect.succeed(Instructions.combine([librarySource, selectionSource])),
     })
   }),
 )
 
 export const node = makeLocationNode({
-  name: "researchos-context",
+  service: Service,
   layer,
-  deps: [FSUtil.node, Location.node, SystemContextRegistry.node],
+  deps: [FSUtil.node, Location.node],
 })
 
 function queryLibrary(db: import("bun:sqlite").Database) {

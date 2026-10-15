@@ -43,6 +43,7 @@ import { SessionTitle } from "./session/title.js"
 import { SessionContext } from "./session/context.js"
 import { Skill } from "./skill.js"
 import { SkillInstructions } from "./skill/instructions.js"
+import { ResearchOSContext } from "./researchos-context.js"
 import { Snapshot } from "./snapshot.js"
 import { InstructionDiscovery } from "./instruction-discovery.js"
 import { InstructionBuiltIns } from "./instructions/builtins.js"
@@ -95,6 +96,7 @@ const nodes = [
   Image.node,
   SkillInstructions.node,
   ReferenceInstructions.node,
+  ResearchOSContext.node,
   InstructionEntry.node,
   Form.node,
   Generate.node,
