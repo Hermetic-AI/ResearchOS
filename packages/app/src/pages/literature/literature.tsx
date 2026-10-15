@@ -1,43 +1,43 @@
 import { Button } from "@opencode/ui/button"
 import { Icon } from "@opencode/ui/icon"
 import { Spinner } from "@opencode/ui/spinner"
-import { Tag } from "@opencode/ui/tag"
-import type { ServerResearchosLiteratureCitationsOutput, ServerResearchosLiteratureSimilarOutput } from "@opencode/client"
+import { Badge } from "@opencode/ui/badge"
+import type { ServerResearchosLiteratureLiteratureCitationsOutput, ServerResearchosLiteratureLiteratureSimilarOutput } from "@opencode/client"
 import { DateTime } from "luxon"
 import { createEffect, createMemo, createResource, createSignal, For, onCleanup, Show } from "solid-js"
-import { useNavigate, useParams } from "@solidjs/router"
+import { useNavigate } from "@solidjs/router"
 import { ModuleState, StatusBadge } from "@/components/researchos/module-state"
 import { archivedPdfPath, readingNotePath, readPaperSessions, startReadingNoteSession } from "@/components/researchos/paper-context"
 import { useResearchosShell } from "@/components/researchos/shell-context"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
-import { useServerSync } from "@/context/server-sync"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory, useResearchosLink } from "@/components/researchos-rail"
+import { useServer } from "@/runtime/server/current"
 import { createResearchosClient } from "@/utils/researchos-client"
-import { formatServerError } from "@/utils/server-errors"
-import { showToast } from "@/utils/toast"
+import { formatServerError } from "@/runtime/server/errors"
+import { showToast } from "@/shell/notifications/toast"
 
 type Category = "all" | "unread" | "favorites" | `year:${number}`
 type CitationDirection = "references" | "cited_by"
-type CitationEntry = ServerResearchosLiteratureCitationsOutput["data"][number]
-type SimilarEntry = ServerResearchosLiteratureSimilarOutput["data"]["results"][number]
+type CitationEntry = ServerResearchosLiteratureLiteratureCitationsOutput["data"][number]
+type SimilarEntry = ServerResearchosLiteratureLiteratureSimilarOutput["data"]["results"][number]
 type ExportFormat = "bibtex" | "ris" | "endnote" | "json" | "markdown"
 type CitationStyle = "ieee" | "acm" | "apa" | "nature" | "springer"
 
 export default function LiteraturePage() {
-  const sdk = useSDK()
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
   const serverSDK = useServerSDK()
   const platform = usePlatform()
   const navigate = useNavigate()
-  const params = useParams<{ dir: string }>()
+  const link = useResearchosLink()
   const client = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-literature"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-literature"].literature)
   const [papers, papersActions] = createResource(
-    () => sdk().directory,
+    () => directory(),
     async (directory) => client().list({ location: { directory }, limit: 100 }).then((result) => result.data),
   )
   const [category, setCategory] = createSignal<Category>("all")
@@ -68,7 +68,7 @@ export default function LiteraturePage() {
     },
     async (input) => client().citations({
       id: input.id,
-      location: { directory: sdk().directory },
+      location: { directory: directory() },
       direction: input.direction,
     }).then((result) => result.data),
   )
@@ -76,7 +76,7 @@ export default function LiteraturePage() {
     () => selectedId(),
     async (id) => client().similar({
       id,
-      location: { directory: sdk().directory },
+      location: { directory: directory() },
       limit: 10,
     }).then((result) => result.data),
   )
@@ -95,8 +95,7 @@ export default function LiteraturePage() {
   // which stays truthy across selection changes so the <article> never remounts.
   const detail = () => selected()!
   const shell = useResearchosShell()
-  const sync = useServerSync()
-  const [sessionStore] = sync().child(sdk().directory, { bootstrap: false })
+  const server = useServer()
   let searchInput!: HTMLInputElement
   let importInput!: HTMLInputElement
   let fileInput!: HTMLInputElement
@@ -110,16 +109,20 @@ export default function LiteraturePage() {
   })
 
   createEffect(() => {
-    sync().child(sdk().directory, { bootstrap: true })
+    server.ctx.sync.child(directory(), { bootstrap: true })
   })
 
-  // Sessions recorded against this paper (reading note, dock chats), joined with the live
-  // session store; ids no longer present in the store were deleted and are dropped.
+  // Sessions recorded against this paper (reading note, dock chats), joined with the
+  // project's session list; ids no longer returned by the server were deleted and are dropped.
+  const [directorySessions] = createResource(
+    () => directory(),
+    async (dir) => serverSDK.api.session.list({ directory: dir, limit: 100 }).then((result) => result.data),
+  )
   const relatedSessions = createMemo(() => {
     const id = selectedId()
     if (!id) return []
-    const byID = new Map((sessionStore.session ?? []).map((session) => [session.id, session]))
-    return readPaperSessions(sdk().directory, id)
+    const byID = new Map((directorySessions() ?? []).map((session) => [session.id, session]))
+    return readPaperSessions(directory(), id)
       .flatMap((sessionID) => {
         const session = byID.get(sessionID)
         return session ? [session] : []
@@ -133,19 +136,19 @@ export default function LiteraturePage() {
     () => selectedId(),
     async (id) => {
       const path = readingNotePath(id)
-      const result = await sdk().client.file.read({ path }).catch(() => undefined)
-      if (result?.data?.type !== "text") return undefined
-      const sections = parseNoteSections(result.data.content)
+      const bytes = await serverSDK.api.file.read({ path, location: { directory: directory() } }).catch(() => undefined)
+      if (!bytes) return undefined
+      const sections = parseNoteSections(new TextDecoder().decode(bytes))
       if (sections.length === 0) return undefined
       return { path, sections }
     },
   )
   const [pdfPath] = createResource(
     () => selected(),
-    async (paper) => archivedPdfPath(sdk(), paper),
+    async (paper) => archivedPdfPath({ api: serverSDK.api, directory: directory(), paper }),
   )
 
-  const openInGraph = (paperId: string) => navigate(`/${params.dir}/graph?paper=${encodeURIComponent(paperId)}`)
+  const openInGraph = (paperId: string) => navigate(link()!.module(`graph?paper=${encodeURIComponent(paperId)}`))
 
   // Mount the context panel once: props are accessors, so it tracks the selection
   // reactively. Re-creating the JSX per selection remounts the whole panel (visible flicker).
@@ -158,10 +161,10 @@ export default function LiteraturePage() {
         const id = selectedId()
         if (id) openInGraph(id)
       }}
-      onInsertCitation={() => navigate(`/${params.dir}/latex`)}
+      onInsertCitation={() => navigate(link()!.module(`latex`))}
       onTranslate={() => {
         const id = selectedId()
-        if (id) navigate(`/${params.dir}/translate?paperId=${encodeURIComponent(id)}`)
+        if (id) navigate(link()!.module(`translate?paperId=${encodeURIComponent(id)}`))
       }}
     />,
   )
@@ -173,7 +176,7 @@ export default function LiteraturePage() {
     // Report focus to the core researchos/selection SystemContext source; best-effort,
     // failures must never break the UI.
     client().select({
-      location: { directory: sdk().directory },
+      location: { directory: directory() },
       ...(paper ? { paperId: paper.id, title: paper.title } : {}),
     }).catch(() => undefined)
   })
@@ -185,7 +188,7 @@ export default function LiteraturePage() {
     setSearching(true)
     setSearchError(undefined)
     const result = await client().search({
-      location: { directory: sdk().directory },
+      location: { directory: directory() },
       query: value,
       limit: 30,
     }).then((response) => response.data).catch((error: unknown) => {
@@ -210,7 +213,7 @@ export default function LiteraturePage() {
     if (!paper) return
     const value = flag === "isRead" ? !paper.isRead : !paper.isFavorite
     try {
-      await client().update({ id, location: { directory: sdk().directory }, ...(flag === "isRead" ? { isRead: value } : { isFavorite: value }) })
+      await client().update({ id, location: { directory: directory() }, ...(flag === "isRead" ? { isRead: value } : { isFavorite: value }) })
       papersActions.mutate((papers() ?? []).map((p) => p.id === id ? { ...p, [flag]: value } : p))
     } catch (error) {
       // silent fail — flag toggle is non-critical
@@ -224,7 +227,7 @@ export default function LiteraturePage() {
     const style = exportStyle()
     try {
       const result = await client().export({
-        location: { directory: sdk().directory },
+        location: { directory: directory() },
         paperIds: paper.id,
         format: exportFormat(),
         ...(style === "none" ? {} : { style }),
@@ -238,7 +241,8 @@ export default function LiteraturePage() {
   const triggerFirstRead = async (paperId: string) => {
     await startReadingNoteSession({
       literature: client(),
-      sdk: sdk(),
+      api: serverSDK.api,
+      directory: directory(),
       paperId,
     }).then(() => {
       showToast({
@@ -271,7 +275,7 @@ export default function LiteraturePage() {
         })
         if (!upload) continue
         const result = await client().import({
-          location: { directory: sdk().directory },
+          location: { directory: directory() },
           contentBase64: upload,
           fileName: file.name,
         }).then((response) => response.data).catch((error: unknown) => {
@@ -300,7 +304,7 @@ export default function LiteraturePage() {
       return
     }
     const result = await client().import({
-      location: { directory: sdk().directory },
+      location: { directory: directory() },
       path: path || undefined,
       url: url || undefined,
     }).then((response) => response.data).catch((error: unknown) => {
@@ -328,7 +332,7 @@ export default function LiteraturePage() {
     setZoteroError(undefined)
     setZoteroNotice(undefined)
     const result = await client().import({
-      location: { directory: sdk().directory },
+      location: { directory: directory() },
       zoteroPath: path,
     }).then((response) => response.data).catch((error: unknown) => {
       setZoteroError(formatServerError(error))
@@ -353,14 +357,15 @@ export default function LiteraturePage() {
     setNoteError(undefined)
     const sessionID = await startReadingNoteSession({
       literature: client(),
-      sdk: sdk(),
+      api: serverSDK.api,
+      directory: directory(),
       paperId: id,
     }).catch((error: unknown) => {
       setNoteError(formatServerError(error))
       return undefined
     })
     setNoting(false)
-    if (sessionID) navigate(`/${params.dir}/session/${sessionID}`)
+    if (sessionID) navigate(link()!.session(sessionID))
   }
 
   return (
@@ -393,7 +398,7 @@ export default function LiteraturePage() {
               placeholder="Search arXiv, S2, Crossref, PubMed…"
               class="min-w-0 flex-1 rounded-md border border-border-base bg-surface-inset-base px-3 py-2 text-12-regular text-text-base outline-none placeholder:text-text-weaker focus:border-border-focus"
             />
-            <Button size="small" variant="primary" disabled={!query().trim() || searching()} onClick={() => void runSearch()}>
+            <Button size="small" variant="submit" disabled={!query().trim() || searching()} onClick={() => void runSearch()}>
               <Show when={searching()} fallback="Search"><Spinner class="size-3.5" /></Show>
             </Button>
           </div>
@@ -430,7 +435,7 @@ export default function LiteraturePage() {
               placeholder="or https://…/paper.pdf"
               class="min-w-0 flex-1 rounded-md border border-border-base bg-surface-inset-base px-3 py-2 text-12-regular text-text-base outline-none placeholder:text-text-weaker focus:border-border-focus"
             />
-            <Button size="small" variant="secondary" disabled={(!importPath().trim() && !importUrl().trim() && importFiles().length === 0) || importing()} onClick={() => void runImport()}>
+            <Button size="small" variant="neutral" disabled={(!importPath().trim() && !importUrl().trim() && importFiles().length === 0) || importing()} onClick={() => void runImport()}>
               <Show when={importing()} fallback="Import PDF"><Spinner class="size-3.5" /></Show>
             </Button>
           </div>
@@ -468,7 +473,7 @@ export default function LiteraturePage() {
               placeholder="zotero.sqlite path (one-time import)…"
               class="min-w-0 flex-1 rounded-md border border-border-base bg-surface-inset-base px-3 py-2 text-12-regular text-text-base outline-none placeholder:text-text-weaker focus:border-border-focus"
             />
-            <Button size="small" variant="secondary" disabled={!zoteroPath().trim() || importingZotero()} onClick={() => void runZoteroImport()}>
+            <Button size="small" variant="neutral" disabled={!zoteroPath().trim() || importingZotero()} onClick={() => void runZoteroImport()}>
               <Show when={importingZotero()} fallback="Import Zotero"><Spinner class="size-3.5" /></Show>
             </Button>
           </div>
@@ -531,8 +536,8 @@ export default function LiteraturePage() {
                 <h2 class="text-12-medium leading-5 text-text-base">{paper.title}</h2>
                 <p class="mt-1 truncate text-11-regular text-text-weak">{paper.authors.map((author) => author.name).join(", ") || "Unknown authors"}</p>
                 <div class="mt-2 flex items-center gap-2">
-                  <Tag>{paper.year ?? "n.d."}</Tag>
-                  <Tag>{paper.source}</Tag>
+                  <Badge>{paper.year ?? "n.d."}</Badge>
+                  <Badge>{paper.source}</Badge>
                   <span class="text-10-regular text-text-weaker">{paper.citationCount.toLocaleString()} citations</span>
                 </div>
               </button>
@@ -549,24 +554,24 @@ export default function LiteraturePage() {
               <p class="mt-2 text-12-regular text-text-weak">{detail().authors.map((author) => author.name).join(", ") || "Unknown authors"}</p>
 
               <div class="mt-4 flex flex-wrap items-center gap-2">
-                <Button size="small" variant="primary" onClick={() => openInGraph(detail().id)}>Open in graph</Button>
-                <Button size="small" variant="secondary" disabled={noting()} onClick={() => void runReadingNote()}>
+                <Button size="small" variant="submit" onClick={() => openInGraph(detail().id)}>Open in graph</Button>
+                <Button size="small" variant="neutral" disabled={noting()} onClick={() => void runReadingNote()}>
                   <Show when={noting()} fallback="Reading note"><Spinner class="size-3.5" /></Show>
                 </Button>
                 <Button size="small" variant="ghost" onClick={() => shell.setDockOpen(true)}>Ask agent</Button>
-                <Button size="small" variant="secondary" onClick={() => void toggleFlag("isRead")}>
+                <Button size="small" variant="neutral" onClick={() => void toggleFlag("isRead")}>
                   {detail().isRead ? "Mark unread" : "Mark read"}
                 </Button>
                 <Button size="small" variant="ghost" onClick={() => void toggleFlag("isFavorite")}>
                   {detail().isFavorite ? "Unfavorite" : "Favorite"}
                 </Button>
-                <Button size="small" variant="ghost" onClick={() => navigate(`/${params.dir}/latex`)}>Insert citation</Button>
+                <Button size="small" variant="ghost" onClick={() => navigate(link()!.module(`latex`))}>Insert citation</Button>
                 <Button
                   size="small"
                   variant="ghost"
                   title="Requires an archived literature PDF and a configured LIBRETRANSLATE_URL on the server"
                   onClick={() => {
-                    if (params.dir && selectedId()) navigate(`/${params.dir}/translate?paperId=${encodeURIComponent(selectedId()!)}`)
+                    if (selectedId()) navigate(link()!.module(`translate?paperId=${encodeURIComponent(selectedId()!)}`))
                   }}
                 >Translate</Button>
               </div>
@@ -611,7 +616,7 @@ export default function LiteraturePage() {
                       <button
                         type="button"
                         class="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none hover:bg-surface-base-hover focus-visible:bg-surface-base-hover"
-                        onClick={() => navigate(`/${params.dir}/session/${session.id}`)}
+                        onClick={() => navigate(link()!.session(session.id))}
                       >
                         <Icon name="speech-bubble" size="small" class="shrink-0 text-text-weak" />
                         <span class="min-w-0 flex-1 truncate text-12-medium text-text-base">{session.title}</span>
@@ -695,7 +700,7 @@ export default function LiteraturePage() {
                   <option value="nature">Nature</option>
                   <option value="springer">Springer</option>
                 </select>
-                <Button size="small" variant="secondary" onClick={() => void exportPaper()}>Export</Button>
+                <Button size="small" variant="neutral" onClick={() => void exportPaper()}>Export</Button>
                 <Button size="small" variant="ghost" onClick={() => void papersActions.refetch()}>Return to local library</Button>
               </div>
 
@@ -757,7 +762,7 @@ function DestinationRow(props: { readonly label: string; readonly module: string
       onClick={props.onClick}
     >
       <span class="text-12-medium text-text-base">{props.label}</span>
-      <Tag>{props.module}</Tag>
+      <Badge>{props.module}</Badge>
     </button>
   )
 }
@@ -789,7 +794,7 @@ function SimilarRow(props: { readonly entry: SimilarEntry; readonly onSelect: ()
     >
       <p class="text-12-medium leading-5 text-text-base">{props.entry.title}</p>
       <div class="mt-1 flex flex-wrap items-center gap-2">
-        <Tag>{props.entry.year ?? "n.d."}</Tag>
+        <Badge>{props.entry.year ?? "n.d."}</Badge>
         <span class="font-mono text-10-regular text-text-weaker">score {score() === undefined ? "n/a" : score()!.toFixed(2)}</span>
       </div>
     </button>
@@ -837,10 +842,10 @@ function CitationContent(props: { readonly entry: CitationEntry }) {
     <>
       <p class="text-12-medium leading-5 text-text-base">{props.entry.title ?? "Untitled reference"}</p>
       <div class="mt-1 flex flex-wrap items-center gap-2">
-        <Tag>{props.entry.year ?? "n.d."}</Tag>
-        <Tag>{props.entry.source}</Tag>
+        <Badge>{props.entry.year ?? "n.d."}</Badge>
+        <Badge>{props.entry.source}</Badge>
         <Show when={props.entry.inLibrary}>
-          <Tag>in library</Tag>
+          <Badge>in library</Badge>
         </Show>
         <Show when={props.entry.doi}>
           {(doi) => <span class="font-mono text-10-regular text-text-weaker">{doi()}</span>}

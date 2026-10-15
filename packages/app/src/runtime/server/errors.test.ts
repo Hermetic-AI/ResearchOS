@@ -125,6 +125,26 @@ describe("formatServerError", () => {
   })
 })
 
+describe("formatServerError researchos recovery", () => {
+  test.each([
+    {
+      message: "spawn tectonic ENOENT",
+      expected: "LaTeX compilation requires Tectonic. Install Tectonic, then run bun run researchos:doctor.",
+    },
+    {
+      message: "Translation service is unavailable",
+      expected: "Translation is unavailable. Configure LIBRETRANSLATE_URL, then run bun run researchos:doctor.",
+    },
+    {
+      message: "spawn uv ENOENT",
+      expected: "Data analysis requires uv and Python. Install the missing runtime, then run bun run researchos:doctor.",
+    },
+    { message: "Request timed out", expected: "Request timed out" },
+  ])("turns $message into a recovery step", ({ message, expected }) => {
+    expect(formatServerError(new Error(message), language.t)).toBe(expected)
+  })
+})
+
 describe("isSessionNotFoundError", () => {
   const body = {
     _tag: "SessionNotFoundError",

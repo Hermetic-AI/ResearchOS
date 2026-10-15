@@ -1,42 +1,41 @@
 import { Button } from "@opencode/ui/button"
 import { Spinner } from "@opencode/ui/spinner"
 import type {
-  ServerResearchosLatexCompileOutput,
-  ServerResearchosLatexFormatCheckOutput,
+  ServerResearchosLatexLatexCompileOutput,
+  ServerResearchosLatexLatexFormatCheckOutput,
 } from "@opencode/client"
 import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 import { MonacoLatex } from "./monaco-latex"
 import { PreviewPane } from "./preview-pane"
 import { WritingSidebar } from "./writing-sidebar"
 
-type Compile = ServerResearchosLatexCompileOutput["data"]
-type FormatIssue = ServerResearchosLatexFormatCheckOutput["data"]["issues"][number]
+type Compile = ServerResearchosLatexLatexCompileOutput["data"]
+type FormatIssue = ServerResearchosLatexLatexFormatCheckOutput["data"]["issues"][number]
 type Diagnostic = { file: string; line: number; message: string; severity: "error" | "warning" | "info"; rule?: string }
 type Selection = { text: string; start: number; end: number }
 type OutlineItem = { level: number; title: string; line: number }
 
 export default function LatexPage() {
-  const sdk = useSDK()
-  const serverSDK = useServerSDK()
+  const directory = useResearchosDirectory()
+    const serverSDK = useServerSDK()
   const platform = usePlatform()
   const shell = useResearchosShell()
   const rootClient = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
+    password: serverSDK.server.http.password,
   }))
-  const latex = createMemo(() => rootClient()["server.researchos-latex"])
-  const writing = createMemo(() => rootClient()["server.researchos-writing"])
-  const literature = createMemo(() => rootClient()["server.researchos-literature"])
-  const location = () => ({ directory: sdk().directory })
+  const latex = createMemo(() => rootClient()["server.researchos-latex"].latex)
+  const writing = createMemo(() => rootClient()["server.researchos-writing"].writing)
+  const literature = createMemo(() => rootClient()["server.researchos-literature"].literature)
+  const location = () => ({ directory: directory() })
 
-  const [files, filesActions] = createResource(() => sdk().directory, async () => latex().files({ location: location() }).then((result) => result.data.files))
+  const [files, filesActions] = createResource(() => directory(), async () => latex().files({ location: location() }).then((result) => result.data.files))
   const [selectedFile, setSelectedFile] = createSignal<string>()
   const [mainFile, setMainFile] = createSignal<string>()
   const [source] = createResource(selectedFile, async (file) => latex().source({ location: location(), file }).then((result) => result.data))
@@ -57,7 +56,7 @@ export default function LatexPage() {
   const dirty = createMemo(() => content() !== saved())
   const bibFile = createMemo(() => files()?.find((file) => file.endsWith(".bib")))
   const liveOutline = createMemo(() => parseOutline(content()))
-  const [builds] = createResource(() => sdk().directory, async () => latex().builds({ location: location(), limit: 20 }).then((result) => result.data.builds))
+  const [builds] = createResource(() => directory(), async () => latex().builds({ location: location(), limit: 20 }).then((result) => result.data.builds))
 
   createEffect(() => {
     const available = files()
@@ -108,7 +107,7 @@ export default function LatexPage() {
     if (!file || !dirty()) return
     setBusy(true)
     setStatus(`Saving ${file}…`)
-    await latex().sourceWrite({ location: location(), file, content: content() })
+    await latex().source_write({ location: location(), file, content: content() })
       .then(() => { setSaved(content()); setStatus(`Saved ${file}`) })
       .catch((error) => setStatus(error instanceof Error ? error.message : String(error)))
       .finally(() => setBusy(false))
@@ -201,8 +200,8 @@ export default function LatexPage() {
           <h1 class="truncate text-13-medium">LaTeX workbench</h1>
           <p class="truncate text-10-regular text-text-weak">{status()}</p>
         </div>
-        <Button size="small" variant="primary" disabled={busy() || !mainFile()} onClick={() => void compile()}>{busy() ? "Working…" : "Compile"}</Button>
-        <Button size="small" variant="secondary" disabled={busy() || !dirty()} onClick={() => void save()}>Save{dirty() ? " •" : ""}</Button>
+        <Button size="small" variant="submit" disabled={busy() || !mainFile()} onClick={() => void compile()}>{busy() ? "Working…" : "Compile"}</Button>
+        <Button size="small" variant="neutral" disabled={busy() || !dirty()} onClick={() => void save()}>Save{dirty() ? " •" : ""}</Button>
         <Button size="small" variant="ghost" disabled={busy() || !mainFile()} onClick={() => void checkFormat()}>Format check</Button>
         <Button size="small" variant="ghost" disabled={!pdf()} onClick={() => void forwardSync()}>Locate in PDF</Button>
         <div class="ml-auto flex items-center gap-2 text-10-regular text-text-weak">
@@ -278,13 +277,13 @@ export default function LatexPage() {
           onRevealLine={setRevealLine}
           onInsert={replaceSelection}
           onReplaceSelection={replaceSelection}
-          convertTable={(input) => writing().tableToLatex({ location: location(), ...input }).then((result) => result.data.text)}
-          convertMarkdown={(markdown) => writing().mdToLatex({ location: location(), markdown }).then((result) => result.data.text)}
+          convertTable={(input) => writing().table({ location: location(), ...input }).then((result) => result.data.text)}
+          convertMarkdown={(markdown) => writing().md2latex({ location: location(), markdown }).then((result) => result.data.text)}
           diff={(original, revised) => writing().diff({ location: location(), original, revised }).then((result) => ({
             parts: result.data.parts.map((part) => ({ value: part.value, ...(part.added ? { added: true } : {}), ...(part.removed ? { removed: true } : {}) })),
             hunks: result.data.hunks.map((hunk) => ({ index: finiteNumber(hunk.index) ?? 0, original: hunk.original, revised: hunk.revised })),
           }))}
-          applyDiff={(original, revised, accepted) => writing().applyDiff({ location: location(), original, revised, accepted }).then((result) => result.data.text)}
+          applyDiff={(original, revised, accepted) => writing().diff_apply({ location: location(), original, revised, accepted }).then((result) => result.data.text)}
           searchPapers={(query) => literature().search({ location: location(), query, limit: 10 }).then((result) => result.data.map((paper) => ({
             id: paper.id,
             title: paper.title,
@@ -294,15 +293,15 @@ export default function LatexPage() {
           addCitation={async (paperId) => {
             const bib = bibFile()
             if (!bib) throw new Error("No .bib file in this project")
-            const resolved = await writing().bibtexFromLibrary({ location: location(), paperIds: [paperId] }).then((result) => result.data)
+            const resolved = await writing().bibtex_library({ location: location(), paperIds: [paperId] }).then((result) => result.data)
             const entry = resolved.entries[0]
             if (!entry) throw new Error("Paper has no local BibTeX record")
-            await writing().bibtexUpsert({ location: location(), bibFile: bib, entries: [entry] })
+            await writing().bibtex_upsert({ location: location(), bibFile: bib, entries: [entry] })
             setCitationKeys((keys) => [...new Set([...keys, entry.key])].sort())
             return entry.key
           }}
           recordRewrite={async ({ original, output, status }) => {
-            await writing().suggestionRecord({ location: location(), kind: "rewrite", targetFile: selectedFile(), inputExcerpt: original, output, status })
+            await writing().suggestion_record({ location: location(), kind: "rewrite", targetFile: selectedFile(), inputExcerpt: original, output, status })
           }}
         />
       </div>

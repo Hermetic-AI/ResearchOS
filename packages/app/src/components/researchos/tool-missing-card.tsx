@@ -1,12 +1,13 @@
 import { Button } from "@opencode/ui/button"
 import { createSignal } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
 
 export function ToolMissingCard(props: { tool: string; error: string }) {
-  const sdk = useSDK()
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
   const serverSDK = useServerSDK()
   const platform = usePlatform()
   const [installing, setInstalling] = createSignal(false)
@@ -18,17 +19,23 @@ export function ToolMissingCard(props: { tool: string; error: string }) {
     setFailed(undefined)
     try {
       const client = createResearchosClient({
-        baseUrl: sdk().url,
+        baseUrl: serverSDK.url,
         fetch: platform.fetch,
-        username: serverSDK().server.http.username,
-        password: serverSDK().server.http.password,
+        password: serverSDK.server.http.password,
       })
-      const assetApi = client["server.researchos-assets"]
-      const location = { directory: sdk().directory }
+      const assetApi = client["server.researchos-assets"].asset
+      const location = { directory: directory() }
       await assetApi.presetInstall({ location, pack: "researchos-mcp", target: "project" })
       await assetApi.presetInstall({ location, pack: "researchos-agents", target: "project" })
       await assetApi.presetInstall({ location, pack: "researchos-skills", target: "project" })
-      await sdk().client.mcp.connect({ name: props.tool }).catch(() => {})
+      // The failed tool only names itself; reconnect every researchos MCP server the
+      // preset just wrote into the project config.
+      const servers = await serverSDK.api.mcp.list({ location }).catch(() => undefined)
+      await Promise.all(
+        (servers?.data ?? [])
+          .filter((server) => server.name.startsWith("researchos"))
+          .map((server) => serverSDK.api.mcp.connect({ server: server.name, location }).catch(() => undefined)),
+      )
       setInstalled(true)
     } catch (error) {
       setFailed(error instanceof Error ? error.message : String(error))
@@ -45,7 +52,7 @@ export function ToolMissingCard(props: { tool: string; error: string }) {
       </p>
       <p class="mt-1 line-clamp-2 font-mono text-10-regular text-text-weaker">{props.error}</p>
       <div class="mt-2 flex items-center gap-2">
-        <Button size="small" variant="primary" disabled={installing() || installed()} onClick={() => void install()}>
+        <Button size="small" variant="submit" disabled={installing() || installed()} onClick={() => void install()}>
           {installed() ? "Installed" : installing() ? "Installing…" : "Install research tools"}
         </Button>
         {failed() && <span class="text-10-regular text-text-on-critical-strong">{failed()}</span>}

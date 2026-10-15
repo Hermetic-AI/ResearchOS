@@ -34,6 +34,10 @@ import { rootSession } from "@/shell/routes/session"
 import { TitlebarItem } from "@opencode/gui-extensions/sdk"
 import { useExtensionHost } from "@/runtime/extension/host"
 import { TitlebarItems, useTitlebarItems } from "@/runtime/extension/titlebar-items"
+// researchos:start — 模块切换菜单（横排标题栏）与侧栏模块列表（竖排侧栏）
+import { ResearchosModulesMenu } from "@/components/researchos-modules-menu"
+import { ResearchosModuleList } from "@/components/researchos-rail"
+// researchos:end
 import devIcon from "../../../../desktop/icons/dev/64x64.png"
 import betaIcon from "../../../../desktop/icons/beta/64x64.png"
 
@@ -541,6 +545,11 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                   <WindowsAppMenu command={command} platform={platform} />
                 </Show>
                 <Show when={!mobile() && !props.verticalTabs}>{homeButton()}</Show>
+                {/* researchos:start */}
+                <Show when={!mobile() && !props.verticalTabs}>
+                  <ResearchosModulesMenu />
+                </Show>
+                {/* researchos:end */}
 
                 <Show
                   when={!mobile()}
@@ -726,6 +735,9 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                               <ChannelIndicator sidebar />
                             </Show>
                             {homeButton(true)}
+                            {/* researchos:start — 研究模块列表与会话同层，点击直达 */}
+                            <ResearchosModuleList />
+                            {/* researchos:end */}
                             <RecentlyClosedTabsMenu
                               vertical
                               onNewTab={openNewTab}

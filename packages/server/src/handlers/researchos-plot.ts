@@ -116,21 +116,23 @@ function withLocation<T>(run: (directory: string) => Promise<T>) {
 }
 
 async function runBridge(directory: string, operation: "create" | "tune" | "annotate", payload: Record<string, unknown>) {
-  const process = Bun.spawn({
-    cmd: ["uv", "run", "--directory", resolve(import.meta.dir, "../../../researchos-mcp/plot"), "researchos-plot-bridge"],
-    cwd: directory,
-    env: { ...Bun.env, RESEARCHOS_PROJECT_ROOT: directory },
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "pipe",
-  })
-  process.stdin.write(JSON.stringify({ operation, payload }))
-  process.stdin.end()
-  const timer = setTimeout(() => process.kill(), 120_000)
+  const bridge = Bun.spawn(
+    ["uv", "run", "--directory", resolve(import.meta.dir, "../../../researchos-mcp/plot"), "researchos-plot-bridge"],
+    {
+      cwd: directory,
+      env: { ...process.env, RESEARCHOS_PROJECT_ROOT: directory },
+      stdin: "pipe",
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  )
+  bridge.stdin.write(JSON.stringify({ operation, payload }))
+  bridge.stdin.end()
+  const timer = setTimeout(() => bridge.kill(), 120_000)
   const [exitCode, stdout, stderr] = await Promise.all([
-    process.exited,
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
+    bridge.exited,
+    new Response(bridge.stdout).text(),
+    new Response(bridge.stderr).text(),
   ])
   clearTimeout(timer)
   if (exitCode !== 0) throw new Error(stderr.trim() || `plot bridge exited with code ${exitCode}`)

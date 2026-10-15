@@ -2,9 +2,10 @@ import { ImagePreview } from "@opencode/ui/image-preview"
 import { useDialog } from "@opencode/ui/context/dialog"
 import type { ReferenceInfo } from "@opencode/client/promise"
 import type { Links, MountedSession } from "@opencode/gui-extensions/sdk"
-import { createComponent, createEffect, createMemo, on } from "solid-js"
+import { createComponent, createEffect, createMemo, createResource, on } from "solid-js"
 import { Predicate } from "effect"
-import type { ComposerSuggestion } from "./types"
+import type { OpenCodeClient } from "@opencode/client"
+import type { ComposerFilePart, ComposerSuggestion } from "./types"
 import { createComposerEditor, createComposerEditorState, type ComposerEditorModel } from "./editor/interaction"
 import { selectionFromLines, type SelectedLineRange, useFile } from "@/workspaces/files/model"
 import { useComments } from "@/composer/comments"
@@ -26,6 +27,11 @@ import { createComposerHistory } from "./history/store"
 import { createComposerSubmit } from "./submit"
 import { useAttachmentDestination } from "./attachments/destination"
 import { parseClientSlashCommand } from "./client-slash-command"
+import { createComposerEditorActions } from "./editor/actions"
+// researchos:start — @paper mentions from the project literature library
+import { createResearchosClient } from "@/utils/researchos-client"
+import { archivedPdfPath, type LiteraturePaper } from "@/components/researchos/paper-context"
+// researchos:end
 
 export type ComposerModel = ComposerEditorModel & {
   readonly model: ComposerControls["model"]
@@ -187,6 +193,51 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
 
   const skills = createMemo(() => data.location.skill.list({ directory: sdk().directory }) ?? [])
 
+  // researchos:start — @paper mention source (ResearchOS literature library)
+  const draft = createComposerEditorActions(prompt.store)
+  const serverSDK = server.ctx.sdk
+  const literature = createMemo(
+    () =>
+      createResearchosClient({
+        baseUrl: serverSDK.url,
+        fetch: platform.fetch,
+        password: serverSDK.server.http.password,
+      })["server.researchos-literature"].literature,
+  )
+  const [libraryPapers] = createResource(
+    () => sdk().directory,
+    async (directory) =>
+      literature()
+        .list({ location: { directory }, limit: 100 })
+        .then((result) => result.data ?? [])
+        .catch(() => []),
+  )
+  const paperList = createMemo<ComposerSuggestion[]>(() =>
+    (libraryPapers() ?? []).map((paper) => ({
+      id: `paper:${paper.id}`,
+      kind: "paper" as const,
+      label: paper.title,
+      paperId: paper.id,
+      description:
+        typeof paper.year === "number" && Number.isFinite(paper.year) ? `${paper.id} · ${paper.year}` : paper.id,
+    })),
+  )
+  const attachPaper = async (paper: LiteraturePaper) => {
+    const mention = await paperMention(serverSDK.api, sdk().directory, paper)
+    if (mention) {
+      draft.addMention(mention)
+
+      return
+    }
+    // Nothing archived to attach: replace the @ trigger with the paper's metadata line.
+    const current = draft.state.prompt.map((part) => ("content" in part ? part.content : "")).join("")
+    const end = draft.state.cursor ?? current.length
+    const start = current.slice(0, end).lastIndexOf("@")
+    const snippet = paperMetadata(paper)
+    draft.setText(start < 0 ? `${current} ${snippet}` : `${current.slice(0, start)}${snippet} ${current.slice(end)}`)
+  }
+  // researchos:end
+
   const context = createMemo<ComposerSuggestion[]>(() => [
     ...references(),
     ...skills().map((skill) => ({
@@ -212,6 +263,9 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
         label: `@${agent.name}`,
         mention: { type: "agent" as const, name: agent.name, content: `@${agent.name}`, start: 0, end: 0 },
       })),
+    // researchos:start — literature papers between agents and recent files
+    ...paperList(),
+    // researchos:end
     ...recent().map((path) => ({
       id: `file:${path}`,
       kind: "file" as const,
@@ -354,6 +408,15 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
       if (adapter.kind === "active-session") adapter.setEditor(editor)
     },
     onSuggestionSelect(item) {
+      // researchos:start — @paper mentions resolve their archived file when selected
+      if (item.kind === "paper") {
+        const paper = (libraryPapers() ?? []).find((entry) => entry.id === item.paperId)
+        if (!paper) return
+        void attachPaper(paper)
+
+        return () => {}
+      }
+      // researchos:end
       if (item.kind !== "command") return
       const selected = slashCommands().find((entry) => entry.id === item.id)
 
@@ -511,3 +574,30 @@ function openComment(
   if (item.commentOrigin === "review") return queueFocus()
   void Promise.resolve(files.load(item.path)).finally(() => queueFocus())
 }
+
+// researchos:start — @paper mention target: the archived PDF, else the full text the library extracted
+async function paperMention(api: OpenCodeClient, directory: string, paper: LiteraturePaper) {
+  const pdf = await archivedPdfPath({ api, directory, paper })
+  if (pdf) return paperFileMention(paper, pdf, "application/pdf", `${paper.title}.pdf`)
+
+  const nodes = await api.file
+    .list({ location: { directory }, path: ".researchos/literature/text" })
+    .then((result) => result.data ?? [])
+    .catch(() => [])
+  if (!nodes.some((node) => node.type === "file" && node.path.endsWith(`/${paper.id}.txt`))) return
+
+  return paperFileMention(paper, `.researchos/literature/text/${paper.id}.txt`, "text/plain", `${paper.id}.txt`)
+}
+
+function paperFileMention(paper: LiteraturePaper, path: string, mime: string, filename: string): ComposerFilePart {
+  return { type: "file", path, content: `@${paper.title}`, start: 0, end: 0, mime, filename }
+}
+
+function paperMetadata(paper: LiteraturePaper) {
+  const abstract = (paper.abstract ?? "").trim()
+  const summary = abstract.length > 500 ? `${abstract.slice(0, 500)}…` : abstract
+  const year = typeof paper.year === "number" && Number.isFinite(paper.year) ? `, ${paper.year}` : ""
+
+  return `@paper "${paper.title}" (${paper.id}${year}): ${summary || "no abstract available"}`
+}
+// researchos:end

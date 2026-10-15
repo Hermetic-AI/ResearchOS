@@ -22,7 +22,7 @@ export function LatexPanel(props: { resource?: string }) {
           The full LaTeX editor is available in the main workspace. Use the panel for quick reviews or to hand the current file to the agent.
         </p>
         <div class="flex gap-2">
-          <Button size="small" variant="secondary" onClick={askAgent}>Ask @paper-writer</Button>
+          <Button size="small" variant="neutral" onClick={askAgent}>Ask @paper-writer</Button>
         </div>
         <Show when={props.resource}>
           {(file) => (

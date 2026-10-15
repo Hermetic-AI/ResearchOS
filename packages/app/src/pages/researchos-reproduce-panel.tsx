@@ -22,7 +22,7 @@ export function ReproducePanel(props: { resource?: string }) {
           Manage six-step reproduction runs in the main workspace. The panel shows the current run status and hands failures to the doctor agent.
         </p>
         <div class="flex gap-2">
-          <Button size="small" variant="secondary" onClick={askAgent}>Diagnose with agent</Button>
+          <Button size="small" variant="neutral" onClick={askAgent}>Diagnose with agent</Button>
         </div>
         <Show when={props.resource}>
           {(resource) => (

@@ -22,7 +22,7 @@ export function DataPanelEmbed(props: { resource?: string }) {
           Open the data notebook in the main workspace to run cells, register datasets, and view artifacts.
         </p>
         <div class="flex gap-2">
-          <Button size="small" variant="secondary" onClick={askAgent}>Analyze with agent</Button>
+          <Button size="small" variant="neutral" onClick={askAgent}>Analyze with agent</Button>
         </div>
         <Show when={props.resource}>
           {(resource) => (

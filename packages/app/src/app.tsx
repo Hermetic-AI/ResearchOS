@@ -19,6 +19,12 @@ import { ErrorPage } from "@/shell/errors/error"
 import { AppRoutes, File, preloadRoute } from "@/shell/routes/routes"
 import { ExtensionRoot } from "@/runtime/extension/root"
 
+// researchos:start — 在每个工具输出上检查 researchos.ui 指令并渲染面板卡片
+import { registerResearchosToolPart } from "@/components/researchos/tool-part"
+
+registerResearchosToolPart()
+// researchos:end
+
 export { preloadRoute }
 
 function QueryProvider(props: ParentProps) {

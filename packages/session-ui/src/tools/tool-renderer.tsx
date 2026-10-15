@@ -1168,6 +1168,19 @@ export const ToolRegistry = {
   render: getTool,
 }
 
+// Hosts may decorate every tool part (ResearchOS panel directives, missing-MCP hints)
+// without replacing a per-tool renderer. Registration is expected before first render.
+export type ToolPartDecorator = (props: ToolProps & { id: string; error?: string }) => JSX.Element
+const decorators: ToolPartDecorator[] = []
+
+export function addToolPartDecorator(decorator: ToolPartDecorator) {
+  decorators.push(decorator)
+  return () => {
+    const index = decorators.indexOf(decorator)
+    if (index >= 0) decorators.splice(index, 1)
+  }
+}
+
 function FileTool(props: ToolProps & { title: string; count: number; children?: JSX.Element }) {
   const i18n = useI18n()
 
@@ -1373,6 +1386,7 @@ export function ToolDisplay(
   return (
     <Show when={!hideQuestion()}>
       <div data-component="tool-part-wrapper" data-timeline-part-id={props.id}>
+        {decorators.map((decorator) => decorator(props))}
         <Switch>
           <Match when={error()}>
             {(error) => {

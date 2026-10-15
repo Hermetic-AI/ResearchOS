@@ -1,11 +1,12 @@
 import { createMemo, createResource, For, Show } from "solid-js"
 import { Spinner } from "@opencode/ui/spinner"
-import { Tag } from "@opencode/ui/tag"
-import { useNavigate, useParams } from "@solidjs/router"
-import type { ServerResearchosGraphNodeOutput } from "@opencode/client"
+import { Badge } from "@opencode/ui/badge"
+import { useNavigate } from "@solidjs/router"
+import { useResearchosLink } from "@/components/researchos-rail"
+import type { ServerResearchosGraphGraphNodeOutput } from "@opencode/client"
 import { nodeColors } from "./graph-colors"
 
-type NodeDetail = ServerResearchosGraphNodeOutput["data"]
+type NodeDetail = ServerResearchosGraphGraphNodeOutput["data"]
 
 export function NodeDrawer(props: {
   nodeId: string
@@ -13,8 +14,8 @@ export function NodeDrawer(props: {
   onSelect: (id: string) => void
   onClose: () => void
 }) {
-  const params = useParams<{ dir: string }>()
   const navigate = useNavigate()
+  const link = useResearchosLink()
   const [detail] = createResource(
     () => props.nodeId,
     (id) => props.fetcher(id),
@@ -40,7 +41,7 @@ export function NodeDrawer(props: {
               <button type="button" class="text-11-regular text-text-weak hover:text-text-base" onClick={props.onClose}>Close</button>
             </div>
             <div class="mt-2 flex flex-wrap items-center gap-2">
-              <Tag>{data().node.type}</Tag>
+              <Badge>{data().node.type}</Badge>
               <Show when={data().node.sourcePath}>
                 {(path) => <span class="font-mono text-10-regular text-text-weaker">{path()}</span>}
               </Show>
@@ -62,7 +63,7 @@ export function NodeDrawer(props: {
                   <button
                     type="button"
                     class="mt-3 text-11-medium text-text-interactive-base hover:underline"
-                    onClick={() => navigate(`/${params.dir}/literature`)}
+                    onClick={() => navigate(link()!.module(`literature`))}
                   >
                     Open in literature
                   </button>

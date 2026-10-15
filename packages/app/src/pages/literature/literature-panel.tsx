@@ -1,40 +1,41 @@
 import { Button } from "@opencode/ui/button"
 import { Spinner } from "@opencode/ui/spinner"
 import { Show, createEffect, createMemo, createResource, onCleanup } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
 import { archivedPdfPath, readingNotePath } from "@/components/researchos/paper-context"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 
 export function LiteraturePanel(props: { paperId?: string }) {
-  const sdk = useSDK()
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
   const serverSDK = useServerSDK()
   const platform = usePlatform()
   const shell = useResearchosShell()
   const client = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-literature"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-literature"].literature)
 
   const [paper] = createResource(
     () => props.paperId,
-    async (id) => client().get({ id, location: { directory: sdk().directory } }).then((result) => result.data),
+    async (id) => client().get({ id, location: { directory: directory() } }).then((result) => result.data),
   )
   const [note] = createResource(
     () => props.paperId,
     async (id) => {
       const path = readingNotePath(id)
-      const result = await sdk().client.file.read({ path }).catch(() => undefined)
-      return result?.data?.type === "text" ? result.data.content : undefined
+      const bytes = await serverSDK.api.file.read({ path, location: { directory: directory() } }).catch(() => undefined)
+      if (!bytes) return undefined
+      return new TextDecoder().decode(bytes)
     },
   )
   const [pdfPath] = createResource(
     () => paper(),
-    async (value) => (value ? archivedPdfPath(sdk(), value) : undefined),
+    async (value) => (value ? archivedPdfPath({ api: serverSDK.api, directory: directory(), paper: value }) : undefined),
   )
 
   createEffect(() => {
@@ -78,7 +79,7 @@ export function LiteraturePanel(props: { paperId?: string }) {
             <Show when={pdfPath()}>
               {(path) => <p class="font-mono text-10-regular text-text-weaker">{path()}</p>}
             </Show>
-            <Button size="small" variant="secondary" onClick={askAgent}>Ask agent about this paper</Button>
+            <Button size="small" variant="neutral" onClick={askAgent}>Ask agent about this paper</Button>
           </div>
         )}
       </Show>

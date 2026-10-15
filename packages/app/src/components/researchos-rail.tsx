@@ -1,15 +1,11 @@
 import { createMemo, For, Show } from "solid-js"
-import { useLocation, useNavigate } from "@solidjs/router"
-import { base64Encode } from "@opencode/core/util/encode"
+import { useNavigate } from "@solidjs/router"
+import { base64Encode } from "@opencode/util/encode"
 import { Icon } from "@opencode/ui/icon"
-import { IconButton } from "@opencode/ui/icon-button"
-import { Tooltip } from "@opencode/ui/tooltip"
-import { IconButtonV2 } from "@opencode/ui/v2/icon-button-v2"
-import { TooltipV2 } from "@opencode/ui/v2/tooltip-v2"
-import { useLayout } from "@/context/layout"
-import { useServerSync } from "@/context/server-sync"
+import { useLayout } from "@/shell/state/layout"
+import { useGlobal } from "@/runtime/server/runtime"
 import { createResearchosCounts } from "@/components/researchos/counts"
-import { decode64 } from "@/utils/base64"
+import { decode64 } from "@/runtime/persistence/base64"
 
 export const researchosModules = [
   { icon: "models" as const, label: "Overview", route: "overview", description: "Live snapshot of every research module in this project." },
@@ -24,104 +20,99 @@ export const researchosModules = [
   { icon: "subagent" as const, label: "Asset Center", route: "assets", description: "Manage agents, skills, and commands for this project." },
 ]
 
-// 目录解析：优先当前路径（/:dir/<module> 或 /:dir/session/…），
-// 再从新布局会话路由（/server/:serverKey/session/:id）的 Session 记录兜底，
-// 最后回落到主页当前选中的项目——主页选中项目后即可进入研究模块，无需先建会话。
-// 其余项目无关页面返回 undefined，调用方应隐藏入口。
+// 目录解析：研究模块路由自带 base64 目录，直接解出；
+// 会话路由回落到该会话 location.directory；主页则回落到主页选中的项目——
+// 选中项目后即可直接进入研究模块，无需先建会话。
+// 其余页面（设置、连接、草稿）返回 undefined，调用方应隐藏入口。
 export function useResearchosDirectory() {
-  const location = useLocation()
   const layout = useLayout()
-  const sync = useServerSync()
+  const global = useGlobal()
+
   return createMemo(() => {
-    const fromPath = decode64(location.pathname.split("/").filter(Boolean)[0] ?? "")
-    if (fromPath) return fromPath
     const route = layout.route()
-    if (route.type === "dir-new-sesssion") return route.dir
-    if (route.type === "session") return sync().session.get(route.sessionId)?.directory
-    if (route.type !== "home") return undefined
+
+    if (route.type === "researchos") return decode64(route.dir)
+    if (route.type === "session") {
+      return global.serverCtx(route.server)?.data.session.get(route.sessionId)?.location.directory
+    }
+    if (route.type !== "home") return
+
     return layout.home.selection().directory
   })
 }
 
-// 旧布局窄侧栏（w-16 图标列）的模块入口：空间只够图标，名称与说明放在 tooltip。
-// 宽侧栏面板用 ResearchosModuleList，主页用 ResearchosModuleRailV2，
-// 会话页用标题栏 ResearchosModulesMenu——每个场景一种形态，数据源同为 researchosModules。
-export function ResearchosModuleRail() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const directory = useResearchosDirectory()
+// 研究模块所属的 server key：模块路由与会话路由自带，主页取选中的项目。
+export function useResearchosServer() {
+  const layout = useLayout()
 
-  return (
-    <Show when={directory()}>
-      <nav class="flex w-full flex-col items-center gap-2 border-t border-border-base py-2" aria-label="ResearchOS modules">
-        <For each={researchosModules}>
-          {(m) => (
-            <Tooltip placement="right" value={`${m.label} — ${m.description}`}>
-              <IconButton
-                icon={m.icon}
-                variant={location.pathname.endsWith(`/${m.route}`) ? "secondary" : "ghost"}
-                size="small"
-                onClick={() => navigate(`/${base64Encode(directory()!)}/${m.route}`)}
-                aria-label={m.label}
-              />
-            </Tooltip>
-          )}
-        </For>
-      </nav>
-    </Show>
-  )
+  return createMemo(() => {
+    const route = layout.route()
+
+    if (route.type === "researchos" || route.type === "session") return route.server
+    if (route.type !== "home") return
+
+    return layout.home.selection().server
+  })
 }
 
-// 新布局主页的模块 rail：选中项目后直接点亮研究模块入口，无需先建会话。
-// 只在主页路由渲染——/:dir/* 工作台页面由旧侧栏的 ResearchosModuleList 承担，
-// 会话页由标题栏 ResearchosModulesMenu 承担，避免导航重复。
-export function ResearchosModuleRailV2() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const directory = useResearchosDirectory()
-  const atHome = () => location.pathname === "/"
-
-  return (
-    <Show when={atHome() && directory()}>
-      <nav
-        class="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-v2-border-border-muted py-2"
-        aria-label="ResearchOS modules"
-      >
-        <For each={researchosModules}>
-          {(m) => (
-            <TooltipV2 placement="right" value={`${m.label} — ${m.description}`}>
-              <IconButtonV2
-                type="button"
-                variant={location.pathname.endsWith(`/${m.route}`) ? "neutral" : "ghost-muted"}
-                size="normal"
-                icon={<Icon name={m.icon} size="small" />}
-                aria-label={m.label}
-                onClick={() => navigate(`/${base64Encode(directory()!)}/${m.route}`)}
-              />
-            </TooltipV2>
-          )}
-        </For>
-      </nav>
-    </Show>
-  )
+export type ResearchosLink = {
+  /** 研究模块地址，path 可带查询串，例如 "graph?paper=xxx" */
+  module(path: string): string
+  session(sessionID: string): string
 }
 
-// 原生侧栏面板用的带文字模块列表：让研究模块与会话同层可见、一键直达
-export function ResearchosModuleList(props: { directory?: string }) {
+export function useResearchosLink() {
+  const server = useResearchosServer()
+  const directory = useResearchosDirectory()
+
+  return createMemo<ResearchosLink | undefined>(() => {
+    const current = server()
+    const dir = directory()
+
+    if (!current || !dir) return
+    const base = `/server/${base64Encode(current)}`
+
+    return {
+      module: (path) => `${base}/researchos/${base64Encode(dir)}/${path}`,
+      session: (sessionID) => `${base}/session/${sessionID}`,
+    }
+  })
+}
+
+// 当前项目下各模块的跳转地址；目录或服务端未知时返回 undefined，调用方应隐藏入口。
+export function useResearchosHref() {
+  const link = useResearchosLink()
+
+  return createMemo(() => {
+    const current = link()
+
+    if (!current) return
+
+    return (module: string) => current.module(module)
+  })
+}
+
+// 原生侧栏用的带文字模块列表：让研究模块与会话同层可见、一键直达。
+// 会话页的模块切换由标题栏 ResearchosModulesMenu 承担，避免导航重复。
+export function ResearchosModuleList() {
+  const href = useResearchosHref()
+  const directory = useResearchosDirectory()
+  const layout = useLayout()
   const navigate = useNavigate()
-  const location = useLocation()
-  const fallback = useResearchosDirectory()
-  const directory = () => props.directory ?? fallback()
   const counts = createResearchosCounts(directory)
 
   return (
-    <Show when={directory()}>
-      {(dir) => (
+    <Show when={href()}>
+      {(to) => (
         <nav class="px-2 pb-2" aria-label="ResearchOS modules">
           <p class="px-2 pb-1 pt-2 text-10-medium uppercase tracking-wide text-text-weaker">Research</p>
           <For each={researchosModules}>
             {(m) => {
-              const active = () => location.pathname.endsWith(`/${m.route}`)
+              const active = createMemo(() => {
+                const route = layout.route()
+
+                return route.type === "researchos" && route.module === m.route
+              })
               // aria-hidden keeps the button's accessible name ("Literature") stable for e2e
               return (
                 <button
@@ -130,7 +121,7 @@ export function ResearchosModuleList(props: { directory?: string }) {
                     "bg-background-selected text-text-strong": active(),
                     "text-text-weak": !active(),
                   }}
-                  onClick={() => navigate(`/${base64Encode(dir())}/${m.route}`)}
+                  onClick={() => navigate(to()(m.route))}
                 >
                   <Icon name={m.icon} size="small" />
                   <span>{m.label}</span>

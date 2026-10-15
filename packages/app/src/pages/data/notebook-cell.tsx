@@ -49,7 +49,7 @@ export function NotebookCell(props: {
           "text-text-weak": props.cell.status === "idle",
         }}>{running() ? "running" : props.cell.status}</span>
         <Button size="small" variant="ghost" disabled={source() === saved() || running()} onClick={() => void save()}>Save</Button>
-        <Button size="small" variant="primary" disabled={running()} onClick={() => void run()}>{running() ? <Spinner class="size-3" /> : "Run"}</Button>
+        <Button size="small" variant="submit" disabled={running()} onClick={() => void run()}>{running() ? <Spinner class="size-3" /> : "Run"}</Button>
       </header>
       <div class="grid grid-cols-[40px_1fr] bg-background-base">
         <pre class="select-none border-r border-border-weak-base py-3 text-right font-mono text-11-regular leading-5 text-text-weaker">{source().split("\n").map((_, index) => `${index + 1}\n`).join("")}</pre>

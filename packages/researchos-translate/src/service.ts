@@ -12,7 +12,7 @@ export async function translatePaper(root: string, input: { paperId: string; sec
   if (!paper?.pdfPath) throw new Error(`paper has no archived PDF: ${input.paperId}`)
   const pdf = resolve(root, paper.pdfPath)
   if (!pdf.startsWith(resolve(root))) throw new Error("PDF path escapes project root")
-  const extractor = Bun.spawn({ cmd: ["uv", "run", "--directory", resolve(import.meta.dir, "../../researchos-mcp/translate"), "python", "src/server.py", "extract", relative(root, pdf)], cwd: root, env: { ...Bun.env, RESEARCHOS_PROJECT_ROOT: root }, stdout: "pipe", stderr: "pipe" })
+  const extractor = Bun.spawn(["uv", "run", "--directory", resolve(import.meta.dir, "../../researchos-mcp/translate"), "python", "src/server.py", "extract", relative(root, pdf)], { cwd: root, env: { ...process.env, RESEARCHOS_PROJECT_ROOT: root }, stdout: "pipe", stderr: "pipe" })
   const [code, stdout, stderr] = await Promise.all([extractor.exited, new Response(extractor.stdout).text(), new Response(extractor.stderr).text()])
   if (code !== 0) throw new Error(stderr.trim() || `PDF extractor exited with ${code}`)
   const extracted = JSON.parse(stdout) as { blocks: Array<{ kind: string; text: string }> }

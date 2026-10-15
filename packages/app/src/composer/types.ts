@@ -42,7 +42,8 @@ export type ComposerOption = {
 
 export type ComposerSuggestion = {
   id: string
-  kind: "agent" | "command" | "file" | "reference" | "resource" | "skill"
+  // researchos: "paper" suggestions resolve their mention only when selected, so paperId carries the lookup key.
+  kind: "agent" | "command" | "file" | "reference" | "resource" | "skill" | "paper"
   label: string
   title?: string
   trigger?: string
@@ -50,5 +51,6 @@ export type ComposerSuggestion = {
   path?: string
   keybind?: string[]
   recent?: boolean
+  paperId?: string
   mention?: ComposerFilePart | ComposerAgentPart | ComposerSkillPart
 }

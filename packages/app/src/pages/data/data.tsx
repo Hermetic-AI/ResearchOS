@@ -1,43 +1,41 @@
 import { Button } from "@opencode/ui/button"
 import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError } from "@/runtime/server/errors"
 import { ModuleState } from "@/components/researchos/module-state"
 import { useResearchosShell } from "@/components/researchos/shell-context"
-import { useDirectoryPicker } from "@/components/directory-picker"
 import { DataPanel } from "./data-panel"
 import { NotebookCell, type NotebookCellRow } from "./notebook-cell"
 
 export default function DataPage() {
-  const sdk = useSDK()
-  const serverSDK = useServerSDK()
+  const directory = useResearchosDirectory()
+    const serverSDK = useServerSDK()
   const platform = usePlatform()
   const shell = useResearchosShell()
-  const client = createMemo(() => createResearchosClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-data"])
-  const location = () => ({ directory: sdk().directory })
-  const [notebooks] = createResource(() => sdk().directory, async () => client().notebooks({ location: location() }).then((result) => result.data))
+  const client = createMemo(() => createResearchosClient({ baseUrl: serverSDK.url, fetch: platform.fetch, password: serverSDK.server.http.password })["server.researchos-data"].data)
+  const location = () => ({ directory: directory() ?? "" })
+  const [notebooks] = createResource(() => directory(), async () => client().notebooks({ location: location() }).then((result) => result.data))
   const [notebookId, setNotebookId] = createSignal<string>()
   const [cells, cellActions] = createResource(notebookId, async (id) => client().cells({ id, location: location() }).then((result) => result.data.map(normalizeCell)))
-  const [datasets, datasetActions] = createResource(() => sdk().directory, async () => client().datasets({ location: location() }).then((result) => result.data.map((dataset) => ({
+  const [datasets, datasetActions] = createResource(() => directory(), async () => client().datasets({ location: location() }).then((result) => result.data.map((dataset) => ({
     id: dataset.id, name: dataset.name, path: dataset.path, format: dataset.format,
     sizeBytes: finite(dataset.sizeBytes) ?? 0,
     ...(dataset.profileJson ? { profileJson: dataset.profileJson } : {}),
   }))))
-  const [artifacts, artifactActions] = createResource(() => sdk().directory, async () => client().artifacts({ location: location() }).then((result) => result.data.map((artifact) => ({
+  const [artifacts, artifactActions] = createResource(() => directory(), async () => client().artifacts({ location: location() }).then((result) => result.data.map((artifact) => ({
     id: artifact.id, kind: artifact.kind, path: artifact.path, format: artifact.format,
     createdAt: finite(artifact.createdAt) ?? 0,
     ...(finite(artifact.dpi) === undefined ? {} : { dpi: finite(artifact.dpi) }),
     ...(artifact.latexSnippet ? { latexSnippet: artifact.latexSnippet } : {}),
   }))))
-  const [tests, testActions] = createResource(() => sdk().directory, async () => client().statTests({ location: location() }).then((result) => result.data.map((test) => ({ ...test, statistic: finite(test.statistic), pValue: finite(test.pValue) }))))
+  const [tests, testActions] = createResource(() => directory(), async () => client().statTests({ location: location() }).then((result) => result.data.map((test) => ({ ...test, statistic: finite(test.statistic), pValue: finite(test.pValue) }))))
   const [registerPath, setRegisterPath] = createSignal("")
   const [registerName, setRegisterName] = createSignal("")
   const [registering, setRegistering] = createSignal(false)
   const [registerError, setRegisterError] = createSignal<string>()
-  const pickFile = useDirectoryPicker()
   const [status, setStatus] = createSignal("Persistent Python kernel · workspace sandbox · 120 s timeout")
 
   createEffect(() => { if (!notebookId() && notebooks()?.[0]) setNotebookId(notebooks()![0]!.id) })
@@ -50,12 +48,12 @@ export default function DataPage() {
   const addCell = async () => {
     const id = notebookId()
     if (!id) return
-    await client().cellCreate({ id, location: location(), source: "" })
+    await client().cell_create({ id, location: location(), source: "" })
     await cellActions.refetch()
   }
 
   const saveCell = async (id: string, source: string) => {
-    await client().cellSave({ id, location: location(), source })
+    await client().cell_save({ id, location: location(), source })
     setStatus(`Saved ${id}`)
   }
 
@@ -64,7 +62,7 @@ export default function DataPage() {
     if (!path) return
     setRegistering(true); setRegisterError(undefined)
     try {
-      await client().datasetRegister({ location: location(), path, ...(registerName().trim() ? { name: registerName().trim() } : {}) })
+      await client().dataset_register({ location: location(), path, ...(registerName().trim() ? { name: registerName().trim() } : {}) })
       setRegisterPath(""); setRegisterName("")
       await Promise.all([datasetActions.refetch()])
     } catch (error) {
@@ -74,7 +72,7 @@ export default function DataPage() {
 
   const runCell = async (id: string, source: string) => {
     setStatus(`Running ${id} in the shared kernel…`)
-    await client().cellRun({ id, location: location(), source, timeoutS: 120 }).then((result) => {
+    await client().cell_run({ id, location: location(), source, timeoutS: 120 }).then((result) => {
       setStatus(result.data.error ? `${result.data.error.type}: ${result.data.error.message}` : `Completed in ${finite(result.data.cell.durationMs) ?? 0} ms`)
     })
     await Promise.all([cellActions.refetch(), artifactActions.refetch(), datasetActions.refetch(), testActions.refetch()])
@@ -87,10 +85,10 @@ export default function DataPage() {
         <span class="rounded border border-border-weak-base px-2 py-1 text-10-medium text-text-weak">Python sandbox</span>
         <input class="ml-2 h-7 w-40 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={registerPath()} onInput={(e) => setRegisterPath(e.currentTarget.value)} placeholder="data/experiment.csv" />
         <input class="ml-1 h-7 w-28 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={registerName()} onInput={(e) => setRegisterName(e.currentTarget.value)} placeholder="Name (optional)" />
-        <Button size="small" variant="secondary" disabled={registering() || !registerPath().trim()} onClick={() => void registerDataset()}>{registering() ? "…" : "Register dataset"}</Button>
+        <Button size="small" variant="neutral" disabled={registering() || !registerPath().trim()} onClick={() => void registerDataset()}>{registering() ? "…" : "Register dataset"}</Button>
         <Show when={registerError()}><span class="ml-2 text-10-regular text-text-on-critical-strong">{registerError()}</span></Show>
         <select class="ml-auto h-7 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={notebookId()} onChange={(event) => setNotebookId(event.currentTarget.value)}><For each={notebooks()}>{(notebook) => <option value={notebook.id}>{notebook.title}</option>}</For></select>
-        <Button size="small" variant="primary" disabled={!notebookId()} onClick={() => void addCell()}>+ Code cell</Button>
+        <Button size="small" variant="submit" disabled={!notebookId()} onClick={() => void addCell()}>+ Code cell</Button>
       </header>
       <div class="flex min-h-0 flex-1">
         <section class="min-w-0 flex-1 overflow-y-auto px-5 py-4">

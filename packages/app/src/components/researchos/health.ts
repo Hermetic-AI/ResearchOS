@@ -1,9 +1,9 @@
 import { createMemo, createResource, onCleanup } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
-import { checkServerHealth } from "@/utils/server-health"
+import { checkServerHealth } from "@/runtime/server/health"
 
 export type ResearchosServiceStatus = "ok" | "degraded" | "fail" | "off" | "unknown"
 
@@ -41,25 +41,24 @@ const settled = <T,>(result: PromiseSettledResult<T> | undefined, map: (value: T
 }
 
 export function createResearchosHealth() {
-  const sdk = useSDK()
-  const serverSDK = useServerSDK()
+  const directory = useResearchosDirectory()
+    const serverSDK = useServerSDK()
   const platform = usePlatform()
 
   const [resource, { refetch }] = createResource(
-    () => ({ directory: sdk().directory, url: sdk().url }),
+    () => ({ directory: directory(), url: serverSDK.url }),
     async ({ directory }): Promise<ResearchosServiceHealth[]> => {
       const location = { directory }
       const client = createResearchosClient({
-        baseUrl: sdk().url,
+        baseUrl: serverSDK.url,
         fetch: platform.fetch,
-        username: serverSDK().server.http.username,
-        password: serverSDK().server.http.password,
+        password: serverSDK.server.http.password,
       })
       const [backend, graph, mcp, api] = await Promise.allSettled([
-        checkServerHealth(serverSDK().server.http, platform.fetch ?? globalThis.fetch),
-        client["server.researchos-graph"].status({ location }),
-        sdk().client.mcp.status(),
-        client["server.researchos-assets"].stats({ location }),
+        checkServerHealth(serverSDK.server.http, platform.fetch ?? globalThis.fetch),
+        client["server.researchos-graph"].graph.status({ location }),
+        serverSDK.api.mcp.list({ location }),
+        client["server.researchos-assets"].asset.api.stats({ location }),
       ])
 
       return [
@@ -76,9 +75,9 @@ export function createResearchosHealth() {
           detail: `${result.data.backend} · ${result.data.detail}`,
         }), "graph"),
         settled(mcp, (result) => {
-          const entries = Object.values(result.data ?? {})
-          const connected = entries.filter((entry) => entry.status === "connected").length
-          const broken = entries.filter((entry) => entry.status === "failed").length
+          const entries = result.data ?? []
+          const connected = entries.filter((entry) => entry.status.status === "connected").length
+          const broken = entries.filter((entry) => entry.status.status === "failed").length
           if (entries.length === 0) return { id: "mcp", name: serviceNames.mcp, status: "off" as const, detail: "No MCP servers configured" }
           if (broken > 0) return { id: "mcp", name: serviceNames.mcp, status: "degraded" as const, detail: `${connected} connected · ${broken} failed` }
           return { id: "mcp", name: serviceNames.mcp, status: "ok" as const, detail: `${connected} connected` }

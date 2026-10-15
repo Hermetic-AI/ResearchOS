@@ -81,7 +81,7 @@ export function ModuleState(
           <div class="mt-4 flex items-center gap-2">
             <Show when={props.action}>
               {(action) => (
-                <Button variant="primary" size="small" onClick={action().onClick}>
+                <Button variant="submit" size="small" onClick={action().onClick}>
                   {action().label}
                 </Button>
               )}

@@ -41,7 +41,8 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
     typeof unwrapped.message === "string" &&
     unwrapped.message
   )
-    return unwrapped.message
+    // researchos: 把缺依赖的服务端报错翻译成可执行的修复步骤
+    return researchosRecoveryMessage(unwrapped.message)
 
   if (error instanceof Error && error.message) return error.message
 
@@ -137,3 +138,21 @@ function parseReadableProviderModelNotFoundError(errorInput: ProviderModelNotFou
 
   return [body, tail].join("\n")
 }
+
+// researchos:start — 常见依赖缺失的恢复指引（bun run researchos:doctor 检查全部）
+function researchosRecoveryMessage(message: string) {
+  if (/tectonic.*(?:ENOENT|not found)|(?:ENOENT|not found).*tectonic/i.test(message)) {
+    return "LaTeX compilation requires Tectonic. Install Tectonic, then run bun run researchos:doctor."
+  }
+
+  if (/LibreTranslate|translation service|ECONNREFUSED.*translate/i.test(message)) {
+    return "Translation is unavailable. Configure LIBRETRANSLATE_URL, then run bun run researchos:doctor."
+  }
+
+  if (/(?:uv|python).*(?:ENOENT|not found)|(?:ENOENT|not found).*(?:uv|python)/i.test(message)) {
+    return "Data analysis requires uv and Python. Install the missing runtime, then run bun run researchos:doctor."
+  }
+
+  return message
+}
+// researchos:end

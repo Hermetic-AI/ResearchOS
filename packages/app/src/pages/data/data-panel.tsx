@@ -60,7 +60,7 @@ export function DataPanel(props: {
               <div class="mt-2 flex gap-1"><Button size="small" variant="ghost" onClick={() => void openArtifact(artifact)}>Preview</Button><Button size="small" variant="ghost" onClick={() => void navigator.clipboard?.writeText(artifact.latexSnippet ?? artifact.path)}>Copy LaTeX</Button></div>
               <Show when={preview()?.id === artifact.id}><div class="mt-2 rounded bg-white p-2"><Show when={preview()?.url} fallback={<pre class="whitespace-pre-wrap text-black">{preview()?.text}</pre>}>{(url) => <img class="max-h-52 w-full object-contain" src={url()} alt={artifact.path} />}</Show></div></Show>
               <div class="mt-2 grid grid-cols-2 gap-1"><input class={inputClass} value={texFile()} onInput={(event) => setTexFile(event.currentTarget.value)} placeholder="paper/main.tex" /><input class={inputClass} value={texSection()} onInput={(event) => setTexSection(event.currentTarget.value)} placeholder="sec:results" /></div>
-              <Button class="mt-2" size="small" variant="secondary" onClick={() => void props.linkArtifact(artifact.id, texFile() || undefined, texSection() || undefined).then((warning) => setNotice(warning ?? "Artifact linked to the current git commit."))}>Link experiment</Button>
+              <Button class="mt-2" size="small" variant="neutral" onClick={() => void props.linkArtifact(artifact.id, texFile() || undefined, texSection() || undefined).then((warning) => setNotice(warning ?? "Artifact linked to the current git commit."))}>Link experiment</Button>
             </article>}
           </For>
         </Show>

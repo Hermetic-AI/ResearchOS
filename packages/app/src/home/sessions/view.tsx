@@ -14,6 +14,7 @@ import { useLanguage } from "@/runtime/i18n/language"
 import { ServerConnection } from "@/runtime/server/registry"
 import { SessionTabAvatarView } from "@/shell/layout/session-tab-avatar"
 import { sessionLabel } from "@/session/title"
+import { lookupSessionScope } from "@/components/researchos/session-scope"
 import { shouldOpenSessionInBackground } from "./open"
 import { createAltHold } from "./alt-hold"
 import "./view.css"
@@ -412,6 +413,9 @@ function HomeSessionSearchResultRow(
   const location = createMemo(() => props.location(props.record))
   const showProjectName = () => props.showProjectName && props.record.projectName
   const key = () => homeSessionSearchKey(props.record)
+  // researchos:start
+  const scope = createMemo(() => lookupSessionScope(props.record.session.location.directory, props.record.session.id))
+  // researchos:end
 
   return (
     <button
@@ -451,6 +455,12 @@ function HomeSessionSearchResultRow(
       <HomeSessionLeadingController server={props.server} isOpenTab={props.isOpenTab} record={props.record} />
       <div data-slot="home-session-labels" class="flex min-w-0 flex-1 items-center gap-1.5">
         <HomeSessionTitle title={title()} showProjectName={!!showProjectName()} search />
+        {/* researchos: module badge for sessions opened from a ResearchOS surface */}
+        <Show when={scope()}>
+          {(value) => (
+            <span class="shrink-0 font-mono text-[11px] leading-4 text-v2-text-text-faint">{value().module}</span>
+          )}
+        </Show>
         <Show when={showProjectName()}>
           <HomeSessionProjectName name={props.record.projectName} trailing={props.desktop} search />
         </Show>
@@ -504,6 +514,8 @@ function HomeSessionRow(
   const title = createMemo(() => sessionLabel(props.record.session))
   const location = createMemo(() => props.location(props.record))
   const showProjectName = () => props.showProjectName && props.record.projectName
+  // researchos: module badge for sessions opened from a ResearchOS surface
+  const scope = createMemo(() => lookupSessionScope(props.record.session.location.directory, props.record.session.id))
   const sessionID = () => props.record.session.id
   const menu = () => (props.rowUI.menu?.id === sessionID() ? props.rowUI.menu : undefined)
   const editor = () => (props.rowUI.editor?.id === sessionID() ? props.rowUI.editor : undefined)
@@ -728,6 +740,11 @@ function HomeSessionRow(
             classList={{ flex: props.desktop, contents: !props.desktop }}
           >
             <HomeSessionTitle title={title()} showProjectName={!!showProjectName()} />
+            <Show when={scope()}>
+              {(value) => (
+                <span class="shrink-0 font-mono text-[11px] leading-4 text-v2-text-text-faint">{value().module}</span>
+              )}
+            </Show>
             <Show when={showProjectName()}>
               <HomeSessionProjectName name={props.record.projectName} trailing={props.desktop} />
             </Show>

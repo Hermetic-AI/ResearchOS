@@ -27,12 +27,25 @@ const TargetSessionRouteContent = lazy(() =>
   loadSessionRoute().then((module) => ({ default: module.TargetSessionRouteContent })),
 )
 
+// researchos:start — 研究模块工作台（10 个页面共用一条路由，页面本身按需加载）
+const ResearchosWorkspace = lazy(() =>
+  import("@/pages/researchos-workspace").then((module) => ({ default: module.ResearchosWorkspace })),
+)
+
+const ResearchosModuleRoute = lazy(() => import("@/pages/researchos-module-route"))
+// researchos:end
+
+const researchosPath = /^\/server\/[^/]+\/researchos\/[^/]+(\/[^/]+)?$/
+
 export function preloadRoute(url: string) {
   const pathname = url.split(/[?#]/, 1)[0]
 
   if (pathname === "/new-session") return DraftRoute.preload().then(() => undefined)
 
   if (pathname === "/settings") return SettingsScreen.preload().then(() => undefined)
+
+  if (researchosPath.test(pathname))
+    return Promise.all([ResearchosWorkspace.preload(), ResearchosModuleRoute.preload()]).then(() => undefined)
 
   if (/^\/server\/[^/]+\/session\/[^/]+$/.test(pathname))
     return TargetSessionRouteContent.preload().then(() => undefined)
@@ -63,6 +76,10 @@ export function AppRoutes() {
           </SessionRouteFrame>
         )}
       />
+      {/* researchos:start */}
+      <Route path="/server/:serverKey/researchos/:dir" component={ResearchosRouteContent} />
+      <Route path="/server/:serverKey/researchos/:dir/:module" component={ResearchosRouteContent} />
+      {/* researchos:end */}
       <Route path="/new-session" component={DraftRoute} />
     </Route>
   )
@@ -82,6 +99,23 @@ function TargetServerRoute(props: ParentProps) {
     </Show>
   )
 }
+
+// researchos:start — 模块路由挂在当前服务端下，页面在 ResearchosWorkspace（壳层：
+// 上下文面板 / Agent Dock / 状态栏）内按 :module 切换。
+function ResearchosRouteContent() {
+  return (
+    <SessionRouteFrame padded>
+      <Suspense fallback={<SessionPanelFrame raised />}>
+        <TargetServerRoute>
+          <ResearchosWorkspace>
+            <ResearchosModuleRoute />
+          </ResearchosWorkspace>
+        </TargetServerRoute>
+      </Suspense>
+    </SessionRouteFrame>
+  )
+}
+// researchos:end
 
 function AppLayout(props: ParentProps) {
   const servers = useServers()

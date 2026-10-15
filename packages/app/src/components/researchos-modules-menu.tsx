@@ -1,52 +1,48 @@
 import { useNavigate } from "@solidjs/router"
-import { base64Encode } from "@opencode/core/util/encode"
-import { DropdownMenu } from "@opencode/ui/dropdown-menu"
+import { For } from "solid-js"
+import { Menu } from "@opencode/ui/menu"
 import { Icon } from "@opencode/ui/icon"
-import { IconButtonV2 } from "@opencode/ui/v2/icon-button-v2"
-import { Icon as IconV2 } from "@opencode/ui/v2/icon"
-import { TooltipV2 } from "@opencode/ui/v2/tooltip-v2"
-import { researchosModules, useResearchosDirectory } from "./researchos-rail"
+import { IconButton } from "@opencode/ui/icon-button"
+import { Tooltip } from "@opencode/ui/tooltip"
+import { researchosModules, useResearchosHref } from "./researchos-rail"
 
-// 新布局（/server/:serverKey/session/:id）没有 dir 路由参数，
-// 目录从当前会话的 Session 记录解析；主页则回落到当前选中的项目；
-// researchos 路由仍挂在 legacy DirectoryLayout 下
+// 会话页标题栏的模块切换菜单：目录从当前会话的记录解析，主页回落到选中的项目。
 export function ResearchosModulesMenu() {
+  const href = useResearchosHref()
   const navigate = useNavigate()
-  const directory = useResearchosDirectory()
-  const open = (route: string) => {
-    const dir = directory()
-    if (!dir) return
-    navigate(`/${base64Encode(dir)}/${route}`)
-  }
 
   return (
-    <DropdownMenu gutter={4} modal={false} placement="bottom-start">
-      <TooltipV2 placement="bottom" value="ResearchOS modules" class="shrink-0">
-        <DropdownMenu.Trigger
-          as={IconButtonV2}
+    <Menu gutter={4} modal={false} placement="bottom-start">
+      <Tooltip placement="bottom" value="ResearchOS modules" class="shrink-0">
+        <Menu.Trigger
+          as={IconButton}
           type="button"
           variant="ghost-muted"
           size="large"
           class="!w-9 shrink-0"
-          icon={<IconV2 name="outline-sliders" />}
-          disabled={!directory()}
+          icon={<Icon name="outline-sliders" />}
+          disabled={!href()}
           aria-label="ResearchOS modules"
         />
-      </TooltipV2>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content class="desktop-app-menu">
-          <DropdownMenu.Group>
-            <DropdownMenu.GroupLabel class="desktop-app-menu-heading">ResearchOS</DropdownMenu.GroupLabel>
-            {researchosModules.map((module) => (
-              <DropdownMenu.Item onSelect={() => open(module.route)}>
-                <Icon name={module.icon} size="small" />
-                <DropdownMenu.ItemLabel>{module.label}</DropdownMenu.ItemLabel>
-                <DropdownMenu.ItemDescription>{module.description}</DropdownMenu.ItemDescription>
-              </DropdownMenu.Item>
-            ))}
-          </DropdownMenu.Group>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu>
+      </Tooltip>
+      <Menu.Portal>
+        <Menu.Content class="max-w-80">
+          <Menu.Group>
+            <Menu.GroupLabel>ResearchOS</Menu.GroupLabel>
+            <For each={researchosModules}>
+              {(module) => (
+                <Menu.Item disabled={!href()} onSelect={() => href() && navigate(href()!(module.route))}>
+                  <Icon name={module.icon} size="small" />
+                  <span class="flex min-w-0 flex-col">
+                    <span>{module.label}</span>
+                    <span class="truncate text-11-regular text-text-weaker">{module.description}</span>
+                  </span>
+                </Menu.Item>
+              )}
+            </For>
+          </Menu.Group>
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu>
   )
 }

@@ -45,6 +45,7 @@ export type LayoutRoute =
   | { type: "connect" }
   | { type: "draft"; draftID: string }
   | { type: "session"; sessionId: string; server: ServerConnection.Key }
+  | { type: "researchos"; module: string; dir: string; server: ServerConnection.Key }
 
 export const currentRoute = (pathname: string, search: string): LayoutRoute => {
   const parts = pathname.split("/").filter(Boolean)
@@ -67,6 +68,17 @@ export const currentRoute = (pathname: string, search: string): LayoutRoute => {
     return {
       type: "session",
       sessionId: parts[3],
+      server: requireServerKey(parts[1]),
+    }
+  }
+
+  // researchos: 研究模块工作台挂在 /server/:serverKey/researchos/:dir/:module，
+  // currentRoute 对未识别路径会抛错，所以这里必须与路由表同步登记。
+  if (parts[0] === "server" && parts[2] === "researchos" && parts[3]) {
+    return {
+      type: "researchos",
+      module: parts[4] ?? "overview",
+      dir: parts[3],
       server: requireServerKey(parts[1]),
     }
   }

@@ -142,12 +142,15 @@ export function createComposerEditor(input: {
 
       if (item.kind === "resource") return "resource"
 
+      // researchos: literature papers group right after resources, before recent files.
+      if (item.kind === "paper") return "paper"
+
       if (item.recent) return "recent"
 
       return "file"
     },
     sortGroupsBy: (a, b) => {
-      const order = ["reference", "skill", "agent", "resource", "recent", "file"]
+      const order = ["reference", "skill", "agent", "resource", "paper", "recent", "file"]
 
       return order.indexOf(a.category) - order.indexOf(b.category)
     },

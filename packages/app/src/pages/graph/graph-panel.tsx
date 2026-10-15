@@ -1,37 +1,37 @@
 import { Button } from "@opencode/ui/button"
 import { Spinner } from "@opencode/ui/spinner"
 import { For, Show, createEffect, createMemo, createResource, onCleanup } from "solid-js"
-import { useNavigate, useParams } from "@solidjs/router"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { useNavigate } from "@solidjs/router"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory, useResearchosLink } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 
 export function GraphPanel(props: { nodeId?: string }) {
-  const sdk = useSDK()
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
   const serverSDK = useServerSDK()
   const platform = usePlatform()
   const shell = useResearchosShell()
   const navigate = useNavigate()
-  const params = useParams<{ dir: string }>()
+  const link = useResearchosLink()
   const client = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-graph"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-graph"].graph)
 
   const [detail] = createResource(
     () => props.nodeId,
-    async (id) => client().node({ id, location: { directory: sdk().directory } }).then((result) => result.data),
+    async (id) => client().node({ id, location: { directory: directory() } }).then((result) => result.data),
   )
   const node = () => detail()?.node
 
   const openFullGraph = () => {
     const id = props.nodeId
     const query = id ? `?node=${encodeURIComponent(id)}` : ""
-    navigate(`/${params.dir}/graph${query}`)
+    navigate(link()!.module(`graph${query}`))
   }
 
   createEffect(() => {
@@ -77,7 +77,7 @@ export function GraphPanel(props: { nodeId?: string }) {
               </Show>
             </div>
             <div class="flex gap-2">
-              <Button size="small" variant="secondary" onClick={askAgent}>Ask agent</Button>
+              <Button size="small" variant="neutral" onClick={askAgent}>Ask agent</Button>
               <Button size="small" variant="ghost" onClick={openFullGraph}>Open full graph</Button>
             </div>
           </div>

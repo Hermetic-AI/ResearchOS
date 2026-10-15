@@ -69,7 +69,7 @@ export function WritingSidebar(props: {
 
         <Show when={tab() === "titles"}>
           <PanelTitle title="Title candidates" description="Title generation requires a model turn. ResearchOS injects a scoped prompt directly into the companion chat." />
-          <Button size="small" variant="secondary" onClick={() => askAgent("titles")}>Ask @paper-writer</Button>
+          <Button size="small" variant="neutral" onClick={() => askAgent("titles")}>Ask @paper-writer</Button>
         </Show>
 
         <Show when={tab() === "structure"}>
@@ -82,7 +82,7 @@ export function WritingSidebar(props: {
             >{item.title}<span class="ml-2 text-text-weaker">L{item.line}</span></button>}</For>
             <Show when={props.outline.length === 0}><p>No section commands in this file.</p></Show>
           </div>
-          <Button size="small" variant="secondary" onClick={() => askAgent("structure")}>Request structure review</Button>
+          <Button size="small" variant="neutral" onClick={() => askAgent("structure")}>Request structure review</Button>
         </Show>
 
         <Show when={tab() === "polish"}>
@@ -90,7 +90,7 @@ export function WritingSidebar(props: {
           <p class="mb-2 line-clamp-4 rounded bg-background-stronger p-2 text-text-base">{selected() || "Select text in the editor first."}</p>
           <textarea class={textareaClass} rows={6} value={revised()} onInput={(event) => setRevised(event.currentTarget.value)} placeholder="Paste the proposed revision…" />
           <div class="mt-2 flex gap-2">
-            <Button size="small" variant="secondary" disabled={!selected() || !revised().trim() || busy()} onClick={() => {
+            <Button size="small" variant="neutral" disabled={!selected() || !revised().trim() || busy()} onClick={() => {
               setBusy(true)
               void props.diff(selected(), revised()).then((result) => {
                 setReview(result)
@@ -115,7 +115,7 @@ export function WritingSidebar(props: {
                 <span class="min-w-0"><span class="block text-text-weaker line-through">{hunk.original || "∅"}</span><span class="block text-text-base">{hunk.revised || "∅"}</span></span>
               </label>}</For>
             </div>
-            <Button class="mt-3" size="small" variant="primary" onClick={() => {
+            <Button class="mt-3" size="small" variant="submit" onClick={() => {
               setBusy(true)
               const indexes = [...accepted()]
               void props.applyDiff(selected(), revised(), indexes).then(async (text) => {
@@ -130,22 +130,22 @@ export function WritingSidebar(props: {
         <Show when={tab() === "typeset"}>
           <PanelTitle title="Deterministic typesetting" description="Convert inline CSV or Markdown using the writing-core implementation." />
           <div class="mb-2 flex gap-1">
-            <Button size="small" variant={mode() === "csv" ? "primary" : "ghost"} onClick={() => setMode("csv")}>CSV table</Button>
-            <Button size="small" variant={mode() === "markdown" ? "primary" : "ghost"} onClick={() => setMode("markdown")}>Markdown</Button>
+            <Button size="small" variant={mode() === "csv" ? "submit" : "ghost"} onClick={() => setMode("csv")}>CSV table</Button>
+            <Button size="small" variant={mode() === "markdown" ? "submit" : "ghost"} onClick={() => setMode("markdown")}>Markdown</Button>
           </div>
           <Show when={mode() === "csv"}>
             <input class={inputClass} value={caption()} onInput={(event) => setCaption(event.currentTarget.value)} placeholder="Caption (optional)" />
             <input class={`${inputClass} mt-2`} value={label()} onInput={(event) => setLabel(event.currentTarget.value)} placeholder="Label (optional)" />
           </Show>
           <textarea class={`${textareaClass} mt-2`} rows={9} value={input()} onInput={(event) => setInput(event.currentTarget.value)} placeholder={mode() === "csv" ? "Method,Score\nOurs,92.4" : "## Method\n\nDescribe the method…"} />
-          <Button class="mt-2" size="small" variant="secondary" disabled={!input().trim() || busy()} onClick={() => {
+          <Button class="mt-2" size="small" variant="neutral" disabled={!input().trim() || busy()} onClick={() => {
             setBusy(true)
             const task = mode() === "csv" ? props.convertTable({ csv: input(), ...(caption() ? { caption: caption() } : {}), ...(label() ? { label: label() } : {}) }) : props.convertMarkdown(input())
             void task.then(setGenerated).finally(() => setBusy(false))
           }}>Convert</Button>
           <Show when={generated()}><>
             <pre class="my-3 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-background-stronger p-2 font-mono text-11-regular text-text-base">{generated()}</pre>
-            <Button size="small" variant="primary" onClick={() => props.onInsert(generated())}>Insert at selection</Button>
+            <Button size="small" variant="submit" onClick={() => props.onInsert(generated())}>Insert at selection</Button>
           </></Show>
         </Show>
 
@@ -153,7 +153,7 @@ export function WritingSidebar(props: {
           <PanelTitle title="Citation assistant" description={props.bibFile ? `Resolved entries are merged into ${props.bibFile}.` : "Add a .bib file before inserting citations."} />
           <div class="flex gap-2">
             <input class={inputClass} value={query()} onInput={(event) => setQuery(event.currentTarget.value)} placeholder="Search title, DOI, or topic" />
-            <Button size="small" variant="secondary" disabled={!query().trim() || busy()} onClick={() => {
+            <Button size="small" variant="neutral" disabled={!query().trim() || busy()} onClick={() => {
               setBusy(true)
               void props.searchPapers(query()).then(setPapers).finally(() => setBusy(false))
             }}>Search</Button>
