@@ -38,7 +38,9 @@ def extract_pdf(pdf_path: str) -> dict:
 @mcp.tool()
 def translate_extract_pdf(pdf_path: str) -> dict:
     """Extract ordered text blocks from a project PDF using PyMuPDF."""
-    return extract_pdf(pdf_path)
+    result = extract_pdf(pdf_path)
+    result["researchos.ui"] = {"panel": "translate", "resource": pdf_path, "mode": "badge"}
+    return result
 
 
 def main():

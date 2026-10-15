@@ -36,7 +36,7 @@ Du kan konfigurere webserveren ved hjælp af kommandolinjeflag eller i din [conf
 Som standard vælger OpenCode en tilgængelig port. Du kan angive en port:
 
 ```bash
-opencode web --port 4096
+opencode web --port 14096
 ```
 
 ### Værtsnavn
@@ -50,8 +50,8 @@ opencode web --hostname 0.0.0.0
 Når du bruger `0.0.0.0`, vil OpenCode vise både lokale adresser og netværksadresser:
 
 ```
-  Local access:       http://localhost:4096
-  Network access:     http://192.168.1.100:4096
+  Local access:       http://localhost:14096
+  Network access:     http://192.168.1.100:14096
 ```
 
 ### mDNS-opdagelse
@@ -114,10 +114,10 @@ Du kan vedhæfte en terminal TUI til en kørende webserver:
 
 ```bash
 # Start the web server
-opencode web --port 4096
+opencode web --port 14096
 
 # In another terminal, attach the TUI
-opencode attach http://localhost:4096
+opencode attach http://localhost:14096
 ```
 
 Dette giver dig mulighed for at bruge både webgrænsefladen og terminalen samtidigt og dele de samme sessioner og tilstand.
@@ -131,7 +131,7 @@ Du kan også konfigurere serverindstillinger i din `opencode.json`-konfiguration
 ```json
 {
   "server": {
-    "port": 4096,
+    "port": 14096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

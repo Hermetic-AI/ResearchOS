@@ -24,6 +24,11 @@ const WriteAssetPayload = Schema.Struct({
   scope: AssetScope,
 }).annotate({ identifier: "WriteAssetPayload" })
 
+const NoteWritePayload = Schema.Struct({
+  path: Schema.String,
+  content: Schema.String,
+}).annotate({ identifier: "NoteWritePayload" })
+
 const PresetInstallPayload = Schema.Struct({
   pack: Schema.Literals(["researchos-skills", "researchos-agents", "researchos-mcp"]),
   target: AssetScope,
@@ -133,6 +138,22 @@ export const ResearchosAssetsGroup = HttpApiGroup.make("server.researchos-assets
           identifier: "v2.asset.fileWrite",
           summary: "Write an asset file",
           description: "Atomically write a Skill, SubAgent, Command, or Rules file in project or global scope.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("asset.noteWrite", "/api/researchos-assets/note/write", {
+      query: LocationQuery,
+      payload: NoteWritePayload,
+      success: Location.response(Schema.Struct({ path: Schema.String })),
+      error: [InvalidRequestError, UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.asset.noteWrite",
+          summary: "Write a project note file",
+          description: "Write a Markdown note under notes/ in the project root. Parent directories are created automatically.",
         }),
       ),
   )

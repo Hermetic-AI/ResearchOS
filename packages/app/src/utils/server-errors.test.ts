@@ -20,6 +20,7 @@ function useLanguageMock() {
     "error.chain.modelNotFound": "Modelo nao encontrado: {{provider}}/{{model}}",
     "error.chain.didYouMean": "Voce quis dizer: {{suggestions}}",
     "error.chain.checkConfig": "Revise provider/model no config",
+    "error.chain.reference": "Referencia do erro: {{ref}}",
   }
   return {
     t(key: string, vars?: Record<string, string | number>) {
@@ -141,6 +142,39 @@ describe("formatServerError", () => {
     const wrapped = new Error("ConfigInvalidError", { cause: { body, status: 400 } })
 
     expect(formatServerError(wrapped, language.t)).toBe("Arquivo de config em config invalido: Missing host")
+  })
+
+  test("formats an unknown server error with its diagnostic reference", () => {
+    const wrapped = new Error("Unknown error", {
+      cause: {
+        body: {
+          name: "UnknownError",
+          data: { message: "Translation service is unavailable", ref: "researchos-translate" },
+        },
+        status: 500,
+      },
+    })
+
+    expect(formatServerError(wrapped, language.t)).toBe(
+      [
+        "Translation is unavailable. Configure LIBRETRANSLATE_URL, then run bun run researchos:doctor.",
+        "Referencia do erro: researchos-translate",
+      ].join("\n"),
+    )
+  })
+
+  test("adds a recovery action for a missing LaTeX compiler", () => {
+    const result = formatServerError({
+      name: "UnknownError",
+      data: { message: "spawn tectonic ENOENT", ref: "researchos-latex" },
+    }, language.t)
+
+    expect(result).toBe(
+      [
+        "LaTeX compilation requires Tectonic. Install Tectonic, then run bun run researchos:doctor.",
+        "Referencia do erro: researchos-latex",
+      ].join("\n"),
+    )
   })
 })
 

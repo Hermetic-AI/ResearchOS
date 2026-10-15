@@ -41,6 +41,8 @@ import { FSUtil } from "@opencode-ai/core/fs-util"
 import { Truncate } from "@/tool/truncate"
 import { Image } from "@/image/image"
 import { decodeDataUrl } from "@/util/data-url"
+import { isPdfAttachment } from "@/util/media"
+import { extractPdfText } from "@researchos/literature"
 import { Process } from "@/util/process"
 import { Cause, Effect, Exit, Latch, Layer, Option, Scope, Context, Schema, Types } from "effect"
 import { InstanceState } from "@/effect/instance-state"
@@ -782,6 +784,38 @@ const layer = Layer.effect(
             }
             return pieces
           }
+          // PDF attachments: when the selected model has no PDF input, extract the text
+          // server-side and inject it as synthetic text instead of the binary file part —
+          // otherwise the part degrades to an inline "model does not support pdf" error.
+          // Returns undefined when the model handles PDFs natively or extraction fails.
+          const expandPdf = (bytes: Uint8Array, filename: string | undefined) =>
+            Effect.gen(function* () {
+              const mdl = yield* provider
+                .getModel(info.model.providerID, info.model.modelID)
+                .pipe(Effect.catch(() => Effect.succeed(undefined)))
+              if (mdl?.capabilities.input.pdf) return undefined
+              const text = yield* Effect.tryPromise(() => extractPdfText(bytes, 50)).pipe(
+                Effect.catch(() => Effect.succeed("")),
+              )
+              if (!text.trim()) return undefined
+              return [
+                {
+                  messageID: info.id,
+                  sessionID: input.sessionID,
+                  type: "text" as const,
+                  synthetic: true as const,
+                  text: `Called the Read tool with the following input: ${JSON.stringify({ filePath: filename })}`,
+                },
+                {
+                  messageID: info.id,
+                  sessionID: input.sessionID,
+                  type: "text" as const,
+                  synthetic: true as const,
+                  text: `Content of ${filename ?? "attachment.pdf"} (text extracted from the PDF because the selected model does not support PDF input):\n\n${text}`,
+                },
+              ]
+            })
+
           const url = new URL(part.url)
           switch (url.protocol) {
             case "data:":
@@ -803,6 +837,10 @@ const layer = Layer.effect(
                   },
                   { ...part, messageID: info.id, sessionID: input.sessionID },
                 ]
+              }
+              if (isPdfAttachment(part.mime)) {
+                const expanded = yield* expandPdf(Buffer.from(part.url.slice(part.url.indexOf(",") + 1), "base64"), part.filename)
+                if (expanded) return expanded
               }
               break
             case "file:": {
@@ -946,6 +984,11 @@ const layer = Layer.effect(
                 ]
               }
 
+              const bytes = yield* fsys.readFile(filepath).pipe(Effect.catch(Effect.die))
+              if (isPdfAttachment(mime)) {
+                const expanded = yield* expandPdf(bytes, part.filename)
+                if (expanded) return expanded
+              }
               return [
                 {
                   messageID: info.id,
@@ -959,9 +1002,7 @@ const layer = Layer.effect(
                   messageID: info.id,
                   sessionID: input.sessionID,
                   type: "file",
-                  url:
-                    `data:${mime};base64,` +
-                    Buffer.from(yield* fsys.readFile(filepath).pipe(Effect.catch(Effect.die))).toString("base64"),
+                  url: `data:${mime};base64,` + Buffer.from(bytes).toString("base64"),
                   mime,
                   filename: part.filename!,
                   source: part.source,

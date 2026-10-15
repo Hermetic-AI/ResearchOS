@@ -70,10 +70,10 @@ opencode attach [url]
 
 ```bash
 # Start the backend server for web/mobile access
-opencode web --port 4096 --hostname 0.0.0.0
+opencode web --port 14096 --hostname 0.0.0.0
 
 # In another terminal, attach the TUI to the running backend
-opencode attach http://10.20.30.40:4096
+opencode attach http://10.20.30.40:14096
 ```
 
 #### Флаги
@@ -334,7 +334,7 @@ opencode run Explain the use of context in Go
 opencode serve
 
 # In another terminal, run commands that attach to it
-opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
+opencode run --attach http://localhost:14096 "Explain async/await in JavaScript"
 ```
 
 #### Флаги
@@ -351,7 +351,7 @@ opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
 | <nobr><code>{"--file"}</code></nobr>     | `-f`     | Файл(ы) для прикрепления к сообщению                                                             |
 | <nobr><code>{"--format"}</code></nobr>   |          | Формат: по умолчанию (отформатированный) или json (необработанные события JSON).                 |
 | <nobr><code>{"--title"}</code></nobr>    |          | Название сеанса (использует усеченное приглашение, если значение не указано)                     |
-| <nobr><code>{"--attach"}</code></nobr>   |          | Подключитесь к работающему серверу opencode (например, http://localhost:4096)                    |
+| <nobr><code>{"--attach"}</code></nobr>   |          | Подключитесь к работающему серверу opencode (например, http://localhost:14096)                    |
 | <nobr><code>{"--password"}</code></nobr> | `-p`     | Пароль базовой аутентификации (по умолчанию `OPENCODE_SERVER_PASSWORD`)                          |
 | <nobr><code>{"--username"}</code></nobr> | `-u`     | Имя пользователя базовой аутентификации (по умолчанию `OPENCODE_SERVER_USERNAME` или `opencode`) |
 | <nobr><code>{"--dir"}</code></nobr>      |          | Каталог для выполнения или путь на удалённом сервере при подключении                             |

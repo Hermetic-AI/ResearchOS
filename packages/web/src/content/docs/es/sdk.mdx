@@ -40,7 +40,7 @@ Esto inicia tanto un servidor como un cliente.
 | Opción     | Tipo          | Descripción                                     | Predeterminado |
 | ---------- | ------------- | ----------------------------------------------- | -------------- |
 | `hostname` | `string`      | Nombre de host del servidor                     | `127.0.0.1`    |
-| `port`     | `number`      | Puerto del servidor                             | `4096`         |
+| `port`     | `number`      | Puerto del servidor                             | `14096`         |
 | `signal`   | `AbortSignal` | Señal de aborto para cancelación                | `undefined`    |
 | `timeout`  | `number`      | Tiempo de espera en ms para inicio del servidor | `5000`         |
 | `config`   | `Config`      | Objeto de configuración                         | `{}`           |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 4096,
+  port: 14096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ Si ya tiene una instancia en ejecución de opencode, puede crear una instancia d
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:4096",
+  baseUrl: "http://localhost:14096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | Opción          | Tipo       | Descripción                                  | Predeterminado          |
 | --------------- | ---------- | -------------------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | URL del servidor                             | `http://localhost:4096` |
+| `baseUrl`       | `string`   | URL del servidor                             | `http://localhost:14096` |
 | `fetch`         | `function` | Implementación de recuperación personalizada | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Método de análisis de respuesta              | `auto`                  |
 | `responseStyle` | `string`   | Estilo de devolución: `data` o `fields`      | `fields`                |

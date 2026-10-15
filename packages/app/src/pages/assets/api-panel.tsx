@@ -2,6 +2,7 @@ import { Button } from "@opencode-ai/ui/button"
 import { Spinner } from "@opencode-ai/ui/spinner"
 import { Tag } from "@opencode-ai/ui/tag"
 import { createSignal, For, Show } from "solid-js"
+import { StatusBadge } from "@/components/researchos/module-state"
 
 type ApiDescriptor = {
   readonly name: string
@@ -63,15 +64,13 @@ export function ApiPanel(props: {
           return (
             <article class="rounded-lg border border-border-weaker-base bg-surface-base px-4 py-4">
               <div class="flex items-start gap-4">
-                <span
-                  aria-label={status()?.state ?? "idle"}
-                  class="mt-1.5 size-2 shrink-0 rounded-full bg-border-base"
-                  classList={{
-                    "bg-surface-success-strong": status()?.state === "healthy",
-                    "bg-surface-critical-strong": status()?.state === "failed",
-                    "bg-surface-warning-strong": status()?.state === "disabled",
-                  }}
-                />
+                <span class="mt-1 shrink-0" aria-label={status()?.state ?? "idle"}>
+                  <StatusBadge
+                    status={apiBadgeStatus(status()?.state ?? "idle")}
+                    label={status()?.state ?? "idle"}
+                    detail={status()?.lastError ?? undefined}
+                  />
+                </span>
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <h2 class="text-13-medium text-text-base">{descriptor.name}</h2>
@@ -115,6 +114,13 @@ export function ApiPanel(props: {
       </For>
     </div>
   )
+}
+
+function apiBadgeStatus(state: ApiStatus["state"]): "ok" | "fail" | "off" | "unknown" {
+  if (state === "healthy") return "ok"
+  if (state === "failed") return "fail"
+  if (state === "disabled") return "off"
+  return "unknown"
 }
 
 function Metric(props: { readonly label: string; readonly value: string }) {

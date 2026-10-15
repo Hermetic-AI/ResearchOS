@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ResearchOS · 融合工作台原型</title>
+<style>
+/* ===== 设计令牌：对齐 app 主题（dark-first），与 artifacts/researchos-ui 原型同源 ===== */
+:root{
+  --bg:#0a0a0a; --panel:#111111; --panel2:#141414; --panel3:#181818;
+  --text:#eeeeee; --text2:#8a8a8a; --text3:#5c5c5c;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+  --orange:#fab283; --purple:#9d7cd8; --green:#7fd88f; --red:#e06c75;
+  --blue:#61afef; --teal:#56b6c2;
+  --sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --ease-spring:cubic-bezier(0.34,1.4,0.44,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--sans);font-size:13px;line-height:1.5;background:var(--bg);color:var(--text);overflow:hidden}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea{font-family:inherit;color:inherit}
+::placeholder{color:var(--text3)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+#app{display:flex;flex-direction:column;height:100vh}
+#shell{display:flex;flex:1;min-height:0}
+#main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
+
+/* ===== 标题栏 ===== */
+#titlebar{height:38px;display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--border);-webkit-app-region:drag;flex-shrink:0}
+#titlebar .logo{display:flex;align-items:center;gap:7px;font-weight:600;font-size:12px}
+#titlebar .logo .dot{width:8px;height:8px;border-radius:2px;background:var(--orange)}
+#titlebar .proj{font-family:var(--mono);font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px}
+#titlebar .proj b{color:var(--text);font-weight:500}
+#cmdk{margin-left:auto;display:flex;align-items:center;gap:8px;height:24px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--panel2);color:var(--text3);font-size:11px}
+#cmdk kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--border);border-radius:3px;padding:0 4px}
+.win-controls{display:flex;gap:14px;margin-left:8px}
+.win-controls span{width:10px;height:10px;border-radius:50%;background:var(--panel3);border:1px solid var(--border2)}
+
+/* ===== 统一导航 rail（P1：模块 + 会话） ===== */
+#rail{width:216px;flex-shrink:0;display:flex;flex-direction:column;background:var(--panel);border-right:1px solid var(--border);padding:10px 8px}
+.rail-cap{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:6px 8px 4px}
+.rail-item{display:flex;align-items:center;gap:8px;width:100%;padding:5px 8px;border-radius:6px;font-size:12px;color:var(--text2);text-align:left;transition:background .15s}
+.rail-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.rail-item.active{background:rgba(250,178,131,0.1);color:var(--text)}
+.rail-item.active .ri-ic{color:var(--orange)}
+.ri-ic{width:14px;height:14px;flex-shrink:0;color:var(--text3)}
+.rail-item .cnt{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3)}
+#chats{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:10px;border-top:1px solid var(--border);padding-top:4px}
+#chat-list{flex:1;min-height:0;overflow-y:auto}
+.chat-item{display:flex;flex-direction:column;gap:1px;width:100%;padding:5px 8px;border-radius:6px;text-align:left;transition:background .15s}
+.chat-item:hover{background:rgba(255,255,255,0.04)}
+.chat-item.active{background:rgba(255,255,255,0.06)}
+.chat-item .t{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item .m{font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center}
+.chat-item .m .scope{color:var(--blue)}
+.rail-foot{border-top:1px solid var(--border);padding:8px;font-size:10px;color:var(--text3)}
+.chat-empty{padding:10px 8px;font-size:11px;color:var(--text3);line-height:1.6}
+.chat-empty b{color:var(--text2);font-weight:500}
+
+/* ===== 文献工作区 ===== */
+#view{flex:1;min-height:0;display:flex;flex-direction:column}
+#view-head{height:42px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
+#view-head h1{font-size:13px;font-weight:600}
+#view-head .sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.vh-search{margin-left:auto;display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;width:240px;border:1px solid var(--border);border-radius:6px;background:var(--panel2);font-size:11px;color:var(--text2)}
+.vh-search input{flex:1;background:none;border:none;outline:none;font-size:11px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:6px;font-size:11px;font-weight:500;border:1px solid var(--border2);background:var(--panel3);transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:rgba(255,255,255,0.2)}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#1a1208}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--text2)}
+.btn.ghost:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+
+#lit-grid{flex:1;min-height:0;display:grid;grid-template-columns:160px 264px 1fr}
+#lit-cats{border-right:1px solid var(--border);padding:10px 8px;overflow-y:auto}
+.cat{display:flex;align-items:center;gap:7px;width:100%;padding:4px 8px;border-radius:5px;font-size:11px;color:var(--text2);text-align:left}
+.cat:hover{background:rgba(255,255,255,0.04)}
+.cat.active{background:rgba(255,255,255,0.06);color:var(--text)}
+.cat .cnt{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3)}
+#lit-list{border-right:1px solid var(--border);overflow-y:auto;padding:8px}
+.paper-card{border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;background:var(--panel)}
+.paper-card:hover{border-color:var(--border2)}
+.paper-card.sel{border-color:var(--orange);background:rgba(250,178,131,0.04)}
+.paper-card .pt{font-size:12px;font-weight:500;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.paper-card .pm{margin-top:5px;font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#lit-detail{overflow-y:auto;padding:16px 18px;min-width:0}
+.detail-title{font-size:16px;font-weight:600;line-height:1.4}
+.detail-meta{margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--text2)}
+.detail-meta span{color:var(--text3)}
+/* 固定动作区（证据链） */
+.action-row{display:flex;align-items:center;gap:6px;margin:12px 0 0;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--panel);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.sec-cap{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin:18px 0 8px}
+.abstract{font-size:12px;color:var(--text2);line-height:1.7}
+.note-block{border:1px solid var(--border);border-left:2px solid var(--blue);border-radius:6px;background:var(--panel);padding:10px 12px;margin-bottom:8px}
+.note-block b{display:block;font-size:11px;color:var(--blue);margin-bottom:4px;font-weight:600}
+.note-block p{font-size:12px;color:var(--text2);line-height:1.6}
+.note-src{margin-top:6px;display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.rel-session{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:11px;cursor:pointer;transition:border-color .15s;background:var(--panel)}
+.rel-session:hover{border-color:var(--border2)}
+.rel-session .rs-t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rel-session .rs-m{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* ===== 状态徽章（ModuleState 词汇） ===== */
+.badge{font-size:10px;padding:1px 8px;border-radius:8px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.b-ok{background:rgba(127,216,143,0.12);color:var(--green)}
+.b-deg{background:rgba(250,178,131,0.12);color:var(--orange)}
+.b-fail{background:rgba(224,108,117,0.12);color:var(--red)}
+.b-off{background:rgba(138,138,138,0.12);color:var(--text3)}
+.b-mod-blue{background:rgba(97,175,239,0.12);color:var(--blue)}
+.b-mod-purple{background:rgba(157,124,216,0.12);color:var(--purple)}
+.b-mod-teal{background:rgba(86,182,194,0.12);color:var(--teal)}
+.b-mod-orange{background:rgba(250,178,131,0.12);color:var(--orange)}
+
+/* ===== 右侧上下文面板 ===== */
+#ctxpanel{width:288px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:margin-right .28s var(--ease)}
+#ctxpanel.closed{margin-right:-288px}
+#ctx-head{height:42px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;flex-shrink:0}
+#ctx-head button{margin-left:auto;color:var(--text3);font-size:14px;padding:2px 6px;border-radius:4px}
+#ctx-head button:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+#ctx-body{flex:1;overflow-y:auto;padding:12px}
+.ctx-item{border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-bottom:8px;background:var(--panel2)}
+.ctx-item .ct{font-size:11px;line-height:1.5}
+.ctx-item .cm{margin-top:4px;font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center}
+.ctx-link{color:var(--blue);font-size:10px;font-family:var(--mono);cursor:pointer}
+.ctx-link:hover{text-decoration:underline}
+#ctx-toggle{position:absolute;top:52px;right:0;z-index:20;width:18px;height:52px;border:1px solid var(--border);border-right:none;border-radius:6px 0 0 6px;background:var(--panel2);color:var(--text3);font-size:10px;display:flex;align-items:center;justify-content:center}
+#ctx-toggle:hover{color:var(--text)}
+
+/* ===== Agent Dock（P2：伴随态真对话） ===== */
+#dock{border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;display:flex;flex-direction:column}
+#dock-bar{height:32px;display:flex;align-items:center;gap:10px;padding:0 12px;cursor:pointer;user-select:none}
+#dock-bar:hover{background:rgba(255,255,255,0.02)}
+#dock-bar .robot{color:var(--orange);display:flex}
+.dock-scope{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.dock-scope .badge{cursor:default}
+#dock-bar .chev{margin-left:auto;color:var(--text3);transition:transform .25s var(--ease);font-size:11px}
+#dock.open #dock-bar .chev{transform:rotate(180deg)}
+#dock-body{display:none;border-top:1px solid var(--border);flex-direction:column;max-height:42vh}
+#dock.open #dock-body{display:flex}
+#dock-ctx{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);font-size:10px;font-family:var(--mono);color:var(--text3);flex-wrap:wrap}
+#dock-ctx .chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:5px;padding:1px 7px;background:var(--panel2);color:var(--text2)}
+.libonly{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-family:var(--sans);font-size:11px;color:var(--text2);margin-left:auto}
+.libonly input{accent-color:var(--orange)}
+#dock-log{flex:1;min-height:120px;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;gap:8px;max-width:88%}
+.msg .avatar{width:18px;height:18px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:1px}
+.msg.user .avatar{background:rgba(97,175,239,0.15);color:var(--blue)}
+.msg.agent .avatar{background:rgba(250,178,131,0.15);color:var(--orange)}
+.msg .body{font-size:12px;line-height:1.65;color:var(--text);white-space:pre-wrap}
+.msg .body .cite{font-family:var(--mono);font-size:10px;color:var(--blue);cursor:pointer}
+.msg .body .cite:hover{text-decoration:underline}
+.msg .meta{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:3px}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg.user .body{background:var(--panel3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text)}
+.msg.agent .body{padding:2px 0}
+.thinking{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.thinking .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);animation:ping 1.2s infinite}
+@keyframes ping{0%,100%{opacity:.4}50%{opacity:1}}
+#dock-input{display:flex;gap:8px;padding:8px 12px;border-top:1px solid var(--border);align-items:flex-end}
+#dock-input textarea{flex:1;resize:none;height:34px;max-height:90px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;outline:none;line-height:1.4}
+#dock-input textarea:focus{border-color:var(--orange)}
+.dock-actions{display:flex;gap:6px}
+.rich-hint{padding:4px 12px;font-size:10px;color:var(--text3);border-top:1px dashed var(--border);font-family:var(--mono)}
+
+/* ===== 状态栏 ===== */
+#statusbar{height:26px;display:flex;align-items:center;gap:14px;padding:0 12px;background:var(--panel);border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--text2);flex-shrink:0;cursor:pointer}
+#statusbar:hover{background:rgba(255,255,255,0.02)}
+.sb-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(127,216,143,0.5);animation:sbpulse 2s infinite}
+@keyframes sbpulse{0%{box-shadow:0 0 0 0 rgba(127,216,143,0.4)}70%{box-shadow:0 0 0 6px rgba(127,216,143,0)}100%{box-shadow:0 0 0 0 rgba(127,216,143,0)}}
+.sb-item{display:flex;align-items:center;gap:5px}
+.sb-clock{margin-left:auto;color:var(--text3)}
+/* 健康详情 popover */
+#health-pop{position:fixed;bottom:34px;left:12px;width:320px;background:var(--panel3);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;z-index:300;display:none;box-shadow:0 12px 32px rgba(0,0,0,0.5)}
+#health-pop.open{display:block;animation:popIn .22s var(--ease-spring)}
+@keyframes popIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hp-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11px;border-bottom:1px solid var(--border)}
+.hp-row:last-of-type{border-bottom:none}
+.hp-row .n{width:64px;color:var(--text2);font-family:var(--mono);font-size:10px}
+.hp-row .d{margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--text3);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hp-recheck{width:100%;margin-top:8px}
+
+/* ===== 其他模块占位（ModuleState 演示） ===== */
+#module-state{flex:1;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:40px}
+#module-state .ms-icon{width:40px;height:40px;border-radius:10px;background:var(--panel3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text3)}
+#module-state h2{font-size:14px;font-weight:600}
+#module-state p{font-size:11px;color:var(--text2);max-width:340px;line-height:1.7}
+#module-state .mono{font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px 10px}
+
+/* toast */
+#toasts{position:fixed;bottom:38px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:400}
+.toast{display:flex;align-items:center;gap:8px;background:var(--panel3);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:12px;animation:toastIn .3s var(--ease-spring);box-shadow:0 8px 24px rgba(0,0,0,0.4);max-width:340px}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transform:translateY(4px);transition:all .25s}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 标题栏 -->
+  <div id="titlebar">
+    <div class="logo"><span class="dot"></span>ResearchOS</div>
+    <div class="proj"><b>rag-survey</b><span>·</span><span>~/code/rag-survey</span></div>
+    <button id="cmdk">搜索 / 命令<kbd>⌘K</kbd></button>
+    <div class="win-controls"><span></span><span></span><span></span></div>
+  </div>
+
+  <div id="shell">
+    <!-- 统一导航 rail：模块 + 会话（P1） -->
+    <nav id="rail">
+      <div class="rail-cap">Modules</div>
+      <button class="rail-item" data-mod="overview"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>Overview</button>
+      <button class="rail-item active" data-mod="literature"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h7l3 3v9H3z"/><path d="M10 2v3h3"/></svg>Literature<span class="cnt">47</span></button>
+      <button class="rail-item" data-mod="graph"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="4" cy="4" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="7" cy="12" r="2"/><path d="M5.5 5.5l4.5 1M5 11l-0.5-5M10.5 7.5L8 10.5"/></svg>Knowledge Graph<span class="cnt">312</span></button>
+      <button class="rail-item" data-mod="latex"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h8M8 2v12M5 14h6"/></svg>LaTeX Editor<span class="cnt">3</span></button>
+      <button class="rail-item" data-mod="data"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14h12M4 14V8M8 14V4M12 14v-6"/></svg>Data Analysis<span class="cnt">2</span></button>
+      <button class="rail-item" data-mod="assets"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l6 3v6l-6 3-6-3V5z"/></svg>Asset Center</button>
+
+      <div id="chats">
+        <div class="rail-cap">Chats</div>
+        <div id="chat-list">
+          <button class="chat-item active">
+            <span class="t">文献问答 · Attention Is All You Need</span>
+            <span class="m"><span class="scope">literature</span><span>·</span><span>2 分钟前</span></span>
+          </button>
+          <button class="chat-item">
+            <span class="t">Reading note · RAG Survey</span>
+            <span class="m"><span class="scope">literature</span><span>·</span><span>1 小时前</span></span>
+          </button>
+          <button class="chat-item">
+            <span class="t">图谱构建参数讨论</span>
+            <span class="m"><span class="scope">graph</span><span>·</span><span>昨天</span></span>
+          </button>
+          <button class="chat-item">
+            <span class="t">Untitled session</span>
+            <span class="m"><span class="scope">general</span><span>·</span><span>3 天前</span></span>
+          </button>
+        </div>
+        <button class="rail-item" id="new-chat"><svg class="ri-ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>New chat</button>
+        <button class="rail-item">All sessions<svg class="ri-ic" style="margin-left:auto" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg></button>
+      </div>
+      <div class="rail-foot">模块数据保存在项目内</div>
+    </nav>
+
+    <!-- 主工作区 -->
+    <div id="main">
+      <button id="ctx-toggle" title="上下文面板">◀</button>
+
+      <!-- 文献模块 -->
+      <div id="view">
+        <div id="view-head">
+          <h1>Literature</h1><span class="sub">47 papers · 12 with PDF</span>
+          <div class="vh-search"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><input placeholder="arXiv / S2 / Crossref / PubMed…"></div>
+          <button class="btn" id="import-btn">Import PDF</button>
+        </div>
+        <div id="lit-grid">
+          <div id="lit-cats">
+            <button class="cat active">All<span class="cnt">47</span></button>
+            <button class="cat">Unread<span class="cnt">31</span></button>
+            <button class="cat">Favorites<span class="cnt">6</span></button>
+            <div class="rail-cap" style="margin-top:8px">Year</div>
+            <button class="cat">2025<span class="cnt">18</span></button>
+            <button class="cat">2024<span class="cnt">22</span></button>
+            <button class="cat">2023<span class="cnt">7</span></button>
+          </div>
+          <div id="lit-list">
+            <div class="paper-card sel">
+              <div class="pt">Attention Is All You Need</div>
+              <div class="pm"><span class="badge b-mod-blue">NeurIPS</span><span>2017</span><span>·</span><span>cites 112k</span><span class="badge b-ok">PDF</span></div>
+            </div>
+            <div class="paper-card">
+              <div class="pt">Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</div>
+              <div class="pm"><span class="badge b-mod-blue">NeurIPS</span><span>2020</span><span>·</span><span>cites 9.8k</span><span class="badge b-ok">PDF</span></div>
+            </div>
+            <div class="paper-card">
+              <div class="pt">Dense Passage Retrieval for Open-Domain QA</div>
+              <div class="pm"><span class="badge b-mod-purple">EMNLP</span><span>2020</span><span>·</span><span>cites 5.1k</span><span class="badge b-off">no PDF</span></div>
+            </div>
+            <div class="paper-card">
+              <div class="pt">Lost in the Middle: How Language Models Use Long Contexts</div>
+              <div class="pm"><span class="badge b-mod-teal">TACL</span><span>2024</span><span>·</span><span>cites 1.2k</span><span class="badge b-ok">PDF</span></div>
+            </div>
+            <div class="paper-card">
+              <div class="pt">Self-RAG: Learning to Retrieve, Generate, and Critique</div>
+              <div class="pm"><span class="badge b-mod-purple">ICLR</span><span>2024</span><span>·</span><span>cites 890</span><span class="badge b-deg">parsing</span></div>
+            </div>
+          </div>
+          <div id="lit-detail">
+            <div class="detail-title">Attention Is All You Need</div>
+            <div class="detail-meta">Vaswani, Shazeer, Parmar <span>+5</span> · 2017 · arXiv:1706.03762 · <span>cite:</span> vaswani2017attention</div>
+
+            <!-- 固定动作区：证据链 -->
+            <div class="action-row">
+              <button class="btn primary">Open in graph</button>
+              <button class="btn">Ask agent</button>
+              <button class="btn">Reading note</button>
+              <button class="btn ghost">Insert citation</button>
+              <button class="btn ghost">Translate</button>
+              <button class="btn ghost">Mark read</button>
+            </div>
+
+            <div class="sec-cap">Abstract</div>
+            <p class="abstract">The dominant sequence transduction models are based on complex recurrent or convolutional neural networks… We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.</p>
+
+            <div class="sec-cap">AI 阅读笔记 <span class="badge b-off" style="margin-left:4px">notes/literature/1706.03762.md</span></div>
+            <div class="note-block"><b>方法</b><p>完全基于注意力机制的序列转导架构：多头自注意力 + 位置编码 + 编码器-解码器堆叠，摒弃循环与卷积。</p></div>
+            <div class="note-block"><b>创新点</b><p>并行化训练显著提升效率；自注意力对长距离依赖建模优于 RNN；在 WMT 翻译任务上达到当时 SOTA。</p></div>
+            <div class="note-block"><b>局限性</b><p>自注意力复杂度 O(n²) 随序列长度平方增长；位置信息依赖人工编码而非结构先验。</p>
+              <div class="note-src">由会话「Reading note · Attention…」生成 · 已被图谱索引 <span class="ctx-link">查看节点 →</span></div>
+            </div>
+
+            <div class="sec-cap">相关会话</div>
+            <div class="rel-session"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--orange)" stroke-width="1.5"><path d="M2 3h12v8H6l-4 3z"/></svg><span class="rs-t">文献问答 · Attention Is All You Need</span><span class="rs-m">12 条消息 · 2 分钟前</span></div>
+            <div class="rel-session"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--orange)" stroke-width="1.5"><path d="M2 3h12v8H6l-4 3z"/></svg><span class="rs-t">Reading note · Attention Is All You Need</span><span class="rs-m">4 条消息 · 1 小时前</span></div>
+
+            <div class="sec-cap">References · 42</div>
+            <div class="ctx-item"><div class="ct">Neural Machine Translation by Jointly Learning to Align and Translate</div><div class="cm"><span>Bahdanau 2014</span><span class="badge b-ok">in library</span></div></div>
+            <div class="ctx-item"><div class="ct">Sequence to Sequence Learning with Neural Networks</div><div class="cm"><span>Sutskever 2014</span><span class="badge b-off">external</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 其他模块：ModuleState 演示 -->
+      <div id="module-state">
+        <div class="ms-icon"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3M8 11h.01"/></svg></div>
+        <h2 id="ms-title">Setup required</h2>
+        <p id="ms-desc">此原型仅展开 Literature 模块。实际实现中，每个模块都返回统一状态（ready / empty / setup_required / running / degraded / error），并始终给出下一步动作。</p>
+        <div class="mono" id="ms-detail">missing: tectonic · install via `brew install tectonic`</div>
+        <div style="display:flex;gap:8px"><button class="btn primary">打开配置</button><button class="btn">复制命令</button></div>
+      </div>
+
+      <!-- Agent Dock（伴随态，默认展开演示） -->
+      <div id="dock" class="open">
+        <div id="dock-bar">
+          <span class="robot"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="10" height="8" rx="2"/><path d="M8 5V2M5 9h.01M11 9h.01"/></svg></span>
+          <span class="dock-scope">文献问答 <span class="badge b-mod-blue">Attention Is All You Need</span></span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">rag-survey</span>
+          <span class="chev">▲</span>
+        </div>
+        <div id="dock-body">
+          <div id="dock-ctx">
+            <span class="chip">● 上下文已注入</span>
+            <span>title · authors · abstract (system)</span>
+            <span class="chip">PDF 附件</span>
+            <span>.researchos/literature/pdfs/2017/1706.03762.pdf</span>
+            <label class="libonly"><input type="checkbox" checked>仅基于文献库</label>
+          </div>
+          <div id="dock-log">
+            <div class="msg user"><div class="avatar">你</div><div><div class="body">这篇论文的多头注意力为什么要缩放点积？和加性注意力比好在哪？</div><div class="meta">你 · 2 分钟前</div></div></div>
+            <div class="msg agent"><div class="avatar">AI</div><div><div class="body">根据论文 <span class="cite">§3.2.1</span>，缩放点积注意力将 QK 内积除以 √d_k：当 d_k 较大时，内积量级随维度增长，softmax 会进入梯度极小的饱和区，缩放抵消了这一效应。
+
+与 Bahdanau 的加性注意力相比（<span class="cite">§3.2.1 脚注 4</span>），两者理论复杂度相近，但点积可以用高度优化的矩阵乘法实现，实践中更快、更省内存。论文在 <span class="cite">表 3</span> 中报告点积（不缩放）在 d_k=512 时效果明显变差，缩放后恢复。
+
+<span style="color:var(--text3)">来源：vaswani2017attention（已附加 PDF）· 仅使用文献库</span></div><div class="meta">AI · 2 分钟前 · 伴随态</div></div></div>
+            <div class="thinking" id="thinking" style="display:none"><span class="pulse-dot"></span>Thinking…</div>
+          </div>
+          <div class="rich-hint">富内容（工具调用 / diff / 引用卡片）请打开完整会话查看</div>
+          <div id="dock-input">
+            <textarea id="dock-text" placeholder="继续追问这篇论文… (Enter 发送，Shift+Enter 换行)"></textarea>
+            <div class="dock-actions">
+              <button class="btn" id="open-full">Open full chat</button>
+              <button class="btn ghost" id="new-dock-chat">New chat</button>
+              <button class="btn primary" id="dock-send">发送</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧上下文面板 -->
+    <aside id="ctxpanel">
+      <div id="ctx-head">上下文<button id="ctx-close">✕</button></div>
+      <div id="ctx-body">
+        <div class="rail-cap" style="padding-left:0">图谱邻居</div>
+        <div class="ctx-item"><div class="ct">概念 · scaled dot-product attention</div><div class="cm"><span class="badge b-mod-purple">concept</span><span class="ctx-link">打开图谱 →</span></div></div>
+        <div class="ctx-item"><div class="ct">笔记 · Transformer 阅读笔记</div><div class="cm"><span class="badge b-mod-orange">note</span><span class="ctx-link">打开文件 →</span></div></div>
+        <div class="rail-cap" style="padding-left:0;margin-top:10px">产物去向</div>
+        <div class="ctx-item"><div class="ct">main.tex · 第 2 章相关工作</div><div class="cm"><span class="badge b-mod-teal">latex</span><span>插入引用 vaswani2017attention</span></div></div>
+        <div class="ctx-item"><div class="ct">翻译存档 · 摘要双语</div><div class="cm"><span class="badge b-off">translate</span><span class="ctx-link">查看 →</span></div></div>
+        <div class="rail-cap" style="padding-left:0;margin-top:10px">待办</div>
+        <div class="ctx-item"><div class="ct">阅读 Self-RAG 并与本文对比 critique 机制</div><div class="cm"><span>来自延伸问题 2</span></div></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 状态栏 -->
+  <div id="statusbar">
+    <span class="sb-pulse"></span>
+    <span class="sb-item">backend <span class="badge b-ok">ok</span></span>
+    <span class="sb-item">graph <span class="badge b-ok">sqlite</span></span>
+    <span class="sb-item">mcp <span class="badge b-deg">6 ok · 1 failed</span></span>
+    <span class="sb-item">api <span class="badge b-ok">hub ok</span></span>
+    <span class="sb-clock" id="clock"></span>
+  </div>
+
+  <!-- 健康详情 -->
+  <div id="health-pop">
+    <div class="hp-row"><span class="n">backend</span><span class="badge b-ok">ok</span><span class="d">v0.6.3 · 127.0.0.1:4096</span></div>
+    <div class="hp-row"><span class="n">graph</span><span class="badge b-ok">ok</span><span class="d">sqlite · 312 nodes · indexed</span></div>
+    <div class="hp-row"><span class="n">mcp</span><span class="badge b-deg">degraded</span><span class="d">researchos-translate: failed</span></div>
+    <div class="hp-row"><span class="n">api</span><span class="badge b-ok">ok</span><span class="d">crossref · s2 · pubmed</span></div>
+    <button class="btn hp-recheck">Recheck</button>
+  </div>
+
+  <div id="toasts"></div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+/* 时钟 */
+const clock = () => { $("#clock").textContent = new Date().toTimeString().slice(0, 8); };
+clock(); setInterval(clock, 1000);
+
+/* toast */
+function toast(text) {
+  const el = document.createElement("div");
+  el.className = "toast"; el.textContent = text;
+  $("#toasts").appendChild(el);
+  setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 260); }, 2400);
+}
+
+/* Dock 折叠/展开 */
+$("#dock-bar").addEventListener("click", () => $("#dock").classList.toggle("open"));
+
+/* 上下文面板 */
+const ctx = $("#ctxpanel"), ctxToggle = $("#ctx-toggle");
+function syncCtx() { ctxToggle.textContent = ctx.classList.contains("closed") ? "◀" : "▶"; }
+ctxToggle.addEventListener("click", () => { ctx.classList.toggle("closed"); syncCtx(); });
+$("#ctx-close").addEventListener("click", () => { ctx.classList.add("closed"); syncCtx(); });
+syncCtx();
+
+/* 状态栏健康详情 */
+const pop = $("#health-pop");
+$("#statusbar").addEventListener("click", (e) => { e.stopPropagation(); pop.classList.toggle("open"); });
+document.addEventListener("click", (e) => { if (!pop.contains(e.target)) pop.classList.remove("open"); });
+$(".hp-recheck").addEventListener("click", (e) => { e.stopPropagation(); toast("健康状态已重新探测"); pop.classList.remove("open"); });
+
+/* 模块切换：literature 为完整演示，其余展示统一 ModuleState */
+const view = $("#view"), ms = $("#module-state");
+$$(".rail-item[data-mod]").forEach((btn) => btn.addEventListener("click", () => {
+  $$(".rail-item[data-mod]").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  const isLit = btn.dataset.mod === "literature";
+  view.style.display = isLit ? "flex" : "none";
+  ms.style.display = isLit ? "none" : "flex";
+}));
+
+/* rail 会话切换 */
+$$(".chat-item").forEach((c) => c.addEventListener("click", () => {
+  $$(".chat-item").forEach((x) => x.classList.remove("active"));
+  c.classList.add("active");
+  toast("已切换到会话（原型中保持在当前页演示伴随态）");
+}));
+$("#new-chat").addEventListener("click", () => toast("新建对话 → 会话作用域 general"));
+$("#import-btn").addEventListener("click", () => toast("支持多选导入 · 逐文件进度与失败恢复"));
+$("#open-full").addEventListener("click", () => toast("升级到聚焦态：/:dir/session/<id>（上下文无损）"));
+$("#new-dock-chat").addEventListener("click", () => {
+  $("#dock-log").querySelectorAll(".msg").forEach((m) => m.remove());
+  toast("已开始新会话（原会话保留在 rail 列表）");
+});
+
+/* Dock 内联对话演示 */
+const DEMO_REPLY = `根据论文 §3.2.2，多头机制让模型在 h=8 个不同的表示子空间中并行计算注意力——每个头学习不同的依赖模式（如长距离指代 vs 局部句法），拼接后经 W^O 投影融合。
+
+表 4 的消融显示：头数从 8 降到 1，BLEU 下降 0.9；头数过多（>8）收益递减。
+
+来源：vaswani2017attention（已附加 PDF）· 仅使用文献库`;
+function sendDock() {
+  const ta = $("#dock-text"), text = ta.value.trim();
+  if (!text) return;
+  const log = $("#dock-log");
+  log.insertAdjacentHTML("beforeend",
+    `<div class="msg user"><div class="avatar">你</div><div><div class="body"></div><div class="meta">你 · 刚刚</div></div></div>`);
+  log.lastElementChild.querySelector(".body").textContent = text;
+  ta.value = "";
+  const th = $("#thinking"); th.style.display = "flex";
+  log.scrollTop = log.scrollHeight;
+  setTimeout(() => {
+    th.style.display = "none";
+    log.insertAdjacentHTML("beforeend",
+      `<div class="msg agent"><div class="avatar">AI</div><div><div class="body"></div><div class="meta">AI · 刚刚 · 伴随态</div></div></div>`);
+    log.lastElementChild.querySelector(".body").textContent = DEMO_REPLY;
+    log.scrollTop = log.scrollHeight;
+  }, 1100);
+}
+$("#dock-send").addEventListener("click", sendDock);
+$("#dock-text").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendDock(); }
+});
+
+/* 动作区演示 */
+$$("#lit-detail .action-row .btn").forEach((b) => b.addEventListener("click", () => {
+  const label = b.textContent;
+  if (label === "Ask agent") { $("#dock").classList.add("open"); $("#dock-text").focus(); return; }
+  if (label === "Reading note") { toast("已创建会话：Reading note · Attention Is All You Need"); return; }
+  if (label === "Open in graph") { toast("跳转图谱并定位节点 paper:1706.03762"); return; }
+  toast(label + "（原型演示）");
+}));
+</script>
+</body>
+</html>

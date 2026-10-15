@@ -5,7 +5,7 @@ import { extractPdfText } from "./pdf/extract"
 import { fetchGrobidReferences } from "./pdf/grobid"
 import { normalizeDoi, parsePdfMetadata, type PdfMetadata } from "./pdf/metadata"
 import { parseReferences, type ParsedReference } from "./pdf/references"
-import { pdfDir } from "./paths"
+import { pdfDir, textDir } from "./paths"
 import type { CitationEdge, PaperMeta } from "./types"
 
 export { parsePdfMetadata } from "./pdf/metadata"
@@ -74,6 +74,8 @@ export async function importPdf(input: ImportPdfInput, options: ImportPdfOptions
   // 标题候选只取首页（跨页最长行会误中正文长句）；DOI/arXiv/年份取前 3 页
   const extracted = parsePdfMetadata(await extractPdfText(data, 3))
   extracted.title = parsePdfMetadata(await extractPdfText(data, 1)).title
+  // 全文只提取一次：既写盘供 read 分块，也复用给参考文献解析；失败不阻断导入
+  const fullText = await extractPdfText(data).catch(() => null)
   const enrichment = await enrichMetadata(extracted, options.hub)
   const doi = enrichment?.doi ?? extracted.doi
   const arxivId = enrichment?.arxivId ?? extracted.arxivId
@@ -81,6 +83,7 @@ export async function importPdf(input: ImportPdfInput, options: ImportPdfOptions
   const year = enrichment?.year ?? extracted.year
   const id = computePaperId(doi, arxivId, title)
   const pdfPath = await archivePdf(data, id, year, input.path, options.projectRoot)
+  if (fullText) await persistFullText(options.projectRoot, id, fullText)
 
   const now = Date.now()
   const paper: PaperMeta = {
@@ -106,8 +109,15 @@ export async function importPdf(input: ImportPdfInput, options: ImportPdfOptions
   return {
     paper,
     metadataSource: enrichment?.source ?? "pdf",
-    references: await resolveReferences(data, id),
+    references: await resolveReferences(data, id, fullText),
   }
+}
+
+async function persistFullText(projectRoot: string, paperId: string, text: string): Promise<void> {
+  // 写盘失败只损失 read 的全文检索能力，不影响导入主链路
+  const dir = textDir(projectRoot)
+  mkdirSync(dir, { recursive: true })
+  await Bun.write(join(dir, `${paperId}.txt`), text).catch(() => {})
 }
 
 async function readLocalPdf(path: string, projectRoot: string): Promise<Uint8Array> {
@@ -209,11 +219,13 @@ async function findSemanticScholar(hub: ApiHub, title: string): Promise<Enrichme
   }
 }
 
-async function resolveReferences(data: Uint8Array, paperId: string): Promise<ImportReferences> {
+async function resolveReferences(data: Uint8Array, paperId: string, fullText: string | null): Promise<ImportReferences> {
   const grobidUrl = process.env.RESEARCHOS_GROBID_URL
   // GROBID 不可用时降级回规则解析，不阻断导入
   const grobidRefs = grobidUrl ? await fetchGrobidReferences(data, grobidUrl).catch(() => null) : null
-  const refs = grobidRefs?.length ? grobidRefs : parseReferences(await extractPdfText(data))
+  // fullText 为 null 说明全文提取失败过，退回现场再试一次以保持原有行为
+  const text = fullText ?? (await extractPdfText(data).catch(() => ""))
+  const refs = grobidRefs?.length ? grobidRefs : parseReferences(text)
   const source = grobidRefs?.length ? "grobid" as const : "pdf" as const
 
   const targets = new Map(

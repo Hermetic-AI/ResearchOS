@@ -77,7 +77,28 @@ const LayoutPayload = Schema.Struct({
   })),
 }).annotate({ identifier: "ResearchosGraphLayoutPayload" })
 
+const ReindexResult = Schema.Struct({
+  files: Schema.Array(Schema.String),
+  nodes: Schema.Number,
+  edges: Schema.Number,
+}).annotate({ identifier: "ResearchosGraphReindexResult" })
+
+const GraphStatus = Schema.Struct({
+  backend: Schema.Literals(["sqlite", "neo4j", "memgraph", "tugraph"]),
+  healthy: Schema.Boolean,
+  detail: Schema.String,
+}).annotate({ identifier: "ResearchosGraphStatus" })
+
 export const ResearchosGraphGroup = HttpApiGroup.make("server.researchos-graph")
+  .add(
+    HttpApiEndpoint.get("graph.status", "/api/graph/status", {
+      query: LocationQuery,
+      success: Location.response(GraphStatus),
+      error: [UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({ identifier: "v2.graph.status", summary: "Get graph backend health" })),
+  )
   .add(
     HttpApiEndpoint.get("graph.get", "/api/graph", {
       query: Schema.Struct({
@@ -120,6 +141,18 @@ export const ResearchosGraphGroup = HttpApiGroup.make("server.researchos-graph")
         identifier: "v2.graph.ask",
         summary: "Graph RAG: recall + k-hop expansion + context pack",
         description: "Returns the expanded subgraph, context pack, seeds, and sources. The answer field is empty by design: the caller generates the answer from contextPack.",
+      })),
+  )
+  .add(
+    HttpApiEndpoint.post("graph.reindex", "/api/graph/reindex", {
+      query: LocationQuery,
+      success: Location.response(ReindexResult),
+      error: [UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({
+        identifier: "v2.graph.reindex",
+        summary: "Index project Markdown and LaTex files into the knowledge graph",
       })),
   )
   .add(

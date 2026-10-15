@@ -230,7 +230,7 @@ process.exit(exitCode)
 
 function createOpencode() {
   const host = "127.0.0.1"
-  const port = 4096
+  const port = 14096
   const url = `http://${host}:${port}`
   const proc = spawn(`opencode`, [`serve`, `--hostname=${host}`, `--port=${port}`])
   const client = createOpencodeClient({ baseUrl: url })

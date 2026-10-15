@@ -1,5 +1,8 @@
 import { Global } from "@opencode-ai/core/global"
 import { Location } from "@opencode-ai/core/location"
+import { AgentV2 } from "@opencode-ai/core/agent"
+import { CommandV2 } from "@opencode-ai/core/command"
+import { SkillV2 } from "@opencode-ai/core/skill"
 import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
 import {
   HubImpl,
@@ -7,6 +10,7 @@ import {
 } from "@researchos/api-hub"
 import { Effect, FileSystem } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { mkdir, rename, rm } from "fs/promises"
 import { applyEdits, modify, parse, type ParseError } from "jsonc-parser"
 import path from "path"
 import { Api } from "../api"
@@ -22,6 +26,7 @@ export const ResearchosAssetsHandler = HttpApiBuilder.group(
     handlers
       .handle("asset.fileRead", ({ payload }) => response(readRules(payload.scope)))
       .handle("asset.fileWrite", ({ payload }) => response(writeAsset(payload)))
+      .handle("asset.noteWrite", ({ payload }) => response(writeNote(payload)))
       .handle("asset.presetInstall", ({ payload }) => response(installPreset(payload)))
       .handle("api.list", () => response(apiList()))
       .handle("api.stats", () => response(apiStats()))
@@ -81,13 +86,20 @@ function apiHub() {
 
 function readRules(scope: "project" | "global") {
   return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem
-    const global = yield* Global.Service
     const location = yield* Location.Service
-    const chain = [path.join(location.directory, "AGENTS.md"), path.join(global.config, "AGENTS.md")]
+    const chain = [path.join(location.directory, "AGENTS.md"), path.join(Global.make().config, "AGENTS.md")]
     const selected = scope === "project" ? chain[0] : chain[1]
-    const exists = yield* Effect.all(chain.map((item) => fs.exists(item)))
-    const content = exists[scope === "project" ? 0 : 1] ? yield* fs.readFileString(selected) : ""
+    const exists = yield* Effect.all(
+      chain.map((item) =>
+        Effect.tryPromise({
+          try: () => Bun.file(item).exists(),
+          catch: fileError,
+        }),
+      ),
+    )
+    const content = exists[scope === "project" ? 0 : 1]
+      ? yield* Effect.tryPromise({ try: () => Bun.file(selected).text(), catch: fileError })
+      : ""
 
     return {
       path: selected,
@@ -104,13 +116,36 @@ function writeAsset(input: {
   readonly scope: "project" | "global"
 }) {
   return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem
-    const global = yield* Global.Service
     const location = yield* Location.Service
-    const target = yield* resolveAssetPath(input, location.directory, global.config)
-    yield* writeAtomically(fs, target, input.content)
+    const target = yield* resolveAssetPath(input, location.directory, Global.make().config)
+    yield* writeAtomically(target, input.content)
+    if (input.kind === "agent") {
+      const agent = yield* AgentV2.Service
+      yield* agent.reload()
+    }
+    if (input.kind === "command") {
+      const command = yield* CommandV2.Service
+      yield* command.reload()
+    }
+    if (input.kind === "skill") {
+      const skill = yield* SkillV2.Service
+      yield* skill.reload()
+    }
 
-    return { path: target, reloaded: false }
+    return { path: target, reloaded: true }
+  }).pipe(Effect.mapError((error) => error instanceof InvalidRequestError ? error : fileError(error)))
+}
+
+function writeNote(input: { readonly path: string; readonly content: string }) {
+  return Effect.gen(function* () {
+    const location = yield* Location.Service
+    const normalized = input.path.replace(/\\/g, "/")
+    if (!normalized.startsWith("notes/")) {
+      return yield* Effect.fail(new InvalidRequestError({ message: "Notes must be written under notes/" }))
+    }
+    const target = path.join(location.directory, normalized)
+    yield* writeAtomically(target, input.content)
+    return { path: normalized }
   }).pipe(Effect.mapError((error) => error instanceof InvalidRequestError ? error : fileError(error)))
 }
 
@@ -120,9 +155,8 @@ function installPreset(input: {
 }) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
-    const global = yield* Global.Service
     const location = yield* Location.Service
-    const root = input.target === "project" ? location.directory : global.config
+    const root = input.target === "project" ? location.directory : Global.make().config
     if (input.pack === "researchos-mcp") return yield* installMcpPreset(fs, root)
 
     const preset = path.resolve(import.meta.dir, "../../../researchos-preset")
@@ -145,7 +179,7 @@ function installPreset(input: {
 
     yield* Effect.forEach(files, (file) =>
       fs.readFile(path.join(preset, file)).pipe(
-        Effect.flatMap((content) => writeAtomically(fs, path.join(destination, file), content)),
+        Effect.flatMap((content) => writeAtomically(path.join(destination, file), content)),
       ),
     ).pipe(
       Effect.catch((error) =>
@@ -178,7 +212,7 @@ function installMcpPreset(fs: FileSystem.FileSystem, root: string) {
       original,
     )
 
-    yield* writeAtomically(fs, target, content)
+    yield* writeAtomically(target, content)
     return {
       installed: [],
       configPatched: Object.keys(mcp).map((name) => `mcp.${name}`),
@@ -212,19 +246,28 @@ function restore(
 ) {
   return Effect.forEach(changes, (change) =>
     change.content
-      ? writeAtomically(fs, change.target, change.content)
-      : fs.remove(change.target, { force: true }),
+      ? writeAtomically(change.target, change.content)
+      : fs.remove(change.target, { force: true }).pipe(Effect.mapError(fileError)),
   ).pipe(Effect.ignore)
 }
 
-function writeAtomically(fs: FileSystem.FileSystem, target: string, content: string | Uint8Array) {
+function writeAtomically(target: string, content: string | Uint8Array) {
   const temporary = `${target}.tmp-${crypto.randomUUID()}`
-  return Effect.gen(function* () {
-    yield* fs.makeDirectory(path.dirname(target), { recursive: true })
-    if (typeof content === "string") yield* fs.writeFileString(temporary, content)
-    if (typeof content !== "string") yield* fs.writeFile(temporary, content)
-    yield* fs.rename(temporary, target)
-  }).pipe(Effect.ensuring(fs.remove(temporary, { force: true }).pipe(Effect.ignore)))
+  return Effect.tryPromise({
+    try: async () => {
+      await mkdir(path.dirname(target), { recursive: true })
+      await Bun.write(temporary, content)
+      await rename(temporary, target)
+    },
+    catch: fileError,
+  }).pipe(
+    Effect.ensuring(
+      Effect.tryPromise({
+        try: () => rm(temporary, { force: true }).catch(() => {}),
+        catch: fileError,
+      }).pipe(Effect.ignore),
+    ),
+  )
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

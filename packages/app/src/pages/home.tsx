@@ -74,6 +74,7 @@ import { archiveHomeSession } from "./home-session-archive"
 import { shouldOpenSessionInBackground } from "./home-session-open"
 import { showToast } from "@/utils/toast"
 import { fileManagerApp } from "@/utils/file-manager"
+import { ensureResearchosProject } from "@/components/researchos/project-init"
 import {
   loadHomeSessionIndex,
   retainHomeSessions,
@@ -533,13 +534,17 @@ export function NewHome() {
     setSelection(toggleHomeProjectSelection(selection(), key, directory))
   }
 
-  function addProjects(conn: ServerConnection.Any, directories: string[]) {
+  async function addProjects(conn: ServerConnection.Any, directories: string[]) {
     const directory = directories[0]
     if (!directory) return
     const ctx = global.ensureServerCtx(conn)
     directories.forEach(ctx.projects.open)
     ctx.projects.touch(directory)
     setSelection({ server: ServerConnection.key(conn), directory })
+    const result = await ensureResearchosProject({ directory, conn, fetch: platform.fetch })
+    if (result.error) {
+      showToast({ title: "ResearchOS preset install failed", description: result.error, variant: "error" })
+    }
   }
 
   function openNewSession() {
@@ -1221,6 +1226,7 @@ function HomeProjectRow(props: {
 }) {
   const global = useGlobal()
   const platform = usePlatform()
+  const navigate = useNavigate()
   const serverUnreachable = () => global.servers.health[ServerConnection.key(props.server)]?.healthy === false
   const [state, setState] = createStore({ menuOpen: false })
   const sortable = useSortable({
@@ -1256,7 +1262,7 @@ function HomeProjectRow(props: {
       <button
         type="button"
         data-component="home-project-row"
-        class={`${HOME_PROJECT_NAV_ROW} pr-16 disabled:opacity-60`}
+        class={`${HOME_PROJECT_NAV_ROW} pr-24 disabled:opacity-60`}
         classList={{
           "bg-v2-background-bg-layer-01 text-v2-text-text-base [box-shadow:inset_0_0_0_0.5px_var(--v2-border-border-muted)]":
             sortable.isDragSource(),
@@ -1316,6 +1322,11 @@ function HomeProjectRow(props: {
           />
           <MenuV2.Portal>
             <MenuV2.Content>
+              <MenuV2.Item
+                onSelect={() => navigate(`/${base64Encode(props.project.worktree)}/overview`)}
+              >
+                Research workspace
+              </MenuV2.Item>
               <MenuV2.Item onSelect={() => props.openNewSession(props.server, props.project.worktree)}>
                 {props.language.t("command.session.new")}
               </MenuV2.Item>
@@ -1338,6 +1349,14 @@ function HomeProjectRow(props: {
             </MenuV2.Content>
           </MenuV2.Portal>
         </MenuV2>
+        <IconButtonV2
+          data-action="home-project-workspace"
+          variant="ghost-muted"
+          size="small"
+          icon={<IconV2 name="workspace" />}
+          aria-label="Research workspace"
+          onClick={() => navigate(`/${base64Encode(props.project.worktree)}/overview`)}
+        />
         <IconButtonV2
           data-action="home-project-new-session"
           variant="ghost-muted"
@@ -1819,11 +1838,15 @@ export function LegacyHome() {
     return "bg-border-weak-base"
   })
 
-  function openProject(server: ServerConnection.Any, directory: string) {
+  async function openProject(server: ServerConnection.Any, directory: string) {
     const serverCtx = global.ensureServerCtx(server)
     serverCtx.projects.open(directory)
     serverCtx.projects.touch(directory)
-    navigate(`/${base64Encode(directory)}`)
+    const result = await ensureResearchosProject({ directory, conn: server, fetch: platform.fetch })
+    if (result.error) {
+      showToast({ title: "ResearchOS preset install failed", description: result.error, variant: "error" })
+    }
+    navigate(`/${base64Encode(directory)}/overview`)
   }
 
   function chooseProject() {

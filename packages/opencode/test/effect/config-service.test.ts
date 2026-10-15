@@ -22,14 +22,14 @@ describe("ConfigService", () => {
           fromConfig({
             NAME: "kit",
             TOKEN: "secret",
-            PORT: "4096",
+            PORT: "14096",
           }),
         ),
       )
 
       expect(config.name).toBe("kit")
       expect(config.token).toEqual(Option.some("secret"))
-      expect(config.port).toBe(4096)
+      expect(config.port).toBe(14096)
     }),
   )
 

@@ -140,7 +140,7 @@ const layer = Layer.effect(
 
         const serverUrl = Server.url
         const client = createOpencodeClient({
-          baseUrl: serverUrl?.toString() ?? "http://localhost:4096",
+          baseUrl: serverUrl?.toString() ?? "http://localhost:14096",
           directory: ctx.directory,
           headers: ServerAuth.headers(),
           ...(serverUrl ? {} : { fetch: async (...args) => Server.Default().app.fetch(...args) }),
@@ -157,7 +157,7 @@ const layer = Layer.effect(
             },
           },
           get serverUrl(): URL {
-            return Server.url ?? new URL("http://localhost:4096")
+            return Server.url ?? new URL("http://localhost:14096")
           },
           // @ts-expect-error
           $: typeof Bun === "undefined" ? undefined : Bun.$,

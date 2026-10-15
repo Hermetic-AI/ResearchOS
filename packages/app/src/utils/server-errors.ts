@@ -16,6 +16,14 @@ export type ProviderModelNotFoundError = {
   }
 }
 
+export type UnknownServerError = {
+  name: "UnknownError"
+  data: {
+    message?: string
+    ref?: string
+  }
+}
+
 type Translator = (key: string, vars?: Record<string, string | number>) => string
 
 function tr(translator: Translator | undefined, key: string, text: string, vars?: Record<string, string | number>) {
@@ -29,6 +37,7 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
   const unwrapped = unwrapNamedError(error)
   if (isConfigInvalidErrorLike(unwrapped)) return parseReadableConfigInvalidError(unwrapped, translate)
   if (isProviderModelNotFoundErrorLike(unwrapped)) return parseReadableProviderModelNotFoundError(unwrapped, translate)
+  if (isUnknownServerErrorLike(unwrapped)) return parseReadableUnknownServerError(unwrapped, translate)
   if (error instanceof Error && error.message) return error.message
   if (typeof error === "string" && error) return error
   if (fallback) return fallback
@@ -75,6 +84,12 @@ function isProviderModelNotFoundErrorLike(error: unknown): error is ProviderMode
   return o.name === "ProviderModelNotFoundError" && typeof o.data === "object" && o.data !== null
 }
 
+function isUnknownServerErrorLike(error: unknown): error is UnknownServerError {
+  if (typeof error !== "object" || error === null) return false
+  const value = error as Record<string, unknown>
+  return value.name === "UnknownError" && typeof value.data === "object" && value.data !== null
+}
+
 export function parseReadableConfigInvalidError(errorInput: ConfigInvalidError, translator?: Translator) {
   const file = errorInput.data.path && errorInput.data.path !== "config" ? errorInput.data.path : "config"
   const detail = errorInput.data.message?.trim() ?? ""
@@ -106,4 +121,24 @@ function parseReadableProviderModelNotFoundError(errorInput: ProviderModelNotFou
     )
   }
   return [body, tail].join("\n")
+}
+
+export function parseReadableUnknownServerError(errorInput: UnknownServerError, translator?: Translator) {
+  const message = researchosRecoveryMessage(errorInput.data.message?.trim() || tr(translator, "error.chain.unknown", "Unknown error"))
+  const ref = errorInput.data.ref?.trim()
+  if (!ref) return message
+  return `${message}\n${tr(translator, "error.chain.reference", "Error reference: {{ref}}", { ref })}`
+}
+
+function researchosRecoveryMessage(message: string) {
+  if (/tectonic.*(?:ENOENT|not found)|(?:ENOENT|not found).*tectonic/i.test(message)) {
+    return "LaTeX compilation requires Tectonic. Install Tectonic, then run bun run researchos:doctor."
+  }
+  if (/LibreTranslate|translation service|ECONNREFUSED.*translate/i.test(message)) {
+    return "Translation is unavailable. Configure LIBRETRANSLATE_URL, then run bun run researchos:doctor."
+  }
+  if (/(?:uv|python).*(?:ENOENT|not found)|(?:ENOENT|not found).*(?:uv|python)/i.test(message)) {
+    return "Data analysis requires uv and Python. Install the missing runtime, then run bun run researchos:doctor."
+  }
+  return message
 }

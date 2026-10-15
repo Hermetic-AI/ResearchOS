@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 
-const server = "http://127.0.0.1:4096"
+const server = "http://127.0.0.1:14096"
 const sessionA = session("ses_tab_a", "Tab A session")
 const sessionB = session("ses_tab_b", "Tab B session")
 

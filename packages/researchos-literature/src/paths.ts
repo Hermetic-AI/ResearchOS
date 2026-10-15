@@ -12,6 +12,10 @@ export function pdfDir(projectRoot: string): string {
   return join(literatureDir(projectRoot), "pdfs")
 }
 
+export function textDir(projectRoot: string): string {
+  return join(literatureDir(projectRoot), "text")
+}
+
 export function modelsDir(projectRoot: string): string {
   return join(literatureDir(projectRoot), "models")
 }

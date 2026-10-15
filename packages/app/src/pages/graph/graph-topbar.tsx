@@ -1,5 +1,7 @@
 import { createSignal, For, Show } from "solid-js"
 import { Button } from "@opencode-ai/ui/button"
+import { Spinner } from "@opencode-ai/ui/spinner"
+import { StatusBadge } from "@/components/researchos/module-state"
 import { nodeColors, type NodeType } from "./graph-colors"
 
 const TYPES: Array<{ value: NodeType | "all"; label: string }> = [
@@ -13,9 +15,13 @@ const TYPES: Array<{ value: NodeType | "all"; label: string }> = [
 export function GraphTopbar(props: {
   filter: NodeType | "all"
   layout: "force" | "circle"
+  status: { status: "ok" | "degraded" | "fail" | "unknown"; label: string; detail?: string }
+  nodeCount: number
   onFilter: (filter: NodeType | "all") => void
   onLayout: (layout: "force" | "circle") => void
   onLocate: (label: string) => void
+  onReindex: () => void
+  indexing: boolean
 }) {
   const [term, setTerm] = createSignal("")
   return (
@@ -36,6 +42,13 @@ export function GraphTopbar(props: {
         )}
       </For>
       <div class="flex-1" />
+      <StatusBadge status={props.status.status} label={props.status.label} detail={props.status.detail} />
+      <span class="text-10-regular text-text-weaker">{props.nodeCount} nodes</span>
+      <Button size="small" variant="secondary" disabled={props.indexing} onClick={props.onReindex}>
+        <Show when={props.indexing} fallback="Build graph">
+          <Spinner class="size-3.5" />
+        </Show>
+      </Button>
       <input
         aria-label="Locate node by label"
         value={term()}

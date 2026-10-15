@@ -114,7 +114,7 @@ test("ignores stale background OpenCode checks after removing a WSL server", asy
         stop: () => undefined,
         onExit: () => undefined,
       },
-      url: "http://127.0.0.1:4096",
+      url: "http://127.0.0.1:14096",
       username: "opencode",
       password: "secret",
     }),

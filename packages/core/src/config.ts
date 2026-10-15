@@ -190,6 +190,10 @@ const layer = Layer.effect(
         .toReversed()
         .map((directory) => AbsolutePath.make(directory)),
     ]
+    const projectConfigDirectory = AbsolutePath.make(path.join(location.directory, ".opencode"))
+    if (!directories.some((directory) => path.resolve(directory) === path.resolve(projectConfigDirectory))) {
+      directories.push(projectConfigDirectory)
+    }
     // A config closer to the opened directory should win over one higher up.
     // Search starts nearby, so reverse the results before applying them.
     const directPaths = discovered.filter((item) => path.basename(item) !== ".opencode").toReversed()

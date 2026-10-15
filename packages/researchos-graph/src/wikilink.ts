@@ -27,7 +27,6 @@ export function parseFile(input: ParseInput): ParsedFile {
 
 function parseMarkdown(input: ParseInput): ParsedFile {
   const frontmatter = parseFrontmatter(input.content)
-  const isPaperNote = Boolean(frontmatter.doi)
   const self: GraphNode = frontmatter.doi
     ? {
       id: `paper:${slug(frontmatter.doi)}`,
@@ -57,7 +56,8 @@ function parseMarkdown(input: ParseInput): ParsedFile {
       if (!target) return
       const resolved = resolveTarget(target, input)
       nodes.set(resolved.id, resolved)
-      const relation = isPaperNote && resolved.type === "paper" ? "cites" : "mentions"
+      // 任何指向 paper 目标的链接都记 cites（笔记引用文献即引用关系），其余目标记 mentions
+      const relation = resolved.type === "paper" ? "cites" : "mentions"
       edges.set(`${self.id}${resolved.id}${relation}`, {
         from: self.id,
         to: resolved.id,
@@ -124,9 +124,12 @@ function resolveTarget(target: string, input: ParseInput): GraphNode {
 function parseFrontmatter(content: string): { title?: string; doi?: string } {
   const match = /^---\n([\s\S]*?)\n---/.exec(content)
   const body = match?.[1]
-  if (!body) return {}
+  if (!body) {
+    const title = /^#\s+(.+?)\s*$/m.exec(content)?.[1]
+    return title ? { title } : {}
+  }
   const field = (name: string) => new RegExp(`^${name}:\\s*(.+?)\\s*$`, "m").exec(body)?.[1]
-  const title = field("title")
+  const title = field("title") ?? /^#\s+(.+?)\s*$/m.exec(content)?.[1]
   const doi = field("doi")
   return {
     ...(title ? { title } : {}),

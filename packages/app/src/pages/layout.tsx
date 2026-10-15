@@ -537,6 +537,24 @@ export default function LegacyLayout(props: ParentProps) {
     return projects.find((p) => p.worktree === root)
   })
 
+  // 路由切换时 projects 数据刷新会让 currentProject 瞬空，直接据此渲染会导致
+  // 整个侧栏卸载重建（页面闪一下，并触发 solid-dnd 的 droppable 清理告警）。
+  // 目录未变期间保留上一次解析到的项目，切到别的目录时才重新解析。
+  const currentProjectStable = (() => {
+    let lastDir: string | undefined
+    let lastProject: ReturnType<typeof currentProject>
+    return createMemo(() => {
+      const directory = currentDir()
+      if (directory !== lastDir) {
+        lastDir = directory
+        lastProject = undefined
+      }
+      const project = currentProject()
+      if (project) lastProject = project
+      return lastProject
+    })
+  })()
+
   const [autoselecting] = createResource(async () => {
     await ready.promise
     await layout.ready.promise
@@ -2241,7 +2259,7 @@ export default function LegacyLayout(props: ParentProps) {
       helpLabel={() => language.t("sidebar.help")}
       onOpenHelp={() => platform.openLink("https://opencode.ai/desktop-feedback")}
       renderPanel={() =>
-        mobile ? <SidebarPanel project={currentProject} mobile /> : <SidebarPanel project={currentProject} merged />
+        mobile ? <SidebarPanel project={currentProjectStable} mobile /> : <SidebarPanel project={currentProjectStable} merged />
       }
     />
   )
@@ -2358,7 +2376,7 @@ export default function LegacyLayout(props: ParentProps) {
             >
               <main
                 classList={{
-                  "size-full overflow-x-hidden flex flex-col items-start contain-strict border-t border-border-weak-base bg-background-base xl:border-l xl:rounded-tl-[12px]": true,
+                  "size-full overflow-x-hidden flex flex-col items-stretch contain-strict border-t border-border-weak-base bg-background-base xl:border-l xl:rounded-tl-[12px]": true,
                 }}
               >
                 <Show when={!autoselecting.loading} fallback={<div class="size-full" />}>

@@ -23,6 +23,10 @@
     "researchos-reproduce": {
       "type": "local",
       "command": ["bun", "run", "packages/researchos-reproduce/src/mcp.ts"]
+    },
+    "researchos-translate": {
+      "type": "local",
+      "command": ["uv", "run", "--project", "packages/researchos-mcp/translate", "python", "packages/researchos-mcp/translate/src/server.py"]
     }
   },
   "plugin": ["@researchos/writing", "@researchos/plot-core"],

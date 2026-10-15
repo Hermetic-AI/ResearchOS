@@ -30,7 +30,7 @@ function readyState(input: Partial<WslServersState> = {}): WslServersState {
 describe("WSL server settings presentation", () => {
   test("retries only settled unsuccessful runtimes", () => {
     expect(wslRuntimeRetryable({ kind: "starting" })).toBe(false)
-    expect(wslRuntimeRetryable({ kind: "ready", url: "http://127.0.0.1:4096", username: null, password: null })).toBe(
+    expect(wslRuntimeRetryable({ kind: "ready", url: "http://127.0.0.1:14096", username: null, password: null })).toBe(
       false,
     )
     expect(wslRuntimeRetryable({ kind: "failed", message: "boom" })).toBe(true)

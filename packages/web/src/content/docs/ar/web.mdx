@@ -36,7 +36,7 @@ opencode web
 افتراضيا، يختار OpenCode منفذا متاحا. يمكنك تحديد منفذ:
 
 ```bash
-opencode web --port 4096
+opencode web --port 14096
 ```
 
 ### اسم المضيف
@@ -50,8 +50,8 @@ opencode web --hostname 0.0.0.0
 عند استخدام `0.0.0.0` سيعرض OpenCode كلا من عناوين الوصول المحلي وعناوين الشبكة:
 
 ```
-  Local access:       http://localhost:4096
-  Network access:     http://192.168.1.100:4096
+  Local access:       http://localhost:14096
+  Network access:     http://192.168.1.100:14096
 ```
 
 ### اكتشاف mDNS
@@ -114,10 +114,10 @@ OPENCODE_SERVER_PASSWORD=secret opencode web
 
 ```bash
 # ابدأ خادم الويب
-opencode web --port 4096
+opencode web --port 14096
 
 # في محطة طرفية أخرى، اربط TUI
-opencode attach http://localhost:4096
+opencode attach http://localhost:14096
 ```
 
 يتيح لك ذلك استخدام واجهة الويب وterminal في الوقت نفسه، مع مشاركة الجلسات والحالة نفسها.
@@ -131,7 +131,7 @@ opencode attach http://localhost:4096
 ```json
 {
   "server": {
-    "port": 4096,
+    "port": 14096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

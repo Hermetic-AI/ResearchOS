@@ -353,23 +353,23 @@ describe("HttpApi Server.listen", () => {
     }
   })
 
-  test("port 0 prefers 4096 when free", async () => {
-    if (!(await isPortFree(4096))) return
+  test("port 0 prefers 14096 when free", async () => {
+    if (!(await isPortFree(14096))) return
     const listener = await startListener()
     try {
-      expect(listener.port).toBe(4096)
+      expect(listener.port).toBe(14096)
     } finally {
-      await stop(listener, "timed out cleaning up port-0 prefers-4096 listener")
+      await stop(listener, "timed out cleaning up port-0 prefers-14096 listener")
     }
   })
 
-  test("port 0 falls back when 4096 is taken", async () => {
-    const blocker = await occupyPort(4096)
+  test("port 0 falls back when 14096 is taken", async () => {
+    const blocker = await occupyPort(14096)
     if (!blocker) return
     try {
       const listener = await startListener()
       try {
-        expect(listener.port).not.toBe(4096)
+        expect(listener.port).not.toBe(14096)
         expect(listener.port).toBeGreaterThan(0)
       } finally {
         await stop(listener, "timed out cleaning up port-0 fallback listener")

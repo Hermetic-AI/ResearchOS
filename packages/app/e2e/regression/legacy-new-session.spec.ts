@@ -4,7 +4,7 @@ import { mockOpenCodeServer } from "../utils/mock-server"
 
 const draftID = "draft_legacy_new_session"
 const directory = "C:/OpenCode/LegacyNewSession"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 
 test("redirects a draft to the legacy new-session route", async ({ page }) => {
   await mockOpenCodeServer(page, {

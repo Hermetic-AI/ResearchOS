@@ -40,7 +40,7 @@ const { client } = await createOpencode()
 | 選項       | 型別          | 描述                       | 預設值      |
 | ---------- | ------------- | -------------------------- | ----------- |
 | `hostname` | `string`      | 伺服器主機名稱             | `127.0.0.1` |
-| `port`     | `number`      | 伺服器連接埠               | `4096`      |
+| `port`     | `number`      | 伺服器連接埠               | `14096`      |
 | `signal`   | `AbortSignal` | 用於取消操作的中止訊號     | `undefined` |
 | `timeout`  | `number`      | 伺服器啟動逾時時間（毫秒） | `5000`      |
 | `config`   | `Config`      | 設定物件                   | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 4096,
+  port: 14096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ opencode.server.close()
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:4096",
+  baseUrl: "http://localhost:14096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | 選項            | 型別       | 描述                         | 預設值                  |
 | --------------- | ---------- | ---------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | 伺服器 URL                   | `http://localhost:4096` |
+| `baseUrl`       | `string`   | 伺服器 URL                   | `http://localhost:14096` |
 | `fetch`         | `function` | 自訂 fetch 實作              | `globalThis.fetch`      |
 | `parseAs`       | `string`   | 回應解析方式                 | `auto`                  |
 | `responseStyle` | `string`   | 回傳風格：`data` 或 `fields` | `fields`                |

@@ -37,7 +37,7 @@ function listen(hostname: string, port: Option.Option<number>, password: string)
     bind(hostname, port, password).pipe(
       Effect.catch((error) => (port === 65_535 ? Effect.fail(error) : next(port + 1))),
     )
-  return next(4096)
+  return next(14096)
 }
 
 function bind(hostname: string, port: number, password: string) {

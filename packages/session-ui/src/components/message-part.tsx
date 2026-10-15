@@ -179,6 +179,7 @@ export type UserActions = {
   fork?: SessionAction
   revert?: SessionAction
   openAttachment?: (file: FilePart) => void
+  saveQuickNote?: (text: string) => void
 }
 
 export type UserMessageComment = {
@@ -203,16 +204,21 @@ export interface MessagePartProps {
   showAssistantCopyPartID?: string | null
   turnDurationMs?: number
   useV2Actions?: boolean
+  actions?: UserActions
 }
 
 function MessageActionButton(
   props: Pick<ComponentProps<"button">, "disabled" | "onMouseDown" | "onClick" | "aria-label"> & {
-    icon: "check" | "copy" | "reset"
+    icon: IconProps["name"]
     label: JSX.Element
     useV2?: boolean
   },
 ) {
-  const icon = () => (props.icon === "copy" ? "outline-copy" : props.icon)
+  const icon = () => {
+    if (props.icon === "copy") return "outline-copy"
+    if (props.icon === "pencil-line") return "edit"
+    return props.icon
+  }
   return (
     <Show
       when={props.useV2}
@@ -1467,6 +1473,7 @@ export function Part(props: MessagePartProps) {
         showAssistantCopyPartID={props.showAssistantCopyPartID}
         turnDurationMs={props.turnDurationMs}
         useV2Actions={props.useV2Actions}
+        actions={props.actions}
       />
     </Show>
   )
@@ -1755,6 +1762,16 @@ PART_MAPPING["text"] = function TextPartDisplay(props) {
               onClick={handleCopy}
               aria-label={copied() ? i18n.t("ui.message.copied") : i18n.t("ui.message.copyResponse")}
             />
+            <Show when={props.actions?.saveQuickNote}>
+              <MessageActionButton
+                icon="pencil-line"
+                label="Save as quick note"
+                useV2={props.useV2Actions}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => props.actions?.saveQuickNote?.(text())}
+                aria-label="Save as quick note"
+              />
+            </Show>
             <Show when={meta()}>
               <span data-slot="text-part-meta" class="text-12-regular text-text-weak cursor-default">
                 {meta()}

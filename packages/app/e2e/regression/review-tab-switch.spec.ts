@@ -9,7 +9,7 @@ const sessionA = "ses_review_tab_a"
 const sessionB = "ses_review_tab_b"
 const titleA = "Alpha session"
 const titleB = "Beta session"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 const diffs = Array.from({ length: 2_740 }, (_, index) =>
   fileDiff(`src/generated-${String(index).padStart(4, "0")}.ts`),
 )

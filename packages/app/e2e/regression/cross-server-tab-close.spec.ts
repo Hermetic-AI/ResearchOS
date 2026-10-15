@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 
-const serverA = "http://127.0.0.1:4096"
+const serverA = "http://127.0.0.1:14096"
 const serverB = "http://127.0.0.1:4097"
 const sessionA = session("ses_server_a", "C:/server-a", "Server A session")
 const sessionB = session("ses_server_b", "/home/server-b", "Server B session")
@@ -16,7 +16,7 @@ test("closing the active server's last tab opens the remaining server tab", asyn
       localStorage.setItem(
         "opencode.window.browser.dat:tabs",
         JSON.stringify([
-          { type: "session", server: "http://127.0.0.1:4096", sessionId: sessionA },
+          { type: "session", server: "http://127.0.0.1:14096", sessionId: sessionA },
           { type: "session", server: serverB, sessionId: sessionB },
         ]),
       )

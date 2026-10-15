@@ -7,7 +7,7 @@ const directory = "C:/OpenCode/ReviewOpenFile"
 const projectID = "proj_review_open_file"
 const sessionID = "ses_review_open_file"
 const title = "Review open file"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 
 test.use({ viewport: { width: 1440, height: 900 } })
 

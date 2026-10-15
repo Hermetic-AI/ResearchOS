@@ -4,7 +4,7 @@ import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstab
 import { CodeMode, OpenAPI, Tool } from "../src/index.js"
 import { inputTypeScript, outputTypeScript } from "../src/tool-schema.js"
 
-const baseUrl = "http://localhost:4096"
+const baseUrl = "http://localhost:14096"
 type Document = OpenAPI.Document
 
 type Recorded = {
@@ -424,7 +424,7 @@ describe("OpenAPI.fromSpec", () => {
     expect(new URL(requests[0]!.url).pathname).toBe("/api/session/ses_123")
     expect(requests[1]).toMatchObject({
       method: "POST",
-      url: "http://localhost:4096/api/session",
+      url: "http://localhost:14096/api/session",
       body: { id: "ses_456" },
     })
   })

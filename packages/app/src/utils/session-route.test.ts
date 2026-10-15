@@ -27,10 +27,10 @@ describe("session routes", () => {
   })
 
   test("builds and decodes a server-keyed session route", () => {
-    const server = ServerConnection.Key.make("https://example.com:4096")
+    const server = ServerConnection.Key.make("https://example.com:14096")
     const href = sessionHref(server, "session-1")
 
-    expect(href).toBe("/server/aHR0cHM6Ly9leGFtcGxlLmNvbTo0MDk2/session/session-1")
+    expect(href).toBe("/server/aHR0cHM6Ly9leGFtcGxlLmNvbToxNDA5Ng/session/session-1")
     expect(requireServerKey(href.split("/")[2])).toBe(server)
   })
 

@@ -4,11 +4,12 @@ import type {
   ServerResearchosLatexCompileOutput,
   ServerResearchosLatexFormatCheckOutput,
 } from "@opencode-ai/client"
-import { For, Show, createEffect, createMemo, createResource, createSignal } from "solid-js"
+import { For, Show, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { createResearchosClient } from "@/utils/researchos-client"
+import { useResearchosShell } from "@/components/researchos/shell-context"
 import { MonacoLatex } from "./monaco-latex"
 import { PreviewPane } from "./preview-pane"
 import { WritingSidebar } from "./writing-sidebar"
@@ -23,6 +24,7 @@ export default function LatexPage() {
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const platform = usePlatform()
+  const shell = useResearchosShell()
   const rootClient = createMemo(() => createResearchosClient({
     baseUrl: sdk().url,
     fetch: platform.fetch,
@@ -94,6 +96,12 @@ export default function LatexPage() {
     setCompiledPdfPath(latest.pdfPath ?? undefined)
     void latex().pdf({ location: location(), mainFile: latest.mainFile }).then((result) => setPdf(result.data.data)).catch(() => {})
   })
+
+  createEffect(() => {
+    const file = selectedFile() ?? mainFile()
+    shell.setAgentContext(file ? { module: "latex", resource: file } : { module: "latex" })
+  })
+  onCleanup(() => shell.setAgentContext(undefined))
 
   const save = async () => {
     const file = selectedFile()

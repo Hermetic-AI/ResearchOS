@@ -1,14 +1,21 @@
 import { Button } from "@opencode-ai/ui/button"
+import { Icon } from "@opencode-ai/ui/icon"
 import { Spinner } from "@opencode-ai/ui/spinner"
 import { Tag } from "@opencode-ai/ui/tag"
 import type { ServerResearchosLiteratureCitationsOutput, ServerResearchosLiteratureSimilarOutput } from "@opencode-ai/client"
-import { createMemo, createResource, createSignal, For, Show } from "solid-js"
+import { DateTime } from "luxon"
+import { createEffect, createMemo, createResource, createSignal, For, onCleanup, Show } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
-import { base64Encode } from "@opencode-ai/core/util/encode"
+import { ModuleState, StatusBadge } from "@/components/researchos/module-state"
+import { archivedPdfPath, readingNotePath, readPaperSessions, startReadingNoteSession } from "@/components/researchos/paper-context"
+import { useResearchosShell } from "@/components/researchos/shell-context"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
+import { useServerSync } from "@/context/server-sync"
 import { createResearchosClient } from "@/utils/researchos-client"
+import { formatServerError } from "@/utils/server-errors"
+import { showToast } from "@/utils/toast"
 
 type Category = "all" | "unread" | "favorites" | `year:${number}`
 type CitationDirection = "references" | "cited_by"
@@ -39,16 +46,21 @@ export default function LiteraturePage() {
   const [searching, setSearching] = createSignal(false)
   const [searchError, setSearchError] = createSignal<string>()
   const [exported, setExported] = createSignal<string>()
+  const [exportError, setExportError] = createSignal<string>()
   const [importPath, setImportPath] = createSignal("")
   const [importUrl, setImportUrl] = createSignal("")
+  const [importFiles, setImportFiles] = createSignal<File[]>([])
   const [importing, setImporting] = createSignal(false)
   const [importError, setImportError] = createSignal<string>()
+  const [importFailures, setImportFailures] = createSignal<{ name: string; reason: string }[]>([])
   const [importNotice, setImportNotice] = createSignal<string>()
   const [zoteroPath, setZoteroPath] = createSignal("")
   const [importingZotero, setImportingZotero] = createSignal(false)
   const [zoteroError, setZoteroError] = createSignal<string>()
   const [zoteroNotice, setZoteroNotice] = createSignal<string>()
   const [citationTab, setCitationTab] = createSignal<CitationDirection>("references")
+  const [noting, setNoting] = createSignal(false)
+  const [noteError, setNoteError] = createSignal<string>()
   const [citations] = createResource(
     () => {
       const id = selectedId()
@@ -79,6 +91,93 @@ export default function LiteraturePage() {
     return true
   }))
   const selected = createMemo(() => (papers() ?? []).find((paper) => paper.id === selectedId()))
+  // Non-null accessor for the detail pane: only read inside <Show when={selected()}>,
+  // which stays truthy across selection changes so the <article> never remounts.
+  const detail = () => selected()!
+  const shell = useResearchosShell()
+  const sync = useServerSync()
+  const [sessionStore] = sync().child(sdk().directory, { bootstrap: false })
+  let searchInput!: HTMLInputElement
+  let importInput!: HTMLInputElement
+  let fileInput!: HTMLInputElement
+  let mainEl!: HTMLElement
+
+  // The detail pane stays mounted across selection changes, so reset its scroll
+  // position explicitly — otherwise it keeps the previous paper's reading offset.
+  createEffect(() => {
+    selectedId()
+    mainEl.scrollTop = 0
+  })
+
+  createEffect(() => {
+    sync().child(sdk().directory, { bootstrap: true })
+  })
+
+  // Sessions recorded against this paper (reading note, dock chats), joined with the live
+  // session store; ids no longer present in the store were deleted and are dropped.
+  const relatedSessions = createMemo(() => {
+    const id = selectedId()
+    if (!id) return []
+    const byID = new Map((sessionStore.session ?? []).map((session) => [session.id, session]))
+    return readPaperSessions(sdk().directory, id)
+      .flatMap((sessionID) => {
+        const session = byID.get(sessionID)
+        return session ? [session] : []
+      })
+      .sort((a, b) => (b.time.updated ?? b.time.created) - (a.time.updated ?? a.time.created))
+  })
+
+  // Optional enhancement: the reading-note agent writes notes/literature/<id>.md. Missing
+  // files and read errors both stay silent — the Reading note action remains the entry point.
+  const [readingNote] = createResource(
+    () => selectedId(),
+    async (id) => {
+      const path = readingNotePath(id)
+      const result = await sdk().client.file.read({ path }).catch(() => undefined)
+      if (result?.data?.type !== "text") return undefined
+      const sections = parseNoteSections(result.data.content)
+      if (sections.length === 0) return undefined
+      return { path, sections }
+    },
+  )
+  const [pdfPath] = createResource(
+    () => selected(),
+    async (paper) => archivedPdfPath(sdk(), paper),
+  )
+
+  const openInGraph = (paperId: string) => navigate(`/${params.dir}/graph?paper=${encodeURIComponent(paperId)}`)
+
+  // Mount the context panel once: props are accessors, so it tracks the selection
+  // reactively. Re-creating the JSX per selection remounts the whole panel (visible flicker).
+  shell.setContextPanel(
+    <PaperContextPanel
+      visible={() => !!selected()}
+      pdfPath={() => pdfPath()}
+      notePath={() => readingNote()?.path}
+      onOpenGraph={() => {
+        const id = selectedId()
+        if (id) openInGraph(id)
+      }}
+      onInsertCitation={() => navigate(`/${params.dir}/latex`)}
+      onTranslate={() => {
+        const id = selectedId()
+        if (id) navigate(`/${params.dir}/translate?paperId=${encodeURIComponent(id)}`)
+      }}
+    />,
+  )
+  onCleanup(() => shell.setContextPanel(undefined))
+
+  createEffect(() => {
+    const paper = selected()
+    shell.setAgentContext(paper ? { module: "literature", resource: paper.id } : { module: "literature" })
+    // Report focus to the core researchos/selection SystemContext source; best-effort,
+    // failures must never break the UI.
+    client().select({
+      location: { directory: sdk().directory },
+      ...(paper ? { paperId: paper.id, title: paper.title } : {}),
+    }).catch(() => undefined)
+  })
+  onCleanup(() => shell.setAgentContext(undefined))
 
   const runSearch = async () => {
     const value = query().trim()
@@ -90,7 +189,7 @@ export default function LiteraturePage() {
       query: value,
       limit: 30,
     }).then((response) => response.data).catch((error: unknown) => {
-      setSearchError(error instanceof Error ? error.message : String(error))
+      setSearchError(formatServerError(error))
       return undefined
     })
     if (result) {
@@ -118,42 +217,94 @@ export default function LiteraturePage() {
     }
   }
 
-  const insertCitation = async () => {
-    const paper = selected()
-    if (!paper) return
-    const bib = await client().export({ location: { directory: sdk().directory }, paperIds: paper.id, format: "bibtex" })
-    const match = /@\w+\{([^,]+),/.exec(bib.data.content)
-    const key = match?.[1] ?? paper.id
-    const citation = `\\cite{${key}}`
-    await navigator.clipboard?.writeText(`${citation}\n\n${bib.data.content}`)
-  }
-
   const exportPaper = async () => {
     const paper = selected()
     if (!paper) return
+    setExportError(undefined)
     const style = exportStyle()
-    const result = await client().export({
-      location: { directory: sdk().directory },
-      paperIds: paper.id,
-      format: exportFormat(),
-      ...(style === "none" ? {} : { style }),
+    try {
+      const result = await client().export({
+        location: { directory: sdk().directory },
+        paperIds: paper.id,
+        format: exportFormat(),
+        ...(style === "none" ? {} : { style }),
+      })
+      setExported(result.data.content)
+    } catch (error) {
+      setExportError(formatServerError(error))
+    }
+  }
+
+  const triggerFirstRead = async (paperId: string) => {
+    await startReadingNoteSession({
+      literature: client(),
+      sdk: sdk(),
+      paperId,
+    }).then(() => {
+      showToast({
+        title: "First read started",
+        description: "The agent is reading the paper in the background. The note will appear under notes/literature/ when ready.",
+        variant: "default",
+      })
+    }).catch(() => {
+      // Model unavailable — degrade silently; the import itself succeeded.
     })
-    setExported(result.data.content)
   }
 
   const runImport = async () => {
     const path = importPath().trim()
     const url = importUrl().trim()
-    if ((!path && !url) || importing()) return
+    const files = importFiles()
+    if ((!path && !url && files.length === 0) || importing()) return
     setImporting(true)
     setImportError(undefined)
+    setImportFailures([])
     setImportNotice(undefined)
+    if (files.length > 0) {
+      const failures: { name: string; reason: string }[] = []
+      let succeeded = 0
+      for (const [index, file] of files.entries()) {
+        setImportNotice(`Importing ${index + 1}/${files.length} · ${file.name}…`)
+        const upload = await readPdfFile(file).catch((error: unknown) => {
+          failures.push({ name: file.name, reason: formatServerError(error) })
+          return undefined
+        })
+        if (!upload) continue
+        const result = await client().import({
+          location: { directory: sdk().directory },
+          contentBase64: upload,
+          fileName: file.name,
+        }).then((response) => response.data).catch((error: unknown) => {
+          failures.push({ name: file.name, reason: formatServerError(error) })
+          return undefined
+        })
+        if (!result) continue
+        succeeded += 1
+        if (result.paper) {
+          setSelectedId(result.paper.id)
+          void triggerFirstRead(result.paper.id)
+        }
+      }
+      await papersActions.refetch()
+      setCategory("all")
+      const importedLabel = `Imported ${succeeded} ${succeeded === 1 ? "paper" : "papers"}`
+      if (failures.length === 0) {
+        setImportFiles([])
+        fileInput.value = ""
+        setImportNotice(importedLabel)
+      } else {
+        setImportFailures(failures)
+        setImportNotice(`${importedLabel} · ${failures.length} failed: ${failures.map((failure) => `${failure.name} (${failure.reason})`).join(", ")}`)
+      }
+      setImporting(false)
+      return
+    }
     const result = await client().import({
       location: { directory: sdk().directory },
       path: path || undefined,
       url: url || undefined,
     }).then((response) => response.data).catch((error: unknown) => {
-      setImportError(error instanceof Error ? error.message : String(error))
+      setImportError(formatServerError(error))
       return undefined
     })
     if (result) {
@@ -162,7 +313,10 @@ export default function LiteraturePage() {
       setImportUrl("")
       await papersActions.refetch()
       setCategory("all")
-      if (result.paper) setSelectedId(result.paper.id)
+      if (result.paper) {
+        setSelectedId(result.paper.id)
+        void triggerFirstRead(result.paper.id)
+      }
     }
     setImporting(false)
   }
@@ -177,7 +331,7 @@ export default function LiteraturePage() {
       location: { directory: sdk().directory },
       zoteroPath: path,
     }).then((response) => response.data).catch((error: unknown) => {
-      setZoteroError(error instanceof Error ? error.message : String(error))
+      setZoteroError(formatServerError(error))
       return undefined
     })
     if (result?.zotero) {
@@ -190,6 +344,23 @@ export default function LiteraturePage() {
       setCategory("all")
     }
     setImportingZotero(false)
+  }
+
+  const runReadingNote = async () => {
+    const id = selectedId()
+    if (!id || noting()) return
+    setNoting(true)
+    setNoteError(undefined)
+    const sessionID = await startReadingNoteSession({
+      literature: client(),
+      sdk: sdk(),
+      paperId: id,
+    }).catch((error: unknown) => {
+      setNoteError(formatServerError(error))
+      return undefined
+    })
+    setNoting(false)
+    if (sessionID) navigate(`/${params.dir}/session/${sessionID}`)
   }
 
   return (
@@ -214,6 +385,7 @@ export default function LiteraturePage() {
         <div class="border-b border-border-weaker-base p-3">
           <div class="flex gap-2">
             <input
+              ref={searchInput}
               aria-label="Search academic papers"
               value={query()}
               onInput={(event) => setQuery(event.currentTarget.value)}
@@ -226,8 +398,24 @@ export default function LiteraturePage() {
             </Button>
           </div>
           <Show when={searchError()}>{(error) => <p class="mt-2 text-11-regular text-text-on-critical-strong">{error()}</p>}</Show>
-          <div class="mt-2 flex gap-2">
+          <div class="mt-2 flex items-center gap-2">
+            <label class="flex h-9 shrink-0 cursor-pointer items-center rounded-md border border-border-base bg-surface-inset-base px-3 text-12-medium text-text-base hover:bg-surface-base-hover">
+              Choose PDF
+              <input
+                ref={fileInput}
+                class="sr-only"
+                type="file"
+                multiple
+                accept="application/pdf,.pdf"
+                onChange={(event) => {
+                  setImportFiles(Array.from(event.currentTarget.files ?? []))
+                  setImportError(undefined)
+                  setImportFailures([])
+                }}
+              />
+            </label>
             <input
+              ref={importInput}
               aria-label="Local PDF path"
               value={importPath()}
               onInput={(event) => setImportPath(event.currentTarget.value)}
@@ -242,11 +430,34 @@ export default function LiteraturePage() {
               placeholder="or https://…/paper.pdf"
               class="min-w-0 flex-1 rounded-md border border-border-base bg-surface-inset-base px-3 py-2 text-12-regular text-text-base outline-none placeholder:text-text-weaker focus:border-border-focus"
             />
-            <Button size="small" variant="secondary" disabled={(!importPath().trim() && !importUrl().trim()) || importing()} onClick={() => void runImport()}>
+            <Button size="small" variant="secondary" disabled={(!importPath().trim() && !importUrl().trim() && importFiles().length === 0) || importing()} onClick={() => void runImport()}>
               <Show when={importing()} fallback="Import PDF"><Spinner class="size-3.5" /></Show>
             </Button>
           </div>
-          <Show when={importError()}>{(error) => <p class="mt-2 text-11-regular text-text-on-critical-strong">{error()}</p>}</Show>
+          <Show when={importFiles().length > 0}>
+            <div class="mt-2 rounded-md border border-border-weaker-base bg-surface-inset-base px-3 py-2">
+              <p class="font-mono text-10-medium uppercase tracking-wider text-text-weaker">{importFiles().length} {importFiles().length === 1 ? "PDF" : "PDFs"} selected</p>
+              <For each={importFiles()}>
+                {(file) => <p class="mt-0.5 truncate font-mono text-11-regular text-text-weak" title={file.name}>{file.name}</p>}
+              </For>
+            </div>
+          </Show>
+          <Show when={importError()}>
+            {(error) => (
+              <div class="mt-2">
+                <p class="text-11-regular text-text-on-critical-strong">{error()}</p>
+                <p class="mt-0.5 text-10-regular text-text-weaker">Inputs are preserved — fix the cause and click Import PDF to retry.</p>
+              </div>
+            )}
+          </Show>
+          <Show when={importFailures().length > 0}>
+            <div class="mt-2">
+              <For each={importFailures()}>
+                {(failure) => <p class="mt-0.5 font-mono text-10-regular text-text-on-critical-strong">{failure.name} ({failure.reason})</p>}
+              </For>
+              <p class="mt-0.5 text-10-regular text-text-weaker">The selection is preserved — click Import PDF to retry.</p>
+            </div>
+          </Show>
           <Show when={importNotice()}>{(notice) => <p class="mt-2 text-11-regular text-text-weak">{notice()}</p>}</Show>
           <div class="mt-2 flex gap-2">
             <input
@@ -261,18 +472,49 @@ export default function LiteraturePage() {
               <Show when={importingZotero()} fallback="Import Zotero"><Spinner class="size-3.5" /></Show>
             </Button>
           </div>
-          <Show when={zoteroError()}>{(error) => <p class="mt-2 text-11-regular text-text-on-critical-strong">{error()}</p>}</Show>
+          <Show when={zoteroError()}>
+            {(error) => (
+              <div class="mt-2">
+                <p class="text-11-regular text-text-on-critical-strong">{error()}</p>
+                <p class="mt-0.5 text-10-regular text-text-weaker">The path is preserved — fix the cause and click Import Zotero to retry.</p>
+              </div>
+            )}
+          </Show>
           <Show when={zoteroNotice()}>{(notice) => <p class="mt-2 text-11-regular text-text-weak">{notice()}</p>}</Show>
         </div>
 
         <div class="min-h-0 flex-1 overflow-y-auto">
           <Show when={papers.loading}>
-            <div class="flex items-center gap-2 px-4 py-8 text-12-regular text-text-weak"><Spinner class="size-4" /> Loading local library…</div>
+            <ModuleState
+              state="running"
+              title="Loading library…"
+              description="Fetching the project paper list from the local server."
+            />
           </Show>
-          <Show when={!papers.loading && visible().length === 0}>
+          <Show when={!papers.loading && papers.error}>
+            {(error) => (
+              <ModuleState
+                state="error"
+                title="Library could not be loaded"
+                description="The local server did not return the project library. Search and import above stay available."
+                details={formatServerError(error())}
+                action={{ label: "Retry", onClick: () => void papersActions.refetch() }}
+              />
+            )}
+          </Show>
+          <Show when={!papers.loading && !papers.error && (papers() ?? []).length === 0}>
+            <ModuleState
+              state="empty"
+              title="No papers yet"
+              description="The library is the evidence base for reading, graph building, citations, and translation. Search arXiv, S2, Crossref, and PubMed above, or import a PDF or Zotero library to add the first paper."
+              action={{ label: "Import a PDF", onClick: () => importInput.focus() }}
+              secondary={{ label: "Search sources", onClick: () => searchInput.focus() }}
+            />
+          </Show>
+          <Show when={!papers.loading && !papers.error && (papers() ?? []).length > 0 && visible().length === 0}>
             <div class="px-5 py-10">
               <h2 class="text-13-medium text-text-base">No papers in this view</h2>
-              <p class="mt-1 text-12-regular text-text-weak">Search the four academic sources above; accepted results are stored in the project library automatically.</p>
+              <p class="mt-1 text-12-regular text-text-weak">The library has papers, but none match the selected category. Pick another category on the left.</p>
             </div>
           </Show>
           <For each={visible()}>
@@ -299,60 +541,130 @@ export default function LiteraturePage() {
         </div>
       </section>
 
-      <main class="min-w-0 overflow-y-auto px-7 py-6">
+      <main ref={mainEl} class="min-w-0 overflow-y-auto px-7 py-6">
         <Show when={selected()} fallback={<EmptyDetail />}>
-          {(paper) => (
-            <article class="mx-auto max-w-3xl">
-              <p class="font-mono text-10-medium uppercase tracking-wider text-text-weaker">{paper().source} · {paper().id}</p>
-              <h1 class="mt-2 text-20-medium leading-7 text-text-base">{paper().title}</h1>
-              <p class="mt-2 text-12-regular text-text-weak">{paper().authors.map((author) => author.name).join(", ") || "Unknown authors"}</p>
+          <article class="mx-auto max-w-3xl">
+              <p class="font-mono text-10-medium uppercase tracking-wider text-text-weaker">{detail().source} · {detail().id}</p>
+              <h1 class="mt-2 text-20-medium leading-7 text-text-base">{detail().title}</h1>
+              <p class="mt-2 text-12-regular text-text-weak">{detail().authors.map((author) => author.name).join(", ") || "Unknown authors"}</p>
+
+              <div class="mt-4 flex flex-wrap items-center gap-2">
+                <Button size="small" variant="primary" onClick={() => openInGraph(detail().id)}>Open in graph</Button>
+                <Button size="small" variant="secondary" disabled={noting()} onClick={() => void runReadingNote()}>
+                  <Show when={noting()} fallback="Reading note"><Spinner class="size-3.5" /></Show>
+                </Button>
+                <Button size="small" variant="ghost" onClick={() => shell.setDockOpen(true)}>Ask agent</Button>
+                <Button size="small" variant="secondary" onClick={() => void toggleFlag("isRead")}>
+                  {detail().isRead ? "Mark unread" : "Mark read"}
+                </Button>
+                <Button size="small" variant="ghost" onClick={() => void toggleFlag("isFavorite")}>
+                  {detail().isFavorite ? "Unfavorite" : "Favorite"}
+                </Button>
+                <Button size="small" variant="ghost" onClick={() => navigate(`/${params.dir}/latex`)}>Insert citation</Button>
+                <Button
+                  size="small"
+                  variant="ghost"
+                  title="Requires an archived literature PDF and a configured LIBRETRANSLATE_URL on the server"
+                  onClick={() => {
+                    if (params.dir && selectedId()) navigate(`/${params.dir}/translate?paperId=${encodeURIComponent(selectedId()!)}`)
+                  }}
+                >Translate</Button>
+              </div>
+              <Show when={noteError()}>
+                {(error) => <p class="mt-2 text-11-regular text-text-on-critical-strong">{error()}</p>}
+              </Show>
 
               <div class="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border-weaker-base bg-border-weaker-base sm:grid-cols-4">
-                <Metadata label="Year" value={String(paper().year ?? "Not available")} />
-                <Metadata label="Venue" value={paper().venue ?? "Not available"} />
-                <Metadata label="Citations" value={paper().citationCount.toLocaleString()} />
-                <Metadata label="DOI" value={paper().doi ?? "Not available"} />
+                <Metadata label="Year" value={String(detail().year ?? "Not available")} />
+                <Metadata label="Venue" value={detail().venue ?? "Not available"} />
+                <Metadata label="Citations" value={detail().citationCount.toLocaleString()} />
+                <Metadata label="DOI" value={detail().doi ?? "Not available"} />
               </div>
 
               <section class="mt-6 border-t border-border-weaker-base pt-5">
                 <h2 class="text-13-medium text-text-base">Abstract</h2>
-                <p class="mt-2 whitespace-pre-wrap text-12-regular leading-5 text-text-weak">{paper().abstract ?? "No abstract was returned by the selected source."}</p>
+                <p class="mt-2 whitespace-pre-wrap text-12-regular leading-5 text-text-weak">{detail().abstract ?? "No abstract was returned by the selected source."}</p>
               </section>
 
-              <section class="mt-6 border-t border-border-weaker-base pt-5">
+              <Show when={readingNote()}>
+                {(note) => (
+                  <section class="mt-6 border-t border-border-weaker-base pt-5">
+                    <h2 class="text-13-medium text-text-base">AI reading note</h2>
+                    <For each={note().sections}>
+                      {(section) => (
+                        <div class="mt-3 rounded-md border border-border-weaker-base bg-surface-inset-base px-3 py-2.5">
+                          <p class="text-12-medium text-text-base">{section.title}</p>
+                          <p class="mt-1 whitespace-pre-wrap text-12-regular leading-5 text-text-weak">{section.body}</p>
+                        </div>
+                      )}
+                    </For>
+                    <p class="mt-2 font-mono text-10-regular text-text-weaker">{note().path} · generated by the reading-note session</p>
+                  </section>
+                )}
+              </Show>
+
+              <Show when={relatedSessions().length > 0}>
+                <section class="mt-6 border-t border-border-weaker-base pt-5">
+                  <h2 class="text-13-medium text-text-base">Related chats</h2>
+                  <For each={relatedSessions()}>
+                    {(session) => (
+                      <button
+                        type="button"
+                        class="mt-2 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left outline-none hover:bg-surface-base-hover focus-visible:bg-surface-base-hover"
+                        onClick={() => navigate(`/${params.dir}/session/${session.id}`)}
+                      >
+                        <Icon name="speech-bubble" size="small" class="shrink-0 text-text-weak" />
+                        <span class="min-w-0 flex-1 truncate text-12-medium text-text-base">{session.title}</span>
+                        <span class="shrink-0 text-10-regular text-text-weaker">
+                          {DateTime.fromMillis(session.time.updated ?? session.time.created).toRelative()}
+                        </span>
+                      </button>
+                    )}
+                  </For>
+                </section>
+              </Show>
+
+              <section class="mt-6 border-t border-border-weaker-base pt-5" classList={{ "opacity-60 transition-opacity": citations.loading && citations.latest !== undefined }}>
                 <div class="flex items-center gap-2">
                   <CitationTab label="References" active={citationTab() === "references"} onClick={() => setCitationTab("references")} />
                   <CitationTab label="Cited by" active={citationTab() === "cited_by"} onClick={() => setCitationTab("cited_by")} />
                 </div>
-                <Show when={citations.loading}>
+                <Show when={citations.loading && citations.latest === undefined}>
                   <div class="mt-3 flex items-center gap-2 text-12-regular text-text-weak"><Spinner class="size-3.5" /> Loading citations…</div>
                 </Show>
-                <Show when={!citations.loading && (citations() ?? []).length === 0}>
+                <Show when={!citations.loading && (citations.latest ?? []).length === 0}>
                   <p class="mt-3 text-12-regular text-text-weak">
                     {citationTab() === "references"
                       ? "No references recorded. Import this paper's PDF to parse its reference section."
                       : "No citing papers recorded in the project library yet."}
                   </p>
                 </Show>
-                <For each={citations() ?? []}>
+                <For each={citations.latest ?? []}>
                   {(entry) => (
                     <CitationRow entry={entry} onSelect={entry.inLibrary ? () => setSelectedId(entry.id) : undefined} />
                   )}
                 </For>
               </section>
 
-              <section class="mt-6 border-t border-border-weaker-base pt-5">
+              <section class="mt-6 border-t border-border-weaker-base pt-5" classList={{ "opacity-60 transition-opacity": similar.loading && similar.latest !== undefined }}>
                 <h2 class="text-13-medium text-text-base">Similar papers</h2>
-                <Show when={similar()?.degraded}>
-                  <p class="mt-2 text-11-regular text-text-weak">Keyword-based ranking — embedding vectors are unavailable on this machine.</p>
+                <Show when={similar.latest?.degraded}>
+                  <div class="mt-2 flex flex-wrap items-center gap-2">
+                    <StatusBadge
+                      status="degraded"
+                      label="Keyword ranking"
+                      detail="Embedding vectors are unavailable on this machine; falling back to keyword-based similarity."
+                    />
+                    <span class="text-11-regular text-text-weak">Embedding vectors unavailable — results use keyword-based ranking.</span>
+                  </div>
                 </Show>
-                <Show when={similar.loading}>
+                <Show when={similar.loading && similar.latest === undefined}>
                   <div class="mt-3 flex items-center gap-2 text-12-regular text-text-weak"><Spinner class="size-3.5" /> Ranking similar papers…</div>
                 </Show>
-                <Show when={!similar.loading && (similar()?.results ?? []).length === 0}>
+                <Show when={!similar.loading && (similar.latest?.results ?? []).length === 0}>
                   <p class="mt-3 text-12-regular text-text-weak">No similar papers found in the project library yet.</p>
                 </Show>
-                <For each={similar()?.results ?? []}>
+                <For each={similar.latest?.results ?? []}>
                   {(entry) => <SimilarRow entry={entry} onSelect={() => setSelectedId(entry.id)} />}
                 </For>
               </section>
@@ -384,16 +696,6 @@ export default function LiteraturePage() {
                   <option value="springer">Springer</option>
                 </select>
                 <Button size="small" variant="secondary" onClick={() => void exportPaper()}>Export</Button>
-                <Button size="small" variant="ghost" onClick={() => void insertCitation()}>Insert citation</Button>
-                <Button size="small" variant="ghost" onClick={() => void toggleFlag("isRead")}>
-                  {selected()?.isRead ? "Mark unread" : "Mark read"}
-                </Button>
-                <Button size="small" variant="ghost" onClick={() => void toggleFlag("isFavorite")}>
-                  {selected()?.isFavorite ? "Unfavorite" : "Favorite"}
-                </Button>
-                <Button size="small" variant="ghost" onClick={() => {
-                  if (params.dir && selectedId()) navigate(`/${base64Encode(params.dir)}/translate?paperId=${encodeURIComponent(selectedId()!)}`)
-                }}>Translate</Button>
                 <Button size="small" variant="ghost" onClick={() => void papersActions.refetch()}>Return to local library</Button>
               </div>
 
@@ -408,12 +710,73 @@ export default function LiteraturePage() {
                   </div>
                 )}
               </Show>
-            </article>
-          )}
+            <Show when={exportError()}>{(error) => <p class="mt-3 text-12-regular text-text-on-critical-strong">{error()}</p>}</Show>
+          </article>
         </Show>
       </main>
     </div>
   )
+}
+
+function PaperContextPanel(props: {
+  readonly visible: () => boolean
+  readonly pdfPath: () => string | undefined
+  readonly notePath: () => string | undefined
+  readonly onOpenGraph: () => void
+  readonly onInsertCitation: () => void
+  readonly onTranslate: () => void
+}) {
+  const files = createMemo(() => [props.pdfPath(), props.notePath()].filter((path): path is string => !!path))
+  return (
+    <Show when={props.visible()}>
+      <div class="px-3 py-4">
+        <p class="font-mono text-10-medium uppercase tracking-wider text-text-weaker">Destinations</p>
+        <div class="mt-2 flex flex-col gap-1">
+          <DestinationRow label="Knowledge graph" module="graph" onClick={props.onOpenGraph} />
+          <DestinationRow label="Insert citation" module="latex" onClick={props.onInsertCitation} />
+          <DestinationRow label="Translate" module="translate" onClick={props.onTranslate} />
+        </div>
+        <Show when={files().length > 0}>
+          <p class="mt-4 font-mono text-10-medium uppercase tracking-wider text-text-weaker">Files</p>
+          <div class="mt-2 flex flex-col gap-1.5">
+            <For each={files()}>
+              {(path) => <p class="break-all font-mono text-11-regular text-text-weak">{path}</p>}
+            </For>
+          </div>
+        </Show>
+      </div>
+    </Show>
+  )
+}
+
+function DestinationRow(props: { readonly label: string; readonly module: string; readonly onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      class="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left outline-none hover:bg-surface-base-hover focus-visible:bg-surface-base-hover"
+      onClick={props.onClick}
+    >
+      <span class="text-12-medium text-text-base">{props.label}</span>
+      <Tag>{props.module}</Tag>
+    </button>
+  )
+}
+
+type NoteSection = { readonly title: string; readonly body: string }
+
+// Splits the note on ## / ### headings into titled blocks; frontmatter lines before the
+// first heading are not a section and are dropped. No markdown rendering — bodies keep
+// their raw text and wrap with whitespace-pre-wrap.
+function parseNoteSections(markdown: string): NoteSection[] {
+  return markdown
+    .split(/^(?=#{2,3}\s)/m)
+    .map((chunk) => {
+      const [first, ...rest] = chunk.split("\n")
+      const title = /^#{2,3}\s+(.+)$/.exec(first ?? "")?.[1]?.trim()
+      if (!title) return undefined
+      return { title, body: rest.join("\n").trim() }
+    })
+    .filter((section): section is NoteSection => !!section)
 }
 
 function SimilarRow(props: { readonly entry: SimilarEntry; readonly onSelect: () => void }) {
@@ -519,6 +882,24 @@ function EmptyDetail() {
       </div>
     </div>
   )
+}
+
+function readPdfFile(file: File) {
+  if (!file.name.toLowerCase().endsWith(".pdf")) return Promise.reject(new Error("Select a PDF file"))
+  if (file.size > 50 * 1024 * 1024) return Promise.reject(new Error("PDF upload exceeds the 50 MB limit"))
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(reader.error ?? new Error("Unable to read the selected PDF"))
+    reader.onload = () => {
+      const value = reader.result
+      if (typeof value !== "string" || !value.startsWith("data:application/pdf;base64,")) {
+        reject(new Error("The selected file is not a valid PDF"))
+        return
+      }
+      resolve(value.slice(value.indexOf(",") + 1))
+    }
+    reader.readAsDataURL(file)
+  })
 }
 
 function finiteNumber(value: number | string | null | undefined) {

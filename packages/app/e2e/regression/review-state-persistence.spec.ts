@@ -9,7 +9,7 @@ const sessionA = "ses_review_state_a"
 const sessionB = "ses_review_state_b"
 const titleA = "Alpha review state"
 const titleB = "Beta review state"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 
 test.use({ viewport: { width: 1440, height: 900 } })
 

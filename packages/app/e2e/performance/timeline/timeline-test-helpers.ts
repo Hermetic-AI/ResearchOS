@@ -80,7 +80,7 @@ export function stressDraftHref(draftID: string) {
 }
 
 function stressServer() {
-  return `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+  return `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 }
 
 export function createReviewDiffs() {

@@ -70,7 +70,7 @@
 
 现状是 16 宽 icon rail（`pages/layout/sidebar-shell.tsx`）+ 可展开 panel。ResearchOS 模块在 rail 追加一组图标按钮（同样标记注释包裹），点击导航到对应路由。注意：
 
-- 仓库正处在新旧布局并存期（`settings.general.newLayoutDesigns()` 切换 `layout.tsx` / `layout-new.tsx`）。**入口组件写成布局无关的 `ResearchosRail` 小组件**，在两个 shell 中各插入一行；上游 v2 布局定型后只需维护一处。
+- 仓库正处在新旧布局并存期（`settings.general.newLayoutDesigns()` 切换 `layout.tsx` / `layout-new.tsx`）。**入口组件写成布局无关的 `ResearchosRail` 小组件**，在两个 shell 中各插入一行；上游 v2 布局定型后只需维护一处。（已落实：旧 shell 用 `ResearchosModuleRail`，新布局主页用 `ResearchosModuleRailV2`，标题栏 `ResearchosModulesMenu` 与会话/主页选中项目联动；目录解析统一走 `useResearchosDirectory`。）
 - rail 图标顺序与原型侧栏一致：总览/文献/图谱/LaTeX/数据/绘图/复现。
 
 ### 3.3 复用既有组件清单

@@ -1,5 +1,6 @@
 import { Button } from "@opencode-ai/ui/button"
 import { For, Show, createMemo, createSignal } from "solid-js"
+import { useResearchosShell } from "@/components/researchos/shell-context"
 
 type Tab = "titles" | "structure" | "polish" | "typeset" | "citations"
 type OutlineItem = { level: number; title: string; line: number }
@@ -25,6 +26,7 @@ export function WritingSidebar(props: {
   addCitation: (paperId: string) => Promise<string>
   recordRewrite: (input: { original: string; output: string; status: "accepted" | "partial" }) => Promise<void>
 }) {
+  const shell = useResearchosShell()
   const [tab, setTab] = createSignal<Tab>("structure")
   const [input, setInput] = createSignal("")
   const [caption, setCaption] = createSignal("")
@@ -40,12 +42,12 @@ export function WritingSidebar(props: {
   const [notice, setNotice] = createSignal<string>()
   const selected = createMemo(() => props.selectedText.trim())
 
-  const copyAgentPrompt = async (kind: "titles" | "structure") => {
+  const askAgent = (kind: "titles" | "structure") => {
     const prompt = kind === "titles"
       ? `@paper-writer Generate 5 concise academic title candidates for ${props.file ?? "the current paper"}. Base them on this excerpt:\n\n${selected() || "Please inspect the LaTeX project before proposing titles."}`
       : `@paper-writer Review the structure of ${props.file ?? "the current paper"}. Return a proposed outline as a diff and do not edit files until I approve.`
-    await navigator.clipboard?.writeText(prompt)
-    setNotice("Agent prompt copied. Paste it into chat to run a real paper-writer session.")
+    shell.setPendingPrompt(prompt)
+    shell.setDockOpen(true)
   }
 
   return (
@@ -66,8 +68,8 @@ export function WritingSidebar(props: {
         <Show when={notice()}>{(value) => <p class="mb-3 rounded-md border border-border-weak-base bg-background-stronger p-2 leading-5">{value()}</p>}</Show>
 
         <Show when={tab() === "titles"}>
-          <PanelTitle title="Title candidates" description="Title generation requires a model turn. ResearchOS prepares a scoped prompt instead of inventing local results." />
-          <Button size="small" variant="secondary" onClick={() => void copyAgentPrompt("titles")}>Copy @paper-writer prompt</Button>
+          <PanelTitle title="Title candidates" description="Title generation requires a model turn. ResearchOS injects a scoped prompt directly into the companion chat." />
+          <Button size="small" variant="secondary" onClick={() => askAgent("titles")}>Ask @paper-writer</Button>
         </Show>
 
         <Show when={tab() === "structure"}>
@@ -80,7 +82,7 @@ export function WritingSidebar(props: {
             >{item.title}<span class="ml-2 text-text-weaker">L{item.line}</span></button>}</For>
             <Show when={props.outline.length === 0}><p>No section commands in this file.</p></Show>
           </div>
-          <Button size="small" variant="secondary" onClick={() => void copyAgentPrompt("structure")}>Request structure review</Button>
+          <Button size="small" variant="secondary" onClick={() => askAgent("structure")}>Request structure review</Button>
         </Show>
 
         <Show when={tab() === "polish"}>

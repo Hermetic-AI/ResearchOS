@@ -76,7 +76,9 @@ import DataPage from "@/pages/researchos-data"
 import PlotPage from "@/pages/researchos-plot"
 import ReproducePage from "@/pages/researchos-reproduce"
 import TranslatePage from "@/pages/researchos-translate"
+import NotesPage from "@/pages/researchos-notes"
 import Dashboard from "@/pages/researchos-dashboard"
+import { ResearchosWorkspace } from "@/pages/researchos-workspace"
 
 const NewSession = lazy(() => import("@/pages/new-session"))
 
@@ -607,18 +609,22 @@ function Routes(props: { serverScoped?: JSX.Element }) {
           }
         </Show>
         <Route path="/:dir" component={DirectoryLayout}>
-          <Route path="/" component={() => <Navigate href="session" />} />
+          {/* researchos: 项目默认落地到研究工作台概览，而非强制新建对话 */}
+          <Route path="/" component={() => <Navigate href="overview" />} />
           <Route path="/session/:id?" component={SessionRoute} />
           {/* researchos:start */}
-          <Route path="/overview" component={Dashboard} />
-          <Route path="/assets" component={AssetsPage} />
-          <Route path="/literature" component={LiteraturePage} />
-          <Route path="/graph" component={GraphPage} />
-          <Route path="/latex" component={LatexPage} />
-          <Route path="/data" component={DataPage} />
-          <Route path="/plot" component={PlotPage} />
-          <Route path="/reproduce" component={ReproducePage} />
-          <Route path="/translate" component={TranslatePage} />
+          <Route component={ResearchosWorkspace}>
+            <Route path="/overview" component={Dashboard} />
+            <Route path="/assets" component={AssetsPage} />
+            <Route path="/literature" component={LiteraturePage} />
+            <Route path="/graph" component={GraphPage} />
+            <Route path="/latex" component={LatexPage} />
+            <Route path="/data" component={DataPage} />
+            <Route path="/plot" component={PlotPage} />
+            <Route path="/reproduce" component={ReproducePage} />
+            <Route path="/translate" component={TranslatePage} />
+            <Route path="/notes" component={NotesPage} />
+          </Route>
           {/* researchos:end */}
         </Route>
       </Route>

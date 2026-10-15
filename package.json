@@ -7,6 +7,9 @@
   "packageManager": "bun@1.3.14",
   "scripts": {
     "dev": "bun run --cwd packages/opencode --conditions=browser src/index.ts",
+    "researchos:dev": "bun run script/researchos-dev.ts",
+    "researchos:doctor": "bun run script/researchos-doctor.ts",
+    "researchos:smoke": "bun run script/researchos-smoke.ts",
     "dev:desktop": "bun --cwd packages/desktop dev",
     "dev:web": "bun --cwd packages/app dev",
     "dev:console": "ulimit -n 10240 2>/dev/null; bun run --cwd packages/console/app dev",
@@ -28,7 +31,8 @@
       "packages/console/*",
       "packages/stats/*",
       "packages/sdk/js",
-      "packages/slack"
+      "packages/slack",
+      "ros/*"
     ],
     "catalog": {
       "@effect/opentelemetry": "4.0.0-beta.83",

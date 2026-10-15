@@ -9,6 +9,7 @@ permission:
   literature_get_metadata: allow
   literature_get_citations: allow
   literature_recommend_similar: allow
+  literature_read: allow
   literature_export: allow
   read: allow
   edit: deny

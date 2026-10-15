@@ -69,6 +69,7 @@ def profile(file: str) -> dict:
     with db.connect(ROOT) as conn:
         register_dataset(conn, root=ROOT, relative=relative, size=size, profile_json=result)
         conn.commit()
+    result["researchos.ui"] = {"panel": "data", "resource": relative, "mode": "auto"}
     return result
 
 
@@ -101,6 +102,7 @@ def stat_test(file: str, test: str, columns: list[str], params: dict | None = No
         "p_value": result["p_value"],
         "conclusion": conclusion,
         "test_id": test_id,
+        "researchos.ui": {"panel": "data", "resource": relative, "mode": "auto"},
     }
 
 
@@ -144,6 +146,7 @@ def chart(file: str, kind: str, spec: dict, format: str = "pdf", dpi: int = 300)
         "preview_svg": preview_svg,
         "latex_snippet": snippet,
         "artifact_id": artifact_id,
+        "researchos.ui": {"panel": "data", "resource": artifact_id, "mode": "auto"},
     }
 
 

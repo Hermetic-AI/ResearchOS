@@ -88,9 +88,11 @@ const layer = Layer.effect(
           const name =
             frontmatter.name !== undefined
               ? frontmatter.name
-              : path.dirname(filepath) === directory
-                ? path.basename(filepath, ".md")
-                : undefined
+              : path.basename(filepath) === "SKILL.md"
+                ? path.basename(path.dirname(filepath))
+                : path.dirname(filepath) === directory
+                  ? path.basename(filepath, ".md")
+                  : undefined
           if (!name) continue
           skills.push({
             name,
@@ -120,7 +122,7 @@ const layer = Layer.effect(
 
     return Service.of({
       transform: state.transform,
-      reload: state.reload,
+      reload: () => Effect.sync(() => cache.clear()).pipe(Effect.andThen(state.reload)),
       sources: Effect.fn("SkillV2.sources")(function* () {
         return state.get().sources
       }),

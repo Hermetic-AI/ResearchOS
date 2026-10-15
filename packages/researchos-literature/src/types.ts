@@ -86,6 +86,22 @@ export const RecommendResult = z.object({
 })
 export type RecommendResult = z.infer<typeof RecommendResult>
 
+export const ReadSection = z.object({
+  section: z.string().nullable(),
+  text: z.string(),
+  score: z.number(),
+})
+export type ReadSection = z.infer<typeof ReadSection>
+
+export const ReadResult = z.object({
+  paperId: z.string(),
+  query: z.string(),
+  sections: z.array(ReadSection),
+  degraded: z.boolean(),
+  reason: z.string().optional(),
+})
+export type ReadResult = z.infer<typeof ReadResult>
+
 export const ExportFormat = z.enum(["bibtex", "ris", "endnote", "json", "markdown"])
 export type ExportFormat = z.infer<typeof ExportFormat>
 

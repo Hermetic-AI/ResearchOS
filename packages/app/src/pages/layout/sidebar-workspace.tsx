@@ -19,6 +19,7 @@ import { type LocalProject } from "@/context/layout"
 import { useServerSync, useQueryOptions } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { pathKey } from "@/utils/path-key"
+import { ResearchosModuleList } from "@/components/researchos-rail"
 import { NewSessionItem, SessionItem, SessionSkeleton } from "./sidebar-items"
 import { sortedRootSessions } from "./helpers"
 import { useIsFetching } from "@tanstack/solid-query"
@@ -472,6 +473,9 @@ export const LocalWorkspace = (props: {
       ref={(el) => props.ctx.setScrollContainerRef(el, props.mobile)}
       class="size-full flex flex-col py-2 overflow-y-auto no-scrollbar [overflow-anchor:none]"
     >
+      {/* researchos:start */}
+      <ResearchosModuleList directory={props.project.worktree} />
+      {/* researchos:end */}
       <WorkspaceSessionList
         slug={slug}
         mobile={props.mobile}

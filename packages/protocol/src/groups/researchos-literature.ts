@@ -32,6 +32,8 @@ const ImportPayload = Schema.Struct({
   path: Schema.optional(Schema.String),
   url: Schema.optional(Schema.String),
   zoteroPath: Schema.optional(Schema.String),
+  fileName: Schema.optional(Schema.String),
+  contentBase64: Schema.optional(Schema.String),
 }).annotate({ identifier: "ResearchosLiteratureImportPayload" })
 
 const ZoteroReport = Schema.Struct({
@@ -66,6 +68,27 @@ const SimilarResult = Schema.Struct({
   results: Schema.Array(SimilarPaper),
   degraded: Schema.Boolean,
 }).annotate({ identifier: "ResearchosLiteratureSimilarResult" })
+
+const SelectPayload = Schema.Struct({
+  paperId: Schema.optional(Schema.String),
+  title: Schema.optional(Schema.String),
+}).annotate({ identifier: "ResearchosLiteratureSelectPayload" })
+
+const ReadPayload = Schema.Struct({
+  query: Schema.String,
+  k: Schema.optional(Schema.Number),
+}).annotate({ identifier: "ResearchosLiteratureReadPayload" })
+
+const ReadSection = Schema.Struct({
+  section: Schema.optional(Schema.String),
+  text: Schema.String,
+  score: Schema.Number,
+}).annotate({ identifier: "ResearchosLiteratureReadSection" })
+
+const ReadResult = Schema.Struct({
+  sections: Schema.Array(ReadSection),
+  degraded: Schema.Boolean,
+}).annotate({ identifier: "ResearchosLiteratureReadResult" })
 
 export const ResearchosLiteratureGroup = HttpApiGroup.make("server.researchos-literature")
   .add(
@@ -176,6 +199,21 @@ export const ResearchosLiteratureGroup = HttpApiGroup.make("server.researchos-li
       })),
   )
   .add(
+    HttpApiEndpoint.post("literature.read", "/api/literature/papers/:id/read", {
+      params: { id: Schema.String },
+      query: LocationQuery,
+      payload: ReadPayload,
+      success: Location.response(ReadResult),
+      error: [InvalidRequestError, UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({
+        identifier: "v2.literature.read",
+        summary: "Semantic retrieval over one paper's full text",
+        description: "Return the top-k full-text sections matching a query; degraded to keyword overlap when sqlite-vec is unavailable.",
+      })),
+  )
+  .add(
     HttpApiEndpoint.post("literature.update", "/api/literature/papers/:id", {
       params: { id: Schema.String },
       query: LocationQuery,
@@ -190,6 +228,20 @@ export const ResearchosLiteratureGroup = HttpApiGroup.make("server.researchos-li
       .annotateMerge(OpenApi.annotations({
         identifier: "v2.literature.update",
         summary: "Update paper flags (read/favorite)",
+      })),
+  )
+  .add(
+    HttpApiEndpoint.post("literature.select", "/api/literature/selection", {
+      query: LocationQuery,
+      payload: SelectPayload,
+      success: Location.response(Schema.Struct({ ok: Schema.Boolean })),
+      error: [InvalidRequestError, UnknownError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(OpenApi.annotations({
+        identifier: "v2.literature.select",
+        summary: "Report the currently focused paper",
+        description: "Write .researchos/selection.json when paperId is present, clear it when absent; observed by the core researchos/selection SystemContext source.",
       })),
   )
   .annotateMerge(OpenApi.annotations({

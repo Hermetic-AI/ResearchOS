@@ -36,7 +36,7 @@ You can configure the web server using command line flags or in your [config fil
 By default, OpenCode picks an available port. You can specify a port:
 
 ```bash
-opencode web --port 4096
+opencode web --port 14096
 ```
 
 ### Hostname
@@ -50,8 +50,8 @@ opencode web --hostname 0.0.0.0
 When using `0.0.0.0`, OpenCode will display both local and network addresses:
 
 ```
-  Local access:       http://localhost:4096
-  Network access:     http://192.168.1.100:4096
+  Local access:       http://localhost:14096
+  Network access:     http://192.168.1.100:14096
 ```
 
 ### mDNS Discovery
@@ -114,10 +114,10 @@ You can attach a terminal TUI to a running web server:
 
 ```bash
 # Start the web server
-opencode web --port 4096
+opencode web --port 14096
 
 # In another terminal, attach the TUI
-opencode attach http://localhost:4096
+opencode attach http://localhost:14096
 ```
 
 This allows you to use both the web interface and terminal simultaneously, sharing the same sessions and state.
@@ -131,7 +131,7 @@ You can also configure server settings in your `opencode.json` config file:
 ```json
 {
   "server": {
-    "port": 4096,
+    "port": 14096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

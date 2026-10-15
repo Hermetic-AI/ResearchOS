@@ -1,0 +1,10 @@
+/* ResearchOS v2 shared base styles (used alongside Tailwind CDN). */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #E7E3D8; border-radius: 4px; }
+html, body { height: 100%; }
+.smallcaps { font-variant: all-small-caps; letter-spacing: .14em; }
+.hairline { border-color: #E7E3D8; }
+.cite-ref { color: #2F4B7C; font-size: .72em; vertical-align: super; font-weight: 600; cursor: pointer; }
+.celltag { font-size: 10.5px; padding: 1px 7px; border: 1px solid #E7E3D8; border-radius: 3px; font-family: "Noto Serif SC", Georgia, serif; }
+.node { cursor: pointer; transition: opacity .15s; }
+.node:hover { opacity: .85; }

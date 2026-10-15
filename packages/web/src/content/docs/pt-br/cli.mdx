@@ -70,10 +70,10 @@ Isso permite usar o TUI com um backend opencode remoto. Por exemplo:
 
 ```bash
 # Inicie o servidor backend para acesso web/mobile
-opencode web --port 4096 --hostname 0.0.0.0
+opencode web --port 14096 --hostname 0.0.0.0
 
 # Em outro terminal, anexe o TUI ao backend em execução
-opencode attach http://10.20.30.40:4096
+opencode attach http://10.20.30.40:14096
 ```
 
 #### Opções
@@ -334,7 +334,7 @@ Você também pode se anexar a uma instância em execução do `opencode serve` 
 opencode serve
 
 # Em outro terminal, execute comandos que se anexam a ele
-opencode run --attach http://localhost:4096 "Explique async/await em JavaScript"
+opencode run --attach http://localhost:14096 "Explique async/await em JavaScript"
 ```
 
 #### Opções
@@ -351,7 +351,7 @@ opencode run --attach http://localhost:4096 "Explique async/await em JavaScript"
 | <nobr><code>{"--file"}</code></nobr>     | `-f`  | Arquivo(s) a serem anexados à mensagem                                            |
 | <nobr><code>{"--format"}</code></nobr>   |       | Formato: padrão (formatado) ou json (eventos JSON brutos)                         |
 | <nobr><code>{"--title"}</code></nobr>    |       | Título para a sessão (usa o prompt truncado se nenhum valor for fornecido)        |
-| <nobr><code>{"--attach"}</code></nobr>   |       | Anexe a um servidor opencode em execução (por exemplo, http://localhost:4096)     |
+| <nobr><code>{"--attach"}</code></nobr>   |       | Anexe a um servidor opencode em execução (por exemplo, http://localhost:14096)     |
 | <nobr><code>{"--password"}</code></nobr> | `-p`  | Senha de autenticação básica (padrão: `OPENCODE_SERVER_PASSWORD`)                 |
 | <nobr><code>{"--username"}</code></nobr> | `-u`  | Usuário de autenticação básica (padrão: `OPENCODE_SERVER_USERNAME` ou `opencode`) |
 | <nobr><code>{"--dir"}</code></nobr>      |       | Diretório de execução, ou caminho no servidor remoto ao anexar                    |

@@ -49,13 +49,13 @@ Se preferisci usare l'app desktop di OpenCode ma vuoi eseguire il server in WSL:
 1. **Avvia il server in WSL** con `--hostname 0.0.0.0` per consentire connessioni esterne:
 
    ```bash
-   opencode serve --hostname 0.0.0.0 --port 4096
+   opencode serve --hostname 0.0.0.0 --port 14096
    ```
 
-2. **Collega l'app desktop** a `http://localhost:4096`
+2. **Collega l'app desktop** a `http://localhost:14096`
 
 :::note
-Se `localhost` non funziona nella tua configurazione, usa l'indirizzo IP di WSL (da WSL: `hostname -I`) e collega `http://<wsl-ip>:4096`.
+Se `localhost` non funziona nella tua configurazione, usa l'indirizzo IP di WSL (da WSL: `hostname -I`) e collega `http://<wsl-ip>:14096`.
 :::
 
 :::caution

@@ -92,7 +92,7 @@ describe("tui thread", () => {
 
   cliIt.live("rejects network options in mini mode", ({ opencode }) =>
     Effect.gen(function* () {
-      const result = yield* opencode.spawn(["--mini", "--port", "4096"])
+      const result = yield* opencode.spawn(["--mini", "--port", "14096"])
 
       opencode.expectExit(result, 1)
       expect(result.stderr).toContain("--port cannot be used with --mini")

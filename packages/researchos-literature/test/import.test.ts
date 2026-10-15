@@ -3,9 +3,13 @@ import { mkdtemp, mkdir, rm, writeFile } from "fs/promises"
 import { join } from "path"
 import { tmpdir } from "os"
 import type { ApiAdapter, ApiDescriptor, ApiHub, ApiStatus } from "@researchos/api-hub"
+import type { Embedder } from "../src/embed"
 import { importPdf } from "../src/import"
 import { LiteratureService } from "../src/service"
 import { makePdf } from "./fixtures/pdf"
+
+// 导入现在会对全文分块做嵌入；测试注入 no-op embedder，避免下载真实模型拖慢套件
+const noopEmbedder: Embedder = () => Promise.resolve([])
 
 const PAGES = [
   [
@@ -66,7 +70,7 @@ describe("importPdf", () => {
   })
 
   test("imports a local PDF: enriches via crossref, archives file, persists paper and citation edges", async () => {
-    const service = await LiteratureService.open(dir, fakeHub())
+    const service = await LiteratureService.open(dir, fakeHub(), noopEmbedder)
     const result = await service.importPdf({ path: "papers/attention.pdf" })
 
     expect(result.metadataSource).toBe("crossref")
@@ -93,7 +97,7 @@ describe("importPdf", () => {
   })
 
   test("falls back to PDF-extracted metadata when the hub fails", async () => {
-    const service = await LiteratureService.open(dir, fakeHub(true))
+    const service = await LiteratureService.open(dir, fakeHub(true), noopEmbedder)
     const result = await service.importPdf({ path: "papers/attention.pdf" })
     expect(result.metadataSource).toBe("pdf")
     expect(result.paper.source).toBe("manual")
@@ -104,7 +108,7 @@ describe("importPdf", () => {
   })
 
   test("rejects paths escaping the project root", async () => {
-    const service = await LiteratureService.open(dir, fakeHub())
+    const service = await LiteratureService.open(dir, fakeHub(), noopEmbedder)
     await expect(service.importPdf({ path: "../outside.pdf" })).rejects.toThrow(/escapes project root/)
     service.close()
   })

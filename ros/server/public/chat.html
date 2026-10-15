@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 对话</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<aside id="shell"></aside>
+
+<!-- 第二列：会话列表（期刊目录式） -->
+<aside class="w-[200px] shrink-0 border-r hairline bg-paper flex flex-col">
+  <div class="h-16 flex items-center justify-between px-4 border-b hairline">
+    <span class="smallcaps text-[11px] font-semibold text-ink-faint">Sessions · 会话</span>
+    <button id="new-chat" class="text-[15px] text-accent leading-none hover:underline" title="新建会话">＋</button>
+  </div>
+  <div id="threads" class="flex-1 overflow-y-auto py-2 text-[12.5px]"></div>
+  <div class="px-4 py-2.5 border-t hairline text-[10.5px] text-ink-faint font-serif italic">色点 = 关联主题簇</div>
+</aside>
+
+<!-- 主列：对话 -->
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-3">
+    <div class="min-w-0">
+      <div id="topic" class="font-serif text-[15px] truncate">对话</div>
+      <div class="flex items-center gap-2 text-[11px] text-ink-faint mt-0.5">
+        <span id="meta" class="px-1.5 py-0.5 rounded border hairline bg-paper font-mono">connecting…</span>
+        <span class="hidden lg:inline">真实 SSE 流式 · 重启可恢复</span>
+      </div>
+    </div>
+    <div class="ml-auto flex items-center gap-2 shrink-0 text-[12px]">
+      <a href="/hypotheses.html" class="h-8 px-3 rounded-md border hairline hover:bg-paper text-ink-soft">假设画布</a>
+      <a href="/trace.html" class="h-8 px-3 rounded-md border hairline hover:bg-paper text-ink-soft">研究溯源</a>
+    </div>
+  </header>
+
+  <div id="log" class="flex-1 overflow-y-auto">
+    <div class="max-w-[760px] mx-auto px-6 py-8 space-y-6" id="stream"></div>
+  </div>
+
+  <footer class="shrink-0 bg-card border-t hairline px-6 py-4">
+    <div class="max-w-[760px] mx-auto">
+      <form id="composer" class="rounded-md border hairline bg-paper focus-within:border-accent focus-within:bg-card">
+        <div class="flex gap-1.5 px-3 pt-2.5 flex-wrap items-center">
+          <select id="skill" class="text-[11px] font-mono bg-accent-soft text-accent rounded px-1.5 py-0.5 border-0 outline-none cursor-pointer max-w-[280px]">
+            <option value="">/ 技能（不注入）</option>
+          </select>
+          <span id="skill-hint" class="text-[11px] text-ink-faint"></span>
+        </div>
+        <textarea id="input" rows="2" class="w-full bg-transparent p-3 text-[13.5px] outline-none resize-none" placeholder="继续追问，选择技能后正文仅注入本回合…"></textarea>
+        <div class="flex items-center gap-2 px-3 pb-2.5 text-[12px]">
+          <span class="h-7 px-2.5 rounded border border-accent/30 bg-accent-soft text-accent flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-accent text-white grid place-items-center text-[9px] font-serif">文</span>
+            <span id="provider-tag">文献研究员</span>
+          </span>
+          <span id="file-hint" class="text-ink-faint text-[11px]">read_file 工具已就绪，可读项目内文件</span>
+          <button type="submit" id="send" class="ml-auto h-8 px-4 rounded-md bg-accent text-white hover:opacity-90 disabled:opacity-50">追问 ↵</button>
+        </div>
+      </form>
+    </div>
+  </footer>
+</main>
+
+<script>
+Shell.render("chat")
+const $ = (id) => document.getElementById(id)
+const stream = $("stream")
+let threadId = null
+
+function elUser(text) {
+  const wrap = document.createElement("div")
+  wrap.className = "flex justify-end"
+  wrap.innerHTML = `<div class="max-w-[85%] bg-seal/[0.07] border border-seal/20 rounded-lg px-4 py-3 text-[13.5px] leading-relaxed"><span class="text-[10.5px] smallcaps font-semibold text-seal block mb-1">提问 · Q</span></div>`
+  wrap.lastChild.appendChild(document.createTextNode(text))
+  stream.appendChild(wrap); scroll()
+}
+function elSkill(name, tokens) {
+  const d = document.createElement("div")
+  d.className = "flex items-center gap-2.5 text-[11.5px] text-ink-faint border hairline bg-card/60 rounded-md px-3.5 py-2"
+  d.innerHTML = `<span class="w-4 h-4 rounded-sm bg-moss/10 text-moss grid place-items-center text-[10px] font-serif">技</span>已载入技能 <span class="font-mono text-ink-soft">${Shell.esc(name)}</span> 正文 ~${tokens} tok → 注入本回合（渐进披露，不落历史）`
+  stream.appendChild(d); scroll()
+}
+function elEvent(text, cls) {
+  const d = document.createElement("div")
+  d.className = "text-[12px] text-ink-soft border-l-2 border-line pl-3 " + (cls || "")
+  d.textContent = text
+  stream.appendChild(d); scroll()
+}
+function elLiteratureResult(output) {
+  const d = document.createElement("div")
+  d.className = "text-[12px] text-ink-soft border-l-2 border-line pl-3 whitespace-pre-wrap"
+  d.innerHTML = Shell.esc(output).replace(/\[([0-9a-f]{8})\]/g, '<a href="/reading.html?paper=$1" class="text-accent hover:underline font-mono">[$1]</a>')
+  stream.appendChild(d); scroll()
+}
+function elAnswer() {
+  const a = document.createElement("article")
+  a.className = "bg-card border hairline rounded-lg shadow-sm px-6 py-5"
+  a.innerHTML = `<div class="flex items-center gap-2 pb-3 border-b hairline mb-3"><span class="w-6 h-6 rounded-full bg-accent text-white grid place-items-center text-[11px] font-serif">文</span><span class="font-serif text-[13px]">文献研究员 · 回答</span></div><div class="body font-serif text-[14px] leading-[1.9] whitespace-pre-wrap"></div>`
+  stream.appendChild(a); scroll()
+  return a.querySelector(".body")
+}
+function scroll() { const l = $("log"); l.scrollTop = l.scrollHeight }
+
+async function loadSkills() {
+  const skills = await fetch("/api/skills").then(r => r.json())
+  const sel = $("skill")
+  sel.innerHTML = '<option value="">/ 技能（不注入）</option>'
+  for (const s of skills) {
+    const o = document.createElement("option")
+    o.value = s.name
+    o.textContent = `${s.name}${s.description ? " · " + s.description.slice(0, 36) : ""}`
+    sel.appendChild(o)
+  }
+  $("skill-hint").textContent = `${skills.length} 个技能可注入`
+  const badge = skills.length ? `${skills.length}` : null
+  Shell.render("chat", badge ? { skills: badge } : {})
+}
+
+async function refreshThreads() {
+  const threads = await fetch("/api/threads").then(r => r.json())
+  const ul = $("threads")
+  ul.innerHTML = ""
+  const dots = ["bg-accent", "bg-amber", "bg-moss", "bg-seal"]
+  threads.forEach((t, i) => {
+    const a = document.createElement("a")
+    const active = t.id === threadId
+    a.href = "#"
+    a.className = "block px-4 py-2.5 " + (active ? "bg-card border-y hairline" : "hover:bg-card")
+    const dot = dots[i % dots.length]
+    const when = new Date(t.updated_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    a.innerHTML = `<div class="font-serif text-[12.5px] leading-snug ${active ? "text-ink" : "text-ink-soft"}">${Shell.esc(t.title || "（新会话）")}</div><div class="flex items-center gap-1.5 mt-1 text-[10.5px] text-ink-faint"><i class="w-1.5 h-1.5 rounded-full ${dot} inline-block"></i>会话 · ${when}</div>`
+    a.addEventListener("click", (e) => { e.preventDefault(); openThread(t.id) })
+    ul.appendChild(a)
+  })
+}
+
+async function openThread(id) {
+  threadId = id
+  stream.innerHTML = ""
+  const data = await fetch(`/api/threads/${id}`).then(r => r.json())
+  $("topic").textContent = data.thread.title || "对话"
+  for (const m of data.messages) {
+    if (m.role === "user") elUser(m.content ?? "")
+    if (m.role === "assistant") {
+      if (m.content) { const b = elAnswer(); b.textContent = m.content }
+      for (const c of JSON.parse(m.tool_calls ?? "[]")) elEvent(`⚙ ${c.name} ${c.arguments}`)
+    }
+    if (m.role === "tool") {
+      if (m.name === "literature_search") elLiteratureResult((m.content ?? "").slice(0, 2000))
+      else elEvent(`↳ ${m.name ?? ""} 返回 ${(m.content ?? "").slice(0, 120)}`)
+    }
+  }
+  refreshThreads()
+}
+
+async function newChat() {
+  const t = await fetch("/api/threads", { method: "POST", body: "{}" }).then(r => r.json())
+  await openThread(t.id)
+  $("input").focus()
+}
+$("new-chat").addEventListener("click", newChat)
+
+$("composer").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const content = $("input").value.trim()
+  if (!content || !threadId) return
+  const skill = $("skill").value || undefined
+  $("input").value = ""
+  $("send").disabled = true
+  elUser(content)
+  let cursor = null
+  try {
+    const response = await fetch(`/api/threads/${threadId}/messages`, { method: "POST", body: JSON.stringify({ content, skill }) })
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split("\n")
+      buffer = lines.pop() ?? ""
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue
+        const ev = JSON.parse(line.slice(5))
+        if (ev.type === "text_delta") { if (!cursor) cursor = elAnswer(); cursor.textContent += ev.text }
+        if (ev.type === "tool_call") { cursor = null; elEvent(`⚙ 调用工具 ${ev.call.name} ${ev.call.arguments}`) }
+        if (ev.type === "tool_result") {
+          cursor = null
+          if (ev.call.name === "literature_search" && ev.result.ok) elLiteratureResult(ev.result.output)
+        }
+        if (ev.type === "skill_load") elSkill(ev.name, ev.tokens)
+        if (ev.type === "error") elEvent(`✗ ${ev.message}`, "text-seal")
+        scroll()
+      }
+    }
+  } finally {
+    $("send").disabled = false
+    refreshThreads()
+  }
+})
+
+async function boot() {
+  const health = await fetch("/api/health").then(r => r.json())
+  $("meta").textContent = `${health.provider} · ${health.model}`
+  $("provider-tag").textContent = health.provider === "mock" ? "演示 (mock)" : "文献研究员"
+  loadSkills()
+  const threads = await fetch("/api/threads").then(r => r.json())
+  if (threads[0]) await openThread(threads[0].id)
+  else await newChat()
+}
+boot()
+</script>
+</body>
+</html>

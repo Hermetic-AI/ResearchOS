@@ -19,6 +19,7 @@
     "@huggingface/transformers": "4.2.0",
     "@modelcontextprotocol/sdk": "1.29.0",
     "mdast-util-from-markdown": "2.0.3",
+    "neo4j-driver": "6.2.0",
     "sqlite-vec": "0.1.9",
     "zod": "*"
   },

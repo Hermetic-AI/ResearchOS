@@ -37,7 +37,7 @@ opencode web
 デフォルトでは、OpenCode は使用可能なポートを選択します。ポートを指定できます。
 
 ```bash
-opencode web --port 4096
+opencode web --port 14096
 ```
 
 ### ホスト名
@@ -51,8 +51,8 @@ opencode web --hostname 0.0.0.0
 `0.0.0.0` を使用すると、OpenCode はローカルアドレスとネットワークアドレスの両方を表示します。
 
 ```
-  Local access:       http://localhost:4096
-  Network access:     http://192.168.1.100:4096
+  Local access:       http://localhost:14096
+  Network access:     http://192.168.1.100:14096
 ```
 
 ### mDNS 検出
@@ -115,10 +115,10 @@ OPENCODE_SERVER_PASSWORD=secret opencode web
 
 ```bash
 # Start the web server
-opencode web --port 4096
+opencode web --port 14096
 
 # In another terminal, attach the TUI
-opencode attach http://localhost:4096
+opencode attach http://localhost:14096
 ```
 
 これにより、Web インターフェイスとターミナルの両方を同時に使用し、同じセッションと状態を共有できるようになります。
@@ -132,7 +132,7 @@ opencode attach http://localhost:4096
 ```json
 {
   "server": {
-    "port": 4096,
+    "port": 14096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

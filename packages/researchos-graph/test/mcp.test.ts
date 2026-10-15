@@ -6,6 +6,18 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { createGraphMcpServer } from "../src/mcp"
 
+const DIMS = 384
+
+function vector(words: string[]): number[] {
+  const vec = new Array<number>(DIMS).fill(0)
+  words.forEach((word) => {
+    vec[Array.from(word).reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 0) % DIMS] = 1
+  })
+  return vec
+}
+
+const fakeEmbedder = (texts: string[]) => Promise.resolve(texts.map((text) => vector(text.toLowerCase().match(/[a-z]+/g) ?? [])))
+
 describe("researchos-graph MCP server", () => {
   let dir: string
   let client: Client
@@ -13,14 +25,14 @@ describe("researchos-graph MCP server", () => {
 
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), "graph-mcp-"))
-    const { server, store } = createGraphMcpServer(dir, null)
+    const { server, repository } = await createGraphMcpServer(dir, null)
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
     client = new Client({ name: "test-client", version: "0.1.0" })
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)])
     close = async () => {
       await client.close()
       await server.close()
-      store.close()
+      await repository.close()
     }
   })
 
@@ -75,6 +87,52 @@ describe("researchos-graph MCP server", () => {
   test("parse_wikilinks rejects paths escaping the project root", async () => {
     const result = await client.callTool({ name: "parse_wikilinks", arguments: { paths: ["../outside.md"] } })
     expect(result.isError).toBe(true)
+  })
+})
+
+describe("researchos-graph MCP vector recall", () => {
+  let dir: string
+  let client: Client
+  let vecAvailable: boolean
+  let close: () => Promise<void>
+
+  beforeEach(async () => {
+    dir = await mkdtemp(join(tmpdir(), "graph-mcp-vec-"))
+    const { server, repository } = await createGraphMcpServer(dir, fakeEmbedder)
+    vecAvailable = repository.vecAvailable ?? false
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+    client = new Client({ name: "test-client", version: "0.1.0" })
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)])
+    close = async () => {
+      await client.close()
+      await server.close()
+      await repository.close()
+    }
+  })
+
+  afterEach(async () => {
+    await close()
+    await rm(dir, { recursive: true, force: true }).catch(() => {})
+  })
+
+  test("upsert embeds nodes and query recalls them via KNN", async () => {
+    if (!vecAvailable) {
+      console.warn("sqlite-vec unavailable; skipping vector recall assertions")
+      return
+    }
+    await call(client, "upsert", {
+      nodes: [
+        { id: "concept:quantum-computing", type: "concept", label: "Quantum Computing" },
+        { id: "concept:attention-mechanism", type: "concept", label: "Attention Mechanism" },
+      ],
+      edges: [],
+    })
+    const result = await call(client, "query", { question: "quantum computing" }) as {
+      seeds: Array<{ id: string }>
+      degraded: boolean
+    }
+    expect(result.degraded).toBe(false)
+    expect(result.seeds[0]?.id).toBe("concept:quantum-computing")
   })
 })
 

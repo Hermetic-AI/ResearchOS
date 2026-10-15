@@ -75,7 +75,7 @@ async function setup(page: Page, events?: () => EventPayload[]) {
   // The child session resolves via /session/:id but is absent from the /session list,
   // matching a subagent session that has not been loaded into the list cache yet.
   await page.route(
-    (url) => url.pathname === "/session" && url.port === (process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"),
+    (url) => url.pathname === "/session" && url.port === (process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"),
     (route) =>
       route.fulfill({
         status: 200,
@@ -177,7 +177,7 @@ function parentMessages() {
 }
 
 async function configurePage(page: Page) {
-  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
   await page.addInitScript(
     ({ directory, server, sessionId }) => {
       localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
@@ -195,6 +195,6 @@ async function configurePage(page: Page) {
 }
 
 function sessionHref(sessionID: string) {
-  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
   return `/server/${base64Encode(server)}/session/${sessionID}`
 }

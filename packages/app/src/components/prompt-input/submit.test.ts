@@ -172,7 +172,7 @@ beforeAll(async () => {
         scope: "local",
         directory: "/repo/main",
         client: rootClient,
-        url: "http://localhost:4096",
+        url: "http://localhost:14096",
         createClient(opts: any) {
           return clientFor(opts.directory)
         },

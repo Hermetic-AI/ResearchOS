@@ -46,7 +46,10 @@ def literature_search(
 @mcp.tool()
 def literature_get_metadata(paper_id: str) -> object:
     """Read one real paper record from the project-local literature database."""
-    return _run("get", {"id": paper_id})
+    result = _run("get", {"id": paper_id})
+    if isinstance(result, dict):
+        result["researchos.ui"] = {"panel": "literature", "resource": paper_id, "mode": "auto"}
+    return result
 
 
 @mcp.tool()
@@ -102,6 +105,23 @@ def literature_recommend_similar(paper_id: str, limit: int = 10) -> object:
     back to keyword overlap and the result carries degraded=true.
     """
     return _run("recommend", {"paperId": paper_id, "limit": limit})
+
+
+@mcp.tool()
+def literature_read(paper_id: str, query: str, k: int = 6) -> object:
+    """Semantic retrieval over one paper's full text.
+
+    Returns the top-k chunks matching the query, each carrying its section
+    name (e.g. "2 Methods") so answers can cite where a claim comes from.
+    Prefer this over reading the whole PDF. When the sqlite-vec extension or
+    the embedding model is unavailable, ranking falls back to keyword overlap
+    and the result carries degraded=true; when no full text is available for
+    the paper, sections is empty with reason="no-fulltext".
+    """
+    result = _run("read", {"paperId": paper_id, "query": query, "k": k})
+    if isinstance(result, dict):
+        result["researchos.ui"] = {"panel": "literature", "resource": paper_id, "mode": "badge"}
+    return result
 
 
 def main() -> None:

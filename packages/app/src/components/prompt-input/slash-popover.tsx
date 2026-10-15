@@ -17,6 +17,9 @@ export type AtOption =
       mime?: string
     }
   | { type: "reference"; name: string; path: string; display: string; description: string }
+  // researchos:start — @paper mention option (ResearchOS literature library)
+  | { type: "paper"; paperId: string; title: string; display: string; description?: string }
+  // researchos:end
   | { type: "file"; path: string; display: string; recent?: boolean }
 
 export interface SlashCommand {
@@ -204,6 +207,54 @@ export const PromptPopover: Component<PromptPopoverProps> = (props) => {
                       </button>
                     )
                   }
+
+                  // researchos:start — @paper mention row (literature library paper)
+                  if (item.type === "paper") {
+                    return (
+                      <button
+                        class="w-full flex items-center gap-x-2 px-2 py-0.5"
+                        classList={{
+                          "rounded-[4px]": props.newLayoutDesigns,
+                          "rounded-md": !props.newLayoutDesigns,
+                          "bg-v2-overlay-simple-overlay-hover": props.newLayoutDesigns && props.atActive === key,
+                          "bg-surface-raised-base-hover": !props.newLayoutDesigns && props.atActive === key,
+                        }}
+                        onClick={() => props.onAtSelect(item)}
+                        onPointerMove={() => props.setAtActive(key)}
+                      >
+                        <Icon name="checklist" size="small" class="shrink-0" />
+                        <div
+                          class="flex items-center min-w-0"
+                          classList={{
+                            "text-[13px] leading-[calc(var(--font-size-base)*1.8)] tracking-[-0.04px] [font-weight:440]":
+                              props.newLayoutDesigns,
+                            "text-14-regular": !props.newLayoutDesigns,
+                          }}
+                        >
+                          <span
+                            class="text-text-strong whitespace-nowrap truncate min-w-0"
+                            classList={{ "text-v2-text-text-base": props.newLayoutDesigns }}
+                          >
+                            @{item.display}
+                          </span>
+                          <Show when={item.description}>
+                            {(description) => (
+                              <span
+                                class="whitespace-nowrap truncate min-w-0 ml-2"
+                                classList={{
+                                  "text-v2-text-text-muted": props.newLayoutDesigns,
+                                  "text-text-weak": !props.newLayoutDesigns,
+                                }}
+                              >
+                                {description()}
+                              </span>
+                            )}
+                          </Show>
+                        </div>
+                      </button>
+                    )
+                  }
+                  // researchos:end
 
                   const isDirectory = item.path.endsWith("/")
                   const directory = isDirectory ? item.path : getDirectory(item.path)

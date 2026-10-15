@@ -82,6 +82,12 @@ import { createPromptInputTransientState } from "./prompt-input/transient-state"
 import { showToast } from "@/utils/toast"
 import { ImagePreview } from "@opencode-ai/ui/image-preview"
 import type { ReferenceInfo } from "@opencode-ai/sdk/v2/client"
+// researchos:start — @paper mention in the composer (literature library)
+import { archivedPdfPath } from "@/components/researchos/paper-context"
+import { useServerSDK } from "@/context/server-sdk"
+import { createResearchosClient } from "@/utils/researchos-client"
+import { formatServerError } from "@/utils/server-errors"
+// researchos:end
 
 export { createPromptInputHistory }
 export type { PromptInputControls, PromptInputHistory, PromptInputProps, PromptInputState, PromptInputSubmission }
@@ -579,9 +585,26 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       ),
   )
 
+  const RESEARCHOS_AGENT_NAMES = new Set([
+    "literature",
+    "graph",
+    "paper-writer",
+    "latex-editor",
+    "data-analyst",
+    "plot",
+    "reproduce-doctor",
+    "translator",
+  ])
   const agentList = createMemo(() =>
     props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
+      .toSorted((a, b) => {
+        const aResearch = RESEARCHOS_AGENT_NAMES.has(a.name)
+        const bResearch = RESEARCHOS_AGENT_NAMES.has(b.name)
+        if (aResearch && !bResearch) return -1
+        if (!aResearch && bResearch) return 1
+        return 0
+      })
       .map((agent): AtOption => ({ type: "agent", name: agent.name, display: agent.name })),
   )
 
@@ -598,6 +621,64 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       }),
     ),
   )
+
+  // researchos:start — @paper mention source (ResearchOS literature library)
+  const serverSDK = useServerSDK()
+  const literature = createMemo(
+    () =>
+      createResearchosClient({
+        baseUrl: sdk().url,
+        fetch: platform.fetch,
+        username: serverSDK().server.http.username,
+        password: serverSDK().server.http.password,
+      })["server.researchos-literature"],
+  )
+  const [libraryPapers, libraryPapersActions] = createResource(
+    () => sdk().directory,
+    async (directory) =>
+      literature()
+        .list({ location: { directory }, limit: 100 })
+        .then((result) => result.data ?? [])
+        .catch(() => []),
+  )
+  const paperList = createMemo(() =>
+    (libraryPapers() ?? []).map(
+      (paper): AtOption => ({
+        type: "paper",
+        paperId: paper.id,
+        title: paper.title,
+        display: paper.title,
+        description:
+          typeof paper.year === "number" && Number.isFinite(paper.year)
+            ? `${paper.id} · ${paper.year}`
+            : paper.id,
+      }),
+    ),
+  )
+  const importAttachmentToLibrary = async (attachment: ImageAttachmentPart) => {
+    const comma = attachment.dataUrl.indexOf(",")
+    const contentBase64 = comma === -1 ? attachment.dataUrl : attachment.dataUrl.slice(comma + 1)
+    try {
+      const result = await literature().import({
+        location: { directory: sdk().directory },
+        contentBase64,
+        fileName: attachment.filename,
+      })
+      showToast({
+        variant: "default",
+        title: language.t("prompt.toast.libraryImportSuccess.title"),
+        description: result.data?.paper?.title,
+      })
+      libraryPapersActions.refetch()
+    } catch (error) {
+      showToast({
+        variant: "error",
+        title: language.t("prompt.toast.libraryImportFailed.title"),
+        description: formatServerError(error, language.t),
+      })
+    }
+  }
+  // researchos:end
 
   const handleAtSelect = (option: AtOption | undefined) => {
     if (!option) return
@@ -636,6 +717,37 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       })
       return
     }
+    // researchos:start — @paper mention: attach archived PDF, else fall back to metadata text
+    if (option.type === "paper") {
+      const paper = libraryPapers()?.find((item) => item.id === option.paperId)
+      if (!paper) return
+      void (async () => {
+        const pdf = await archivedPdfPath(sdk(), paper)
+        if (pdf) {
+          addPart({
+            type: "file",
+            path: pdf,
+            content: "@" + paper.title,
+            start: 0,
+            end: 0,
+            mime: "application/pdf",
+            filename: paper.title + ".pdf",
+          })
+          return
+        }
+        const abstract = (paper.abstract ?? "").trim()
+        const summary = abstract.length > 500 ? abstract.slice(0, 500) + "…" : abstract
+        const year = typeof paper.year === "number" && Number.isFinite(paper.year) ? `, ${paper.year}` : ""
+        addPart({
+          type: "text",
+          content: `@paper "${paper.title}" (${paper.id}${year}): ${summary || "no abstract available"}`,
+          start: 0,
+          end: 0,
+        })
+      })()
+      return
+    }
+    // researchos:end
     addPart({ type: "file", path: option.path, content: "@" + option.path, start: 0, end: 0 })
   }
 
@@ -644,6 +756,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     if (x.type === "agent") return `agent:${x.name}`
     if (x.type === "reference") return `reference:${x.name}`
     if (x.type === "resource") return `resource:${x.client}:${x.uri}`
+    // researchos:start — @paper mention key
+    if (x.type === "paper") return `paper:${x.paperId}`
+    // researchos:end
     return `file:${x.path}`
   }
 
@@ -658,15 +773,18 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       const references = referenceList()
       const agents = agentList()
       const mcpResources = mcpResourceList()
+      // researchos:start — @paper mention options
+      const papers = paperList()
+      // researchos:end
       const open = recent()
       const seen = new Set(open)
       const pinned: AtOption[] = open.map((path) => ({ type: "file", path, display: path, recent: true }))
-      if (!query.trim()) return [...references, ...agents, ...mcpResources, ...pinned]
+      if (!query.trim()) return [...references, ...agents, ...mcpResources, ...papers, ...pinned]
       const paths = await files.searchFilesAndDirectories(query)
       const fileOptions: AtOption[] = paths
         .filter((path) => !seen.has(path))
         .map((path) => ({ type: "file", path, display: path }))
-      return [...references, ...agents, ...mcpResources, ...pinned, ...fileOptions]
+      return [...references, ...agents, ...mcpResources, ...papers, ...pinned, ...fileOptions]
     },
     key: atKey,
     filterKeys: ["display"],
@@ -675,6 +793,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       if (item.type === "reference") return "reference"
       if (item.type === "agent") return "agent"
       if (item.type === "resource") return "resource"
+      // researchos:start — @paper mention group
+      if (item.type === "paper") return "paper"
+      // researchos:end
       if (item.recent) return "recent"
       return "file"
     },
@@ -683,8 +804,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         if (category === "reference") return 0
         if (category === "agent") return 1
         if (category === "resource") return 2
-        if (category === "recent") return 3
-        return 4
+        // researchos:start — @paper mention group rank (before recent/files)
+        if (category === "paper") return 3
+        // researchos:end
+        if (category === "recent") return 4
+        return 5
       }
       return rank(a.category) - rank(b.category)
     },
@@ -1493,6 +1617,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
           }
           onRemove={removeAttachment}
           removeLabel={language.t("prompt.attachment.remove")}
+          onImport={importAttachmentToLibrary}
+          importLabel={language.t("prompt.attachment.import")}
           newLayoutDesigns={false}
         />
         <div

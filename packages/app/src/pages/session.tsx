@@ -53,6 +53,10 @@ import { usePlatform } from "@/context/platform"
 import { SDKProvider, useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { ServerConnection, serverName, useServer } from "@/context/server"
+import { createResearchosClient } from "@/utils/researchos-client"
+import { registerResearchosToolPart } from "@/components/researchos/tool-part"
+import { ResearchosShellProvider } from "@/components/researchos/shell-context"
+import { PanelContainer } from "@/components/researchos/panel-container"
 import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
@@ -107,6 +111,8 @@ type FollowupItem = FollowupDraft & { id: string }
 type FollowupEdit = Pick<FollowupItem, "id" | "prompt" | "context">
 const emptyFollowups: FollowupItem[] = []
 
+registerResearchosToolPart()
+
 type ChangeMode = "git" | "branch" | "turn"
 type VcsMode = "git" | "branch"
 
@@ -145,9 +151,11 @@ async function runPromptRollbackMutation<T, R>(input: {
 
 export function SessionPage() {
   return (
-    <SessionProviders>
-      <Page />
-    </SessionProviders>
+    <ResearchosShellProvider>
+      <SessionProviders>
+        <Page />
+      </SessionProviders>
+    </ResearchosShellProvider>
   )
 }
 
@@ -172,7 +180,9 @@ export function TargetSessionRouteContent() {
 }
 
 function TargetSessionSettingsCommand() {
-  useSettingsCommand()
+  // 旧布局下该路由嵌在 LegacyServerLayout 内，layout 已注册 settings.open；
+  // 只有新布局（无 LegacyLayout 祖先）才需要在此注册，否则命令 id 重复。
+  if (useSettings().general.newLayoutDesigns()) useSettingsCommand()
   return null
 }
 
@@ -1956,7 +1966,40 @@ export default function Page() {
     download()
   }
 
-  const actions = { revert, openAttachment }
+  const saveQuickNote = async (text: string) => {
+    const trimmed = text.trim()
+    if (!trimmed) return
+    const date = new Date().toISOString().slice(0, 10)
+    const slug = trimmed
+      .slice(0, 40)
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .toLowerCase() || "note"
+    const path = `notes/quick/${date}-${slug}.md`
+    const content = `---\ncreated: ${new Date().toISOString()}\n---\n\n${trimmed}\n`
+    const client = createResearchosClient({
+      baseUrl: sdk().url,
+      fetch: platform.fetch,
+      username: serverSDK().server.http.username,
+      password: serverSDK().server.http.password,
+    })
+    try {
+      const result = await client["server.researchos-assets"].noteWrite({
+        location: { directory: sdk().directory },
+        path,
+        content,
+      })
+      showToast({ title: "Saved as quick note", description: result.data.path, variant: "success" })
+    } catch (error) {
+      showToast({
+        title: "Could not save quick note",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "error",
+      })
+    }
+  }
+
+  const actions = { revert, openAttachment, saveQuickNote }
 
   createEffect(() => {
     const sessionID = params.id
@@ -2285,13 +2328,14 @@ export default function Page() {
   return (
     <SessionRouteFrame>
       <SessionHeader />
-      <div
-        ref={panelRow}
-        class="flex-1 min-h-0 flex flex-col md:flex-row"
-        classList={{
-          "gap-2 p-2": settings.general.newLayoutDesigns(),
-        }}
-      >
+      <PanelContainer>
+        <div
+          ref={panelRow}
+          class="flex-1 min-h-0 flex flex-col md:flex-row"
+          classList={{
+            "gap-2 p-2": settings.general.newLayoutDesigns(),
+          }}
+        >
         <Show when={!isDesktop() && !!params.id && !settings.general.newLayoutDesigns()}>{mobileTabs()}</Show>
 
         <div
@@ -2417,6 +2461,7 @@ export default function Page() {
           </Show>
         </Show>
       </div>
+      </PanelContainer>
 
       <Show when={!newSessionDesign()}>
         <TerminalPanel />

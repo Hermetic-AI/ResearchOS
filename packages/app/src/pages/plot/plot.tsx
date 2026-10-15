@@ -1,9 +1,10 @@
 import { Button } from "@opencode-ai/ui/button"
-import { For, Match, Switch, createMemo, createResource, createSignal } from "solid-js"
+import { For, Match, Switch, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { createResearchosClient } from "@/utils/researchos-client"
+import { useResearchosShell } from "@/components/researchos/shell-context"
 import { CanvasMode } from "./canvas-mode"
 import { ChartMode } from "./chart-mode"
 import { CodeMode } from "./code-mode"
@@ -16,12 +17,15 @@ export default function PlotPage() {
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const platform = usePlatform()
+  const shell = useResearchosShell()
   const client = createMemo(() => createResearchosClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-plot"])
   const location = () => ({ directory: sdk().directory })
   const [mode, setMode] = createSignal<Mode>("chart")
   const [galleryOpen, setGalleryOpen] = createSignal(true)
   const [artifacts, actions] = createResource(() => sdk().directory, async () => client().artifacts({ location: location() }).then((result) => result.data as PlotArtifact[]))
   const refresh = async () => { await actions.refetch() }
+  createEffect(() => { shell.setAgentContext({ module: "plot", resource: mode() }) })
+  onCleanup(() => shell.setAgentContext(undefined))
   return <main class="flex h-full min-h-0 flex-col bg-background-stronger text-text-base">
     <header class="flex h-11 shrink-0 items-center gap-2 border-b border-border-weak-base bg-background-base px-3">
       <div class="mr-3"><h1 class="text-13-medium">Scientific plot studio</h1><p class="text-10-regular text-text-weak">Reproducible artifacts · publication output</p></div>

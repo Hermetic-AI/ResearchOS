@@ -18,7 +18,11 @@ export const Plugin = define({
     yield* ctx.skill.transform(
       Effect.fn(function* (draft) {
         const entries = yield* config.entries()
-        const directories = entries.flatMap((entry) => (entry.type === "directory" ? [entry.path] : []))
+        const directories = [
+          ...entries.flatMap((entry) => (entry.type === "directory" ? [entry.path] : [])),
+          path.join(location.directory, ".opencode"),
+          global.config,
+        ]
         const items = entries.flatMap((entry) => (entry.type === "document" ? (entry.info.skills ?? []) : []))
         for (const directory of directories) {
           draft.source(

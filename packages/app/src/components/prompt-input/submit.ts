@@ -13,12 +13,15 @@ import { usePermission } from "@/context/permission"
 import { type ContextItem, type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useSync, type DirectorySync } from "@/context/sync"
+import { usePlatform } from "@/context/platform"
+import { useServerSDK } from "@/context/server-sdk"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
 import { buildRequestParts } from "./build-request-parts"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError } from "@/utils/server-errors"
 import { ScopedKey } from "@/utils/server-scope"
+import { createResearchosClient } from "@/utils/researchos-client"
 import { createPromptSubmissionState } from "./submission-state"
 
 type PendingPrompt = {
@@ -197,6 +200,8 @@ type PromptSubmitInput = {
 export function createPromptSubmit(input: PromptSubmitInput) {
   const navigate = useNavigate()
   const sdk = useSDK()
+  const serverSDK = useServerSDK()
+  const platform = usePlatform()
   const sync = useSync()
   const serverSync = useServerSync()
   const local = useLocal()
@@ -296,6 +301,44 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
     if (text.trim().length === 0 && images.length === 0 && input.commentCount() === 0) {
       if (input.working()) void abort()
+      return
+    }
+
+    // `// ` prefix stores the draft as a quick note without sending it to the session.
+    const trimmed = text.trim()
+    if (trimmed.startsWith("// ")) {
+      const noteText = trimmed.slice(3).trim()
+      if (!noteText) return
+      const date = new Date().toISOString().slice(0, 10)
+      const slug = noteText
+        .slice(0, 40)
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .toLowerCase() || "note"
+      const path = `notes/quick/${date}-${slug}.md`
+      const content = `---\ncreated: ${new Date().toISOString()}\n---\n\n${noteText}\n`
+      const client = createResearchosClient({
+        baseUrl: sdk().url,
+        fetch: platform.fetch,
+        username: serverSDK().server.http.username,
+        password: serverSDK().server.http.password,
+      })
+      try {
+        await client["server.researchos-assets"].noteWrite({
+          location: { directory: sdk().directory },
+          path,
+          content,
+        })
+        showToast({ title: "Saved as quick note", description: path, variant: "success" })
+        input.resetHistoryNavigation()
+        prompt.reset()
+      } catch (error) {
+        showToast({
+          title: "Could not save quick note",
+          description: error instanceof Error ? error.message : String(error),
+          variant: "error",
+        })
+      }
       return
     }
 

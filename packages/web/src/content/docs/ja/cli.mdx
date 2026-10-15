@@ -70,10 +70,10 @@ opencode attach [url]
 
 ```bash
 # Start the backend server for web/mobile access
-opencode web --port 4096 --hostname 0.0.0.0
+opencode web --port 14096 --hostname 0.0.0.0
 
 # In another terminal, attach the TUI to the running backend
-opencode attach http://10.20.30.40:4096
+opencode attach http://10.20.30.40:14096
 ```
 
 #### フラグ
@@ -334,7 +334,7 @@ opencode run Explain the use of context in Go
 opencode serve
 
 # In another terminal, run commands that attach to it
-opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
+opencode run --attach http://localhost:14096 "Explain async/await in JavaScript"
 ```
 
 #### フラグ
@@ -351,7 +351,7 @@ opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
 | <nobr><code>{"--file"}</code></nobr>     | `-f`     | メッセージに添付するファイル                                                              |
 | <nobr><code>{"--format"}</code></nobr>   |          | 形式: デフォルト (フォーマット済み) または json (生の JSON イベント)                      |
 | <nobr><code>{"--title"}</code></nobr>    |          | セッションのタイトル (値が指定されていない場合は、切り詰められたプロンプトが使用されます) |
-| <nobr><code>{"--attach"}</code></nobr>   |          | 実行中の opencode サーバー (http://localhost:4096 など) に接続します。                    |
+| <nobr><code>{"--attach"}</code></nobr>   |          | 実行中の opencode サーバー (http://localhost:14096 など) に接続します。                    |
 | <nobr><code>{"--password"}</code></nobr> | `-p`     | Basic 認証パスワード（デフォルトは `OPENCODE_SERVER_PASSWORD`）                           |
 | <nobr><code>{"--username"}</code></nobr> | `-u`     | Basic 認証ユーザー名（デフォルトは `OPENCODE_SERVER_USERNAME` または `opencode`）         |
 | <nobr><code>{"--dir"}</code></nobr>      |          | 実行ディレクトリ、またはアタッチ時のリモートサーバー上のパス                              |

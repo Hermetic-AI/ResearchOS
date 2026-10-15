@@ -5,6 +5,6 @@ import { stressSessionHref } from "../timeline/timeline-test-helpers"
 
 test("builds stress session links for the benchmark server", () => {
   expect(stressSessionHref(fixture.sourceID)).toBe(
-    `/server/${base64Encode("http://127.0.0.1:4096")}/session/${fixture.sourceID}`,
+    `/server/${base64Encode("http://127.0.0.1:14096")}/session/${fixture.sourceID}`,
   )
 })

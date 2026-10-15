@@ -40,7 +40,7 @@ Ovo pokrece i server i klijent
 | Opcija     | Tip           | Opis                          | Default     |
 | ---------- | ------------- | ----------------------------- | ----------- |
 | `hostname` | `string`      | Hostname servera              | `127.0.0.1` |
-| `port`     | `number`      | Port servera                  | `4096`      |
+| `port`     | `number`      | Port servera                  | `14096`      |
 | `signal`   | `AbortSignal` | Abort signal za otkazivanje   | `undefined` |
 | `timeout`  | `number`      | Timeout u ms za start servera | `5000`      |
 | `config`   | `Config`      | Konfiguracijski objekat       | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 4096,
+  port: 14096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ Ako vec imate pokrenutu opencode instancu, mozete napraviti klijentsku instancu 
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:4096",
+  baseUrl: "http://localhost:14096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | Opcija          | Tip        | Opis                              | Default                 |
 | --------------- | ---------- | --------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | URL servera                       | `http://localhost:4096` |
+| `baseUrl`       | `string`   | URL servera                       | `http://localhost:14096` |
 | `fetch`         | `function` | Prilagodena fetch implementacija  | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Metoda parsiranja odgovora        | `auto`                  |
 | `responseStyle` | `string`   | Stil povrata: `data` ili `fields` | `fields`                |

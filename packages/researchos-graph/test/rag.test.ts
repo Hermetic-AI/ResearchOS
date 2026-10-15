@@ -97,6 +97,21 @@ describe("graphRag", () => {
     expect(result.subgraph.nodes.map((n) => n.id)).toContain("concept:quantum")
   })
 
+  // 与 sqlite-vec 可用性无关：任何声明向量能力的 store 都必须走 KNN 分支
+  test("takes the vector branch whenever the store advertises vectors", async () => {
+    const recalled = node("concept:knn-only", "concept", "KNN Only Concept")
+    const stub = {
+      vecAvailable: true,
+      knn: () => [{ nodeId: recalled.id, distance: 0.1 }],
+      getNode: (id: string) => (id === recalled.id ? recalled : null),
+      search: () => [node("concept:fts-only", "concept", "FTS Only Concept")],
+      neighbors: () => ({ nodes: [], edges: [] }),
+    }
+    const result = await graphRag("anything", undefined, stub, embedder)
+    expect(result.degraded).toBe(false)
+    expect(result.seeds.map((seed) => seed.id)).toEqual(["concept:knn-only"])
+  })
+
   test("empty graph returns an empty subgraph with a degraded flag", async () => {
     const emptyDir = await mkdtemp(join(tmpdir(), "graph-rag-empty-"))
     const empty = new SqliteStore(emptyDir)

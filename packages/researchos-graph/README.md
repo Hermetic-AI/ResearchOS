@@ -16,9 +16,9 @@ import { openStore, parseFile, graphRag, createEmbedder, circleLayout } from "@r
 ```
 
 - `openStore(projectRoot)` → `Store`（Kuzu 升级预留接口）：`upsertNodes/upsertEdges/removeBySource/replaceBySource/neighbors/search/all/getNode/upsertEmbedding/knn/saveLayout/resolveCiteKey/paperMeta/close`。
-- `parseFile({ path, content, citeKeyToPaperId?, existingNode? })`：`[[wikilink]]`（含 alias/heading）与 `\cite{}` 解析；paper 笔记 → paper 目标记 cites，其余默认 mentions。
+- `parseFile({ path, content, citeKeyToPaperId?, existingNode? })`：`[[wikilink]]`（含 alias/heading）与 `\cite{}` 解析；指向 paper 目标的边记 cites，其余默认 mentions。
 - `graphRag(question, scope, store, embedder)` → `{ subgraph, contextPack, seeds, degraded }`；不生成 answer 文本（由调用方基于 contextPack 作答）。
-- `resolveCiteKey` 近似策略：DOI 规范化 > arXiv ID > bibtex key 惯例（作者姓 + 年份 + 标题首词），查不到返回 `undefined` 降级。
+- `citeKeyResolver(projectRoot)` → `CiteKeyResolver`：加载一次文献索引快照供整批解析复用；近似策略为 DOI 规范化 > arXiv ID（忽略 vN 版本后缀）> bibtex key 惯例（作者姓 + 年份 + 标题首词），查不到返回 `undefined` 降级。解析节点 id 固定为 `paper:<文献库 id>`，与读时合并的 literatureSubgraph 一致；`Store.resolveCiteKey` 为单 key 便捷封装。
 - `src/mcp.ts`：MCP stdio server（`parse_wikilinks`/`upsert`/`query`/`layout` 四工具），`RESEARCHOS_PROJECT_ROOT` 定位项目根（默认 `process.cwd()`）。
 
 ## 测试

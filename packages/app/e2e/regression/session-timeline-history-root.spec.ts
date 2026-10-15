@@ -55,7 +55,7 @@ for (const scenario of scenarios) {
     const sequence: string[] = []
     const history = Promise.withResolvers<void>()
     const transport = await installSseTransport<{ directory: string; payload: Record<string, unknown> }>(page, {
-      server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
+      server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`,
       retry: 20,
     })
     await mockOpenCodeServer(page, {

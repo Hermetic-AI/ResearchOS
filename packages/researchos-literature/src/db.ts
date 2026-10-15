@@ -35,6 +35,7 @@ export class LiteratureDB {
     try {
       this.db.loadExtension(getLoadablePath())
       this.db.exec("CREATE VIRTUAL TABLE IF NOT EXISTS paper_embedding USING vec0(paper_id TEXT PRIMARY KEY, embedding float[384])")
+      this.db.exec("CREATE VIRTUAL TABLE IF NOT EXISTS paper_chunk_embedding USING vec0(chunk_id TEXT PRIMARY KEY, embedding float[384])")
       this.vec = true
     } catch {
       this.vec = false
@@ -69,6 +70,69 @@ export class LiteratureDB {
     return this.db.prepare(
       "SELECT paper_id AS paperId, distance FROM paper_embedding WHERE embedding MATCH ? AND k = ?",
     ).all(new Float32Array(embedding), k) as Array<{ paperId: string; distance: number }>
+  }
+
+  replaceChunks(paperId: string, chunks: Array<{ section: string | null; seq: number; text: string }>): void {
+    this.db.transaction(() => {
+      // vec0 无级联删除，先清掉旧 chunk 的向量行
+      if (this.vec) {
+        this.db.prepare(
+          "DELETE FROM paper_chunk_embedding WHERE chunk_id IN (SELECT chunk_id FROM paper_chunk WHERE paper_id = ?)",
+        ).run(paperId)
+      }
+      this.db.prepare("DELETE FROM paper_chunk WHERE paper_id = ?").run(paperId)
+      const insert = this.db.prepare(
+        "INSERT INTO paper_chunk (chunk_id, paper_id, section, seq, text) VALUES (?, ?, ?, ?, ?)",
+      )
+      chunks.forEach((chunk) => insert.run(`${paperId}:${chunk.seq}`, paperId, chunk.section, chunk.seq, chunk.text))
+    })()
+  }
+
+  upsertChunkEmbeddings(rows: Array<{ chunkId: string; embedding: number[] }>): void {
+    this.requireVec()
+    // 与 upsertEmbedding 相同：vec0 不支持 UPSERT，用 DELETE+INSERT 覆盖
+    this.db.transaction(() => {
+      const del = this.db.prepare("DELETE FROM paper_chunk_embedding WHERE chunk_id = ?")
+      const insert = this.db.prepare("INSERT INTO paper_chunk_embedding (chunk_id, embedding) VALUES (?, ?)")
+      rows.forEach((row) => {
+        del.run(row.chunkId)
+        insert.run(row.chunkId, new Float32Array(row.embedding))
+      })
+    })()
+  }
+
+  knnChunks(
+    embedding: number[],
+    k: number,
+    paperId?: string,
+  ): Array<{ chunkId: string; paperId: string; section: string | null; text: string; seq: number; distance: number }> {
+    this.requireVec()
+    // 按 paper 过滤时多取一些再筛，避免 KNN 结果被其他论文占满
+    const hits = this.db.prepare(
+      "SELECT chunk_id AS chunkId, distance FROM paper_chunk_embedding WHERE embedding MATCH ? AND k = ?",
+    ).all(new Float32Array(embedding), paperId ? k * 4 : k) as Array<{ chunkId: string; distance: number }>
+    const lookup = this.db.prepare(
+      "SELECT paper_id AS paperId, section, text, seq FROM paper_chunk WHERE chunk_id = ?",
+    )
+    return hits.flatMap((hit) => {
+      const chunk = lookup.get(hit.chunkId) as
+        | { paperId: string; section: string | null; text: string; seq: number }
+        | undefined
+      if (!chunk) return []
+      if (paperId && chunk.paperId !== paperId) return []
+      return [{ chunkId: hit.chunkId, ...chunk, distance: hit.distance }]
+    }).slice(0, k)
+  }
+
+  chunksForPaper(paperId: string): Array<{ chunkId: string; section: string | null; seq: number; text: string }> {
+    return this.db.prepare(
+      "SELECT chunk_id AS chunkId, section, seq, text FROM paper_chunk WHERE paper_id = ? ORDER BY seq",
+    ).all(paperId) as Array<{ chunkId: string; section: string | null; seq: number; text: string }>
+  }
+
+  chunkCount(paperId: string): number {
+    const row = this.db.prepare("SELECT COUNT(*) AS count FROM paper_chunk WHERE paper_id = ?").get(paperId) as { count: number }
+    return row.count
   }
 
   coCitationCounts(paperId: string): Map<string, number> {
@@ -197,6 +261,13 @@ export class LiteratureDB {
       source: row.edge_source as CitationEntry["source"],
       inLibrary: row.p_title !== null,
     }))
+  }
+
+  getExternalPaper(id: string): { id: string; title: string | null; year: number | null; doi: string | null } | null {
+    const row = this.db.prepare("SELECT id, title, year, doi FROM external_paper WHERE id = ?").get(id) as
+      | { id: string; title: string | null; year: number | null; doi: string | null }
+      | undefined
+    return row ?? null
   }
 
   getPaper(id: string): PaperMeta | null {

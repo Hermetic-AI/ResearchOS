@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 课题组</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+<aside id="shell"></aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div>
+      <div class="font-serif text-[16px]">课题组 · 多智能体实验台</div>
+      <div class="text-[11px] text-ink-faint mt-0.5">派单即开工：任务并行跑在实验台上，全过程写入研究溯源</div>
+    </div>
+    <div class="ml-auto flex items-center gap-4 text-[12px] text-ink-soft shrink-0">
+      <div class="flex items-center gap-4 border hairline rounded-md px-3.5 h-9 bg-paper" id="stats">
+        <span><b class="text-ink font-serif" id="st-run">0</b> 作业中</span><span class="text-line">|</span>
+        <span><b class="text-moss font-serif" id="st-done">0</b> 已完成</span><span class="text-line">|</span>
+        <span><b class="text-seal font-serif" id="st-fail">0</b> 失败/中断</span>
+      </div>
+      <button id="new-job" class="h-9 px-4 rounded-md bg-accent text-white text-[13px] hover:opacity-90">＋ 新任务</button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <div class="p-6 space-y-6 max-w-[1180px]">
+      <!-- 派单表单 -->
+      <form id="jobForm" class="hidden bg-card border border-accent/40 rounded-lg p-4 ring-1 ring-accent/10">
+        <div class="smallcaps text-[10.5px] font-semibold text-accent mb-2">新任务 · Dispatch</div>
+        <div class="flex gap-2 items-end text-[12.5px]">
+          <label class="shrink-0"><span class="text-ink-faint">执行 persona</span>
+            <select id="fPersona" class="mt-1 block w-36 h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent"></select></label>
+          <label class="w-52 shrink-0"><span class="text-ink-faint">标题</span>
+            <input id="fTitle" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent" placeholder="简写，留空取任务前 24 字"></label>
+          <label class="flex-1 min-w-0"><span class="text-ink-faint">任务 *（含「文献/论文」会触发 literature_search）</span>
+            <input id="fTask" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent" placeholder="例如：核对文献库中低秩相关论文的结论"></label>
+          <button class="h-8 px-4 rounded-md bg-accent text-white hover:opacity-90 shrink-0">派单 ↵</button>
+          <button type="button" id="cancelJob" class="h-8 px-3 rounded-md border hairline hover:bg-paper shrink-0">取消</button>
+        </div>
+      </form>
+
+      <section>
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="smallcaps text-[12px] font-semibold text-ink-faint">实验台 · Bench</h2>
+          <span class="text-[11px] text-ink-faint">按派单时间排序 · 运行中实时刷新</span>
+        </div>
+        <div id="bench" class="grid grid-cols-1 xl:grid-cols-3 gap-4"></div>
+        <div id="benchEmpty" class="hidden border border-dashed hairline rounded-lg p-8 text-center text-ink-faint text-[13px]">
+          实验台空着。点右上「＋ 新任务」派第一单给某个 persona。
+        </div>
+      </section>
+
+      <!-- 今日实验日志 -->
+      <section class="bg-card border hairline rounded-lg px-6 pt-4 pb-6">
+        <div class="flex items-baseline justify-between mb-5">
+          <h2 class="smallcaps text-[12px] font-semibold text-ink-faint">实验日志 · Lab Journal</h2>
+          <a href="/trace.html" class="text-[11px] text-accent hover:underline">全部溯源 →</a>
+        </div>
+        <div id="journal" class="text-[12px] text-ink-faint italic">读取中…</div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- 右窄栏：组员名录 -->
+<aside class="w-[250px] shrink-0 bg-card border-l hairline flex flex-col">
+  <div class="h-12 px-4 border-b hairline flex items-center justify-between">
+    <span class="font-serif text-[14px]">组员名录</span>
+    <span class="text-[10.5px] text-ink-faint" id="rosterCount">—</span>
+  </div>
+  <div class="flex-1 overflow-y-auto py-2 text-[12.5px]" id="roster"></div>
+  <div class="p-4 border-t hairline text-[11px] text-ink-faint leading-relaxed font-serif italic">persona 是课题组同事：派单即开工；当前由 mock/已配置 provider 驱动，工具面为 read_file 与 literature_search。</div>
+</aside>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const api = (p, o) => fetch(p, o).then(r => r.json())
+const BG = { accent: "bg-accent", amber: "bg-amber", moss: "bg-moss", seal: "bg-seal", ink: "bg-ink" }
+const live = {} // threadId -> {status:"running|done|failed|aborted|queued", lines:[], started, ended}
+let roster = []
+
+const personaOf = (id) => roster.find(p => p.id === id) ?? { name: id, char: "?", color: "ink" }
+
+function lines(job) {
+  const tail = job.lines.slice(-6)
+  return tail.map(l => `<div class="${l.cls ?? ""}">${Shell.esc(l.text)}</div>`).join("")
+}
+
+function statusChip(s) {
+  if (s === "running") return `<span class="ml-auto shrink-0 flex items-center gap-1.5 text-[11px] text-accent"><i class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse inline-block"></i>运行中</span>`
+  if (s === "done") return `<span class="ml-auto shrink-0 text-[11px] text-moss">✓ 已完成</span>`
+  if (s === "failed") return `<span class="ml-auto shrink-0 text-[11px] text-seal">✕ 失败</span>`
+  if (s === "aborted") return `<span class="ml-auto shrink-0 text-[11px] text-seal">⚠ 中断</span>`
+  return `<span class="ml-auto shrink-0 text-[11px] text-ink-faint">排队中</span>`
+}
+
+function card(t) {
+  const job = live[t.id]
+  const p = personaOf(t.persona)
+  const secs = job.started ? Math.round(((job.ended ?? Date.now()) - job.started) / 1000) : null
+  const when = new Date(t.created_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+  const border = job.status === "running" ? "border-accent/40 ring-1 ring-accent/10" : job.status === "failed" || job.status === "aborted" ? "border-l-2 !border-l-seal" : "hairline"
+  return `<div class="bg-card border ${border} rounded-lg p-4 flex flex-col">
+    <div class="flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full ${BG[p.color] ?? BG.ink} text-white grid place-items-center text-[12px] font-serif shrink-0">${Shell.esc(p.char)}</span>
+      <div class="min-w-0">
+        <div class="font-serif text-[13.5px] leading-snug truncate">${Shell.esc(t.title)}</div>
+        <div class="text-[10.5px] text-ink-faint">${Shell.esc(p.name)} · ${when}${secs != null ? ` · ${secs}s` : ""}</div>
+      </div>
+      ${statusChip(job.status)}
+    </div>
+    <div class="mt-2.5 bg-paper border hairline rounded-md p-2 font-mono text-[10.5px] leading-relaxed text-ink-soft h-[76px] overflow-hidden">${lines(job)}</div>
+    <div class="mt-3 pt-3 border-t hairline flex gap-2 text-[11.5px]">
+      <a href="/trace.html" class="flex-1 h-7 rounded border hairline hover:bg-paper grid place-items-center">查看溯源</a>
+      ${t.persona === "lit" || /文献|论文/.test(t.title) ? `<a href="/library.html" class="h-7 px-2.5 rounded border hairline hover:bg-paper grid place-items-center">文献库</a>` : ""}
+    </div>
+  </div>`
+}
+
+function renderBench(jobs) {
+  const ordered = [...jobs].sort((a, b) => b.created_at - a.created_at)
+  $("benchEmpty").classList.toggle("hidden", ordered.length > 0)
+  $("bench").innerHTML = ordered.map(card).join("")
+  const count = (s) => ordered.filter(t => live[t.id]?.status === s).length
+  $("st-run").textContent = String(count("running"))
+  $("st-done").textContent = String(count("done"))
+  $("st-fail").textContent = String(count("failed") + count("aborted"))
+  Shell.render("workbench", { workbench: ordered.length ? String(ordered.length) : undefined })
+  renderRoster(ordered)
+}
+
+function renderRoster(jobs) {
+  const busy = new Set(jobs.filter(t => live[t.id]?.status === "running" || live[t.id]?.status === "queued").map(t => t.persona))
+  $("rosterCount").textContent = `${roster.length} 人 · ${roster.length - busy.size} 空闲`
+  $("roster").innerHTML = `<div class="px-4 py-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">Persona</div>` + roster.map(p => {
+    const on = busy.has(p.id)
+    return `<div class="flex items-center gap-2.5 px-4 py-2">
+      <span class="w-6 h-6 rounded-full ${BG[p.color] ?? BG.ink} text-white grid place-items-center text-[10px] font-serif shrink-0">${Shell.esc(p.char)}</span>
+      <div class="min-w-0"><div class="leading-snug">${Shell.esc(p.name)}</div><div class="text-[10px] text-ink-faint truncate">${Shell.esc(p.note)}</div></div>
+      ${on ? `<span class="ml-auto text-[10.5px] text-accent flex items-center gap-1"><i class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse inline-block"></i>工作中</span>`
+           : `<div class="ml-auto flex items-center gap-1.5"><span class="text-[10.5px] text-moss">空闲</span><button data-persona="${p.id}" class="assign h-6 px-2 rounded border hairline hover:bg-paper text-[11px]">指派</button></div>`}
+    </div>`
+  }).join("") + `<div class="flex items-center gap-2.5 px-4 py-2 mt-2 bg-paper/60 border-y hairline">
+      <span class="w-6 h-6 rounded-full bg-ink text-white grid place-items-center text-[10px] font-serif shrink-0">主</span>
+      <div class="min-w-0"><div class="leading-snug font-serif">主 agent · PI</div><div class="text-[10px] text-ink-faint truncate">值班 · 汇总 · 裁决</div></div>
+      <a href="/chat.html" class="ml-auto text-[10.5px] text-accent hover:underline">去对话 →</a>
+    </div>`
+}
+
+async function replay(threadId) {
+  const data = await api(`/api/threads/${threadId}`)
+  const lines = []
+  let lastRole = "none"
+  for (const m of data.messages) {
+    if (m.role === "user") { lines.push({ text: `◂ 任务：${(m.content ?? "").slice(0, 42)}` }); lastRole = "user" }
+    if (m.role === "assistant") {
+      for (const c of JSON.parse(m.tool_calls ?? "[]")) lines.push({ text: `› ⚙ ${c.name}` })
+      if (m.content) lines.push({ text: `✍ ${m.content.slice(0, 80)}` })
+      lastRole = "assistant"
+    }
+    if (m.role === "tool") {
+      lines.push({ text: `↳ ${m.name ?? ""} ${(m.content ?? "").slice(0, 40)}` })
+      lastRole = "tool"
+    }
+  }
+  live[threadId] = {
+    status: lastRole === "assistant" ? "done" : lastRole === "user" ? "aborted" : "queued",
+    lines,
+  }
+}
+
+async function runJob(threadId, task) {
+  const job = live[threadId]
+  job.status = "running"
+  job.started = Date.now()
+  let answerLine = null
+  try {
+    const response = await fetch(`/api/threads/${threadId}/messages`, { method: "POST", body: JSON.stringify({ content: task }) })
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const parts = buffer.split("\n")
+      buffer = parts.pop() ?? ""
+      for (const line of parts) {
+        if (!line.startsWith("data:")) continue
+        const ev = JSON.parse(line.slice(5))
+        if (ev.type === "text_delta") {
+          if (answerLine === null) { answerLine = { text: "" }; job.lines.push(answerLine) }
+          answerLine.text = (answerLine.text + ev.text).slice(0, 120)
+        }
+        if (ev.type === "tool_call") { answerLine = null; job.lines.push({ text: `› ⚙ ${ev.call.name} ${ev.call.arguments.slice(0, 32)}` }) }
+        if (ev.type === "tool_result") job.lines.push({ text: `↳ ${ev.call.name} ${ev.result.ok ? "✓" : "✕"}`, cls: ev.result.ok ? "" : "text-seal" })
+        if (ev.type === "skill_load") job.lines.push({ text: `✧ 技能 ${ev.name}` })
+        if (ev.type === "error") { job.lines.push({ text: `✕ ${ev.message.slice(0, 80)}`, cls: "text-seal" }); job.status = "failed" }
+        if (ev.type === "finish" && job.status === "running") job.status = "done"
+        renderBench(Object.values(jobsCache))
+      }
+    }
+  } catch (e) {
+    job.lines.push({ text: `✕ 流中断：${String(e).slice(0, 60)}`, cls: "text-seal" })
+    job.status = "failed"
+  }
+  job.ended = Date.now()
+  if (job.status === "running") job.status = "done"
+  renderBench(Object.values(jobsCache))
+  loadJournal()
+}
+
+let jobsCache = {}
+async function loadJobs() {
+  const jobs = await api("/api/lab/jobs")
+  jobsCache = Object.fromEntries(jobs.map(t => [t.id, t]))
+  for (const t of jobs) if (live[t.id] === undefined) await replay(t.id)
+  renderBench(jobs)
+}
+
+async function loadJournal() {
+  const trace = await api("/api/trace?limit=120")
+  const items = trace.filter(t => t.kind === "job" || t.kind === "chat").slice(0, 8)
+  const box = $("journal")
+  if (items.length === 0) { box.innerHTML = `<div class="text-ink-faint italic">还没有派单/对话事件。</div>`; return }
+  const color = { job: "bg-accent", chat: "bg-moss" }
+  box.className = ""
+  box.innerHTML = `<div class="relative"><div class="absolute left-0 right-0 top-[7px] h-px bg-line"></div>
+    <div class="flex gap-3 relative overflow-x-auto pb-1">` +
+    items.map(t => `<div class="min-w-[150px] max-w-[190px]">
+      <i class="block w-3.5 h-3.5 rounded-full ${color[t.kind] ?? "bg-ink-faint"} border-2 border-card shadow-[0_0_0_1px_#E7E3D8]"></i>
+      <div class="text-[10.5px] font-mono text-ink-faint mt-1.5">${new Date(t.ts).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}</div>
+      <div class="text-[11.5px] mt-0.5 leading-snug">${Shell.esc(t.summary)}</div>
+    </div>`).join("") + `</div></div>`
+}
+
+$("new-job").addEventListener("click", () => openForm())
+$("cancelJob").addEventListener("click", () => $("jobForm").classList.add("hidden"))
+$("roster").addEventListener("click", (e) => {
+  const btn = e.target.closest("button.assign")
+  if (btn) openForm(btn.dataset.persona)
+})
+function openForm(persona) {
+  $("jobForm").classList.remove("hidden")
+  if (persona) $("fPersona").value = persona
+  $("fTask").focus()
+}
+
+$("jobForm").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const task = $("fTask").value.trim()
+  if (!task) return
+  const created = await api("/api/lab/jobs", {
+    method: "POST",
+    body: JSON.stringify({ persona: $("fPersona").value, title: $("fTitle").value.trim(), task }),
+  })
+  if (created.error) { alert(created.error); return }
+  $("jobForm").classList.add("hidden")
+  $("fTask").value = ""; $("fTitle").value = ""
+  live[created.thread.id] = { status: "queued", lines: [{ text: `◂ 任务：${task.slice(0, 42)}` }] }
+  jobsCache[created.thread.id] = created.thread
+  renderBench(Object.values(jobsCache))
+  loadJournal()
+  runJob(created.thread.id, task)
+})
+
+async function boot() {
+  roster = await api("/api/lab/roster")
+  $("fPersona").innerHTML = roster.map(p => `<option value="${p.id}">${p.char} · ${p.name}</option>`).join("")
+  await loadJobs()
+  loadJournal()
+}
+boot()
+</script>
+</body>
+</html>

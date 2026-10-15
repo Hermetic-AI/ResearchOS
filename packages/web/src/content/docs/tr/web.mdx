@@ -36,7 +36,7 @@ Web sunucusunu komut satırı bayraklarıyla veya [config dosyanızda](/docs/con
 opencode varsayılan olarak kullanılabilir bir bağlantı noktasını seçer. Bir bağlantı noktası belirtebilirsiniz:
 
 ```bash
-opencode web --port 4096
+opencode web --port 14096
 ```
 
 ### Ana makine adı
@@ -50,8 +50,8 @@ opencode web --hostname 0.0.0.0
 `0.0.0.0` kullanıldığında, opencode hem yerel hem de ağ adreslerini gösterecektir:
 
 ```
-  Local access:       http://localhost:4096
-  Network access:     http://192.168.1.100:4096
+  Local access:       http://localhost:14096
+  Network access:     http://192.168.1.100:14096
 ```
 
 ### mDNS Keşfi
@@ -114,10 +114,10 @@ Bağlı sunucuları ve durumlarını görüntülemek için "Sunucuları Gör" se
 
 ```bash
 # Start the web server
-opencode web --port 4096
+opencode web --port 14096
 
 # In another terminal, attach the TUI
-opencode attach http://localhost:4096
+opencode attach http://localhost:14096
 ```
 
 Bu, aynı oturumları ve durumu paylaşarak hem web arayüzünü hem de terminali aynı anda kullanmanıza olanak tanır.
@@ -131,7 +131,7 @@ Sunucu ayarlarını `opencode.json` yapılandırma dosyanızda da yapılandırab
 ```json
 {
   "server": {
-    "port": 4096,
+    "port": 14096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

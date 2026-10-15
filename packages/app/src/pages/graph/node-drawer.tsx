@@ -1,6 +1,7 @@
 import { createMemo, createResource, For, Show } from "solid-js"
 import { Spinner } from "@opencode-ai/ui/spinner"
 import { Tag } from "@opencode-ai/ui/tag"
+import { useNavigate, useParams } from "@solidjs/router"
 import type { ServerResearchosGraphNodeOutput } from "@opencode-ai/client"
 import { nodeColors } from "./graph-colors"
 
@@ -12,6 +13,8 @@ export function NodeDrawer(props: {
   onSelect: (id: string) => void
   onClose: () => void
 }) {
+  const params = useParams<{ dir: string }>()
+  const navigate = useNavigate()
   const [detail] = createResource(
     () => props.nodeId,
     (id) => props.fetcher(id),
@@ -56,6 +59,13 @@ export function NodeDrawer(props: {
                   <Show when={paper().doi}>
                     {(doi) => <p class="mt-1 break-all font-mono text-10-regular text-text-weaker">{doi()}</p>}
                   </Show>
+                  <button
+                    type="button"
+                    class="mt-3 text-11-medium text-text-interactive-base hover:underline"
+                    onClick={() => navigate(`/${params.dir}/literature`)}
+                  >
+                    Open in literature
+                  </button>
                 </section>
               )}
             </Show>

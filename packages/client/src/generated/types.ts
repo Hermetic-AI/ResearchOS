@@ -2934,6 +2934,23 @@ export type ServerResearchosAssetsFileWriteOutput = {
   readonly data: { readonly path: string; readonly reloaded: boolean }
 }
 
+export type ServerResearchosAssetsNoteWriteInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly path: { readonly path: string; readonly content: string }["path"]
+  readonly content: { readonly path: string; readonly content: string }["content"]
+}
+
+export type ServerResearchosAssetsNoteWriteOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly path: string }
+}
+
 export type ServerResearchosAssetsPresetInstallInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -3122,17 +3139,37 @@ export type ServerResearchosLiteratureImportInput = {
     readonly path?: string | undefined
     readonly url?: string | undefined
     readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
   }["path"]
   readonly url?: {
     readonly path?: string | undefined
     readonly url?: string | undefined
     readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
   }["url"]
   readonly zoteroPath?: {
     readonly path?: string | undefined
     readonly url?: string | undefined
     readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
   }["zoteroPath"]
+  readonly fileName?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["fileName"]
+  readonly contentBase64?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["contentBase64"]
 }
 
 export type ServerResearchosLiteratureImportOutput = {
@@ -3233,6 +3270,31 @@ export type ServerResearchosLiteratureSimilarOutput = {
   }
 }
 
+export type ServerResearchosLiteratureReadInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly query: { readonly query: string; readonly k?: number | undefined }["query"]
+  readonly k?: { readonly query: string; readonly k?: number | undefined }["k"]
+}
+
+export type ServerResearchosLiteratureReadOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly sections: ReadonlyArray<{
+      readonly section?: string | null
+      readonly text: string
+      readonly score: number | "Infinity" | "-Infinity" | "NaN"
+    }>
+    readonly degraded: boolean
+  }
+}
+
 export type ServerResearchosLiteratureUpdateInput = {
   readonly id: { readonly id: string }["id"]
   readonly location?: {
@@ -3264,6 +3326,42 @@ export type ServerResearchosLiteratureUpdateOutput = {
     readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
     readonly isRead?: boolean | null
     readonly isFavorite?: boolean | null
+  }
+}
+
+export type ServerResearchosLiteratureSelectInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly paperId?: { readonly paperId?: string | undefined; readonly title?: string | undefined }["paperId"]
+  readonly title?: { readonly paperId?: string | undefined; readonly title?: string | undefined }["title"]
+}
+
+export type ServerResearchosLiteratureSelectOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly ok: boolean }
+}
+
+export type ServerResearchosGraphStatusInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerResearchosGraphStatusOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly backend: "sqlite" | "neo4j" | "memgraph" | "tugraph"
+    readonly healthy: boolean
+    readonly detail: string
   }
 }
 
@@ -3429,6 +3527,25 @@ export type ServerResearchosGraphAskOutput = {
     }>
     readonly degraded: boolean
     readonly answer: string
+  }
+}
+
+export type ServerResearchosGraphReindexInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerResearchosGraphReindexOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly files: ReadonlyArray<string>
+    readonly nodes: number | "Infinity" | "-Infinity" | "NaN"
+    readonly edges: number | "Infinity" | "-Infinity" | "NaN"
   }
 }
 

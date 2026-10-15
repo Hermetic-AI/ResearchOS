@@ -7,7 +7,7 @@ const directory = "C:/OpenCode/FileBrowserSidebar"
 const projectID = "proj_file_browser_sidebar"
 const sessionID = "ses_file_browser_sidebar"
 const title = "File browser sidebar"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 const files = Array.from({ length: 80 }, (_, index) => `file-${String(index).padStart(2, "0")}.ts`)
 // Marks the file-browser sidebar DOM node so a remount (fresh node) is detectable.
 const PROBE = "original"

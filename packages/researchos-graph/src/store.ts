@@ -3,6 +3,7 @@ import { existsSync, mkdirSync } from "fs"
 import { getLoadablePath } from "sqlite-vec"
 import { dbPath, graphDir, literatureDbPath } from "./paths"
 import type { GraphEdge, GraphNode, NodeType, Subgraph } from "./types"
+import type { CiteKeyResolver } from "./wikilink"
 
 // Kuzu 升级预留：所有存储访问收敛在 Store 接口（设计 §5.3）
 export interface Store {
@@ -16,6 +17,7 @@ export interface Store {
   search(query: string, limit: number): GraphNode[]
   all(filter?: { type?: NodeType }): Subgraph
   getNode(id: string): GraphNode | null
+  hasEmbedding(nodeId: string): boolean
   upsertEmbedding(nodeId: string, embedding: number[]): void
   knn(embedding: number[], k: number): Array<{ nodeId: string; distance: number }>
   saveLayout(positions: Array<{ id: string; x: number; y: number }>): void
@@ -224,6 +226,11 @@ export class SqliteStore implements Store {
     return { nodes, edges }
   }
 
+  hasEmbedding(nodeId: string): boolean {
+    if (!this.vec) return false
+    return this.db.prepare("SELECT 1 FROM node_vec WHERE node_id = ?").get(nodeId) !== null
+  }
+
   upsertEmbedding(nodeId: string, embedding: number[]): void {
     this.requireVec()
     // vec0 不支持 UPSERT，用 DELETE+INSERT 覆盖
@@ -249,7 +256,7 @@ export class SqliteStore implements Store {
   }
 
   resolveCiteKey(key: string): { nodeId: string; refId: string; label: string } | undefined {
-    return resolveCiteKeyFromLiterature(this.projectRoot, key)
+    return citeKeyResolver(this.projectRoot)(key)
   }
 
   paperMeta(refId: string): PaperMeta | undefined {
@@ -288,17 +295,29 @@ export function openStore(projectRoot: string): Store {
   return new SqliteStore(projectRoot)
 }
 
-// bibkey → 文献库条目的近似解析：DOI 规范化 > arXiv ID > bibtex key 惯例（作者姓+年份+标题首词）
-function resolveCiteKeyFromLiterature(
-  projectRoot: string,
-  key: string,
-): { nodeId: string; refId: string; label: string } | undefined {
+// bibkey → 文献库条目的近似解析：DOI 规范化 > arXiv ID（忽略 vN 版本后缀）> bibtex key 惯例（作者姓+年份+标题首词）。
+// 每个 reindex/parse 批次共享一份文献索引快照，避免按 key 反复打开库并全表扫描。
+// 节点 id 固定为 paper:<文献库 id>，与读时合并的 literatureSubgraph（handler 侧 paperNode）保持一致，避免重复 paper 节点。
+export function citeKeyResolver(projectRoot: string): CiteKeyResolver {
+  const rows = loadLiteratureIndex(projectRoot)
+  if (!rows) return () => undefined
+  return (key) => {
+    const normalized = key.trim().toLowerCase()
+    const arxivKey = normalized.replace(/v\d+$/, "")
+    const hit =
+      rows.find((row) => row.doi?.toLowerCase() === normalized) ??
+      rows.find((row) => row.arxiv_id?.toLowerCase().replace(/v\d+$/, "") === arxivKey) ??
+      rows.find((row) => bibtexKeyMatches(row, normalized))
+    return hit ? { nodeId: `paper:${hit.id}`, refId: hit.id, label: hit.title } : undefined
+  }
+}
+
+function loadLiteratureIndex(projectRoot: string) {
   const path = literatureDbPath(projectRoot)
   if (!existsSync(path)) return undefined
   const literature = new Database(path, { readonly: true })
   try {
-    const normalized = key.trim().toLowerCase()
-    const rows = literature.prepare(`
+    return literature.prepare(`
       SELECT p.id, p.doi, p.arxiv_id, p.title, p.year,
         (SELECT a.name FROM author a JOIN paper_author pa ON pa.author_id = a.id
          WHERE pa.paper_id = p.id ORDER BY pa.position LIMIT 1) AS first_author
@@ -311,13 +330,6 @@ function resolveCiteKeyFromLiterature(
       year: number | null
       first_author: string | null
     }>
-    const hit =
-      rows.find((row) => row.doi?.toLowerCase() === normalized) ??
-      rows.find((row) => row.arxiv_id?.toLowerCase() === normalized) ??
-      rows.find((row) => bibtexKeyMatches(row, normalized))
-    if (!hit) return undefined
-    const nodeId = hit.doi ? `paper:${doiSlug(hit.doi)}` : `paper:${hit.id}`
-    return { nodeId, refId: hit.id, label: hit.title }
   } finally {
     literature.close()
   }
@@ -332,10 +344,6 @@ function bibtexKeyMatches(
   if (!family || !key.startsWith(family)) return false
   const firstWord = row.title.toLowerCase().match(/[a-z]+/)?.[0]
   return firstWord ? key.includes(firstWord) : false
-}
-
-function doiSlug(doi: string): string {
-  return doi.toLowerCase().replace(/[^\w]+/g, "-").replace(/^-+|-+$/g, "")
 }
 
 function ftsBody(node: GraphNode): string {

@@ -3,6 +3,9 @@ import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
 import { LiteratureService, type PaperMeta, type SearchResult } from "@researchos/literature"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { mkdirSync } from "fs"
+import { rm } from "fs/promises"
+import { dirname, join } from "path"
 import { Api } from "../api"
 import { response } from "../location"
 
@@ -43,9 +46,10 @@ export const ResearchosLiteratureHandler = HttpApiBuilder.group(
           }
           return { zotero: await library.importZotero(payload.zoteroPath) }
         }
-        if (!payload.path && !payload.url) {
-          throw new InvalidRequestError({ message: "literature.import requires path, url, or zoteroPath" })
+        if (!payload.path && !payload.url && !payload.contentBase64) {
+          throw new InvalidRequestError({ message: "literature.import requires a PDF file, path, URL, or zoteroPath" })
         }
+        if (payload.contentBase64) return importUploadedPdf(library, payload.contentBase64)
         const result = await library.importPdf({ path: payload.path, url: payload.url })
         return {
           paper: wirePaper(result.paper),
@@ -69,6 +73,16 @@ export const ResearchosLiteratureHandler = HttpApiBuilder.group(
           results: result.results.map((paper) => ({ ...wirePaper(paper), score: paper.score })),
         })),
       )))
+      .handle("literature.read", ({ params, payload }) => response(withLibrary((library) =>
+        library.read(params.id, payload.query, payload.k).then((result) => ({
+          degraded: result.degraded,
+          sections: result.sections.map((section) => ({
+            ...(section.section ? { section: section.section } : {}),
+            text: section.text,
+            score: section.score,
+          })),
+        })),
+      )))
       .handle("literature.update", ({ params, payload }) => response(withLibrary((library) => {
         const updated = library.updatePaper(params.id, {
           ...(payload.isRead !== undefined ? { isRead: payload.isRead } : {}),
@@ -76,6 +90,25 @@ export const ResearchosLiteratureHandler = HttpApiBuilder.group(
         })
         if (!updated) throw new InvalidRequestError({ message: `Unknown paper: ${params.id}` })
         return Promise.resolve(wirePaper(updated))
+      })))
+      .handle("literature.select", ({ payload }) => response(Effect.gen(function* () {
+        const location = yield* Location.Service
+        const path = join(location.project.directory, ".researchos", "selection.json")
+        yield* Effect.tryPromise({
+          try: async () => {
+            if (!payload.paperId) {
+              await rm(path, { force: true })
+              return
+            }
+            mkdirSync(dirname(path), { recursive: true })
+            await Bun.write(path, JSON.stringify({
+              paperId: payload.paperId,
+              ...(payload.title ? { title: payload.title } : {}),
+            }, null, 2))
+          },
+          catch: serverError,
+        })
+        return { ok: true }
       }))),
 )
 
@@ -128,4 +161,25 @@ function serverError(error: unknown) {
     message: error instanceof Error ? error.message : String(error),
     ref: "researchos-literature",
   })
+}
+
+async function importUploadedPdf(library: LiteratureService, contentBase64: string) {
+  const data = Buffer.from(contentBase64, "base64")
+  if (data.byteLength > 50 * 1024 * 1024) throw new InvalidRequestError({ message: "PDF upload exceeds the 50 MB limit" })
+  if (new TextDecoder().decode(data.subarray(0, 5)) !== "%PDF-") {
+    throw new InvalidRequestError({ message: "The selected file is not a valid PDF" })
+  }
+  const path = join(library.projectRoot, ".researchos", "literature", "uploads", `${crypto.randomUUID()}.pdf`)
+  mkdirSync(dirname(path), { recursive: true })
+  await Bun.write(path, data)
+  try {
+    const result = await library.importPdf({ path })
+    return {
+      paper: wirePaper(result.paper),
+      metadataSource: result.metadataSource,
+      references: result.references.edges.length,
+    }
+  } finally {
+    await rm(path, { force: true }).catch(() => {})
+  }
 }

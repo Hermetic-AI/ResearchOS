@@ -11,7 +11,11 @@ import { decode64 } from "@/utils/base64"
 import { Schema } from "effect"
 import type { ServerConnection } from "@/context/server"
 import { sessionHref } from "@/utils/session-route"
-import { useServerSync } from "@/context/server-sync"
+import { useServerSync, useQueryOptions } from "@/context/server-sync"
+// researchos:start
+import { pathKey } from "@/utils/path-key"
+import { useQuery } from "@tanstack/solid-query"
+// researchos:end
 
 export function DirectoryDataProvider(
   props: ParentProps<{
@@ -57,8 +61,29 @@ export function DirectoryDataProvider(
     onCleanup(() => serverSync().session.unpin(sessionID))
   })
 
+  // researchos:start
+  // On Windows the route can carry an 8.3 short path while the server reports the
+  // canonical long form asynchronously; the redirect effect above then remounts the
+  // whole subtree and kills in-flight work. Hold children until the canonical
+  // directory is known so any redirect happens before routed content mounts. A
+  // missing or failed path response still renders the route directory as-is.
+  const queryOptions = useQueryOptions()
+  const pathQuery = useQuery(() => ({
+    ...queryOptions().path(pathKey(directory())),
+    enabled: !props.draftID && !props.server?.(),
+  }))
+  const canonical = () => {
+    if (props.draftID || props.server?.()) return true
+    if (pathQuery.isPending) return false
+    const next = pathQuery.data?.directory
+    if (!next) return true
+    return next === directory()
+  }
+  const settled = () => (canonical() ? directory() : undefined)
+  // researchos:end
+
   return (
-    <Show when={directory()} keyed>
+    <Show when={settled()} keyed>
       {(directory) => (
         <DataProvider
           data={sync().data}

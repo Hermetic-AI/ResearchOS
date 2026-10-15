@@ -40,7 +40,7 @@ Bu, hem bir sunucu hem de bir istemci başlatır
 | Seçenek    | Tip           | Açıklama                                      | Varsayılan  |
 | ---------- | ------------- | --------------------------------------------- | ----------- |
 | `hostname` | `string`      | Sunucu ana bilgisayar adı                     | `127.0.0.1` |
-| `port`     | `number`      | Sunucu bağlantı noktası                       | `4096`      |
+| `port`     | `number`      | Sunucu bağlantı noktası                       | `14096`      |
 | `signal`   | `AbortSignal` | İptal için durdurma sinyali                   | `undefined` |
 | `timeout`  | `number`      | Sunucu başlatma için ms cinsinden zaman aşımı | `5000`      |
 | `config`   | `Config`      | Yapılandırma nesnesi                          | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 4096,
+  port: 14096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ Halihazırda çalışan bir opencode örneğiniz varsa, ona bağlanmak için bir
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:4096",
+  baseUrl: "http://localhost:14096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | Seçenek         | Tip        | Açıklama                          | Varsayılan              |
 | --------------- | ---------- | --------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | Sunucunun URL'si                  | `http://localhost:4096` |
+| `baseUrl`       | `string`   | Sunucunun URL'si                  | `http://localhost:14096` |
 | `fetch`         | `function` | Özel fetch uygulaması             | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Yanıt ayrıştırma yöntemi          | `auto`                  |
 | `responseStyle` | `string`   | Dönüş stili: `data` veya `fields` | `fields`                |

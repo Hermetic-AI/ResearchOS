@@ -1,10 +1,12 @@
 import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { For, Show, createEffect, createMemo, createResource, createSignal } from "solid-js"
+import { For, Match, Show, Switch, createEffect, createMemo, createResource, createSignal, onCleanup } from "solid-js"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { createResearchosClient } from "@/utils/researchos-client"
+import { formatServerError } from "@/utils/server-errors"
+import { ModuleState } from "@/components/researchos/module-state"
+import { useResearchosShell } from "@/components/researchos/shell-context"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { DataPanel } from "./data-panel"
 import { NotebookCell, type NotebookCellRow } from "./notebook-cell"
@@ -13,6 +15,7 @@ export default function DataPage() {
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const platform = usePlatform()
+  const shell = useResearchosShell()
   const client = createMemo(() => createResearchosClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-data"])
   const location = () => ({ directory: sdk().directory })
   const [notebooks] = createResource(() => sdk().directory, async () => client().notebooks({ location: location() }).then((result) => result.data))
@@ -38,6 +41,11 @@ export default function DataPage() {
   const [status, setStatus] = createSignal("Persistent Python kernel · workspace sandbox · 120 s timeout")
 
   createEffect(() => { if (!notebookId() && notebooks()?.[0]) setNotebookId(notebooks()![0]!.id) })
+  createEffect(() => {
+    const id = notebookId()
+    shell.setAgentContext(id ? { module: "data", resource: id } : { module: "data" })
+  })
+  onCleanup(() => shell.setAgentContext(undefined))
 
   const addCell = async () => {
     const id = notebookId()
@@ -87,10 +95,31 @@ export default function DataPage() {
       <div class="flex min-h-0 flex-1">
         <section class="min-w-0 flex-1 overflow-y-auto px-5 py-4">
           <div class="mx-auto max-w-4xl space-y-4">
-            <Show when={cells.loading}><div class="flex justify-center p-12"><Spinner class="size-5" /></div></Show>
-            <Show when={!cells.loading && (cells()?.length ?? 0) === 0}><div class="rounded-lg border border-dashed border-border-weak-base p-12 text-center text-12-regular text-text-weak"><p>This notebook has no cells.</p><Button class="mt-3" size="small" variant="secondary" onClick={() => void addCell()}>Add the first code cell</Button></div></Show>
-            <For each={cells()}>{(cell) => <NotebookCell cell={cell} onSave={(source) => saveCell(cell.id, source)} onRun={(source) => runCell(cell.id, source)} />}</For>
-            <Show when={(cells()?.length ?? 0) > 0}><button class="w-full rounded-lg border border-dashed border-border-weak-base py-3 text-11-regular text-text-weak hover:border-border-focus hover:text-text-base" onClick={() => void addCell()}>+ Add code cell</button></Show>
+            <Switch>
+              <Match when={cells.loading && !cells()}>
+                <ModuleState state="running" title="Loading notebook…" description="Fetching cells from the persistent Python kernel workspace." />
+              </Match>
+              <Match when={cells.error}>
+                <ModuleState
+                  state="error"
+                  title="Notebook could not be loaded"
+                  details={formatServerError(cells.error)}
+                  action={{ label: "Retry", onClick: () => void cellActions.refetch() }}
+                />
+              </Match>
+              <Match when={(cells()?.length ?? 0) === 0}>
+                <ModuleState
+                  state="empty"
+                  title="This notebook has no cells"
+                  description="Add a code cell to start exploring project data in the shared Python kernel."
+                  action={{ label: "Add code cell", onClick: () => void addCell() }}
+                />
+              </Match>
+              <Match when={true}>
+                <For each={cells()}>{(cell) => <NotebookCell cell={cell} onSave={(source) => saveCell(cell.id, source)} onRun={(source) => runCell(cell.id, source)} />}</For>
+                <button class="w-full rounded-lg border border-dashed border-border-weak-base py-3 text-11-regular text-text-weak hover:border-border-focus hover:text-text-base" onClick={() => void addCell()}>+ Add code cell</button>
+              </Match>
+            </Switch>
           </div>
         </section>
         <DataPanel

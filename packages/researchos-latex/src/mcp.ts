@@ -16,7 +16,9 @@ export function createLatexMcpServer(projectRoot: string, env: Record<string, st
       main_file: z.string().describe("Main .tex file, relative to the project root"),
     },
   }, ({ main_file }) =>
-    compile({ projectRoot: root, mainFile: main_file, env }).then(json),
+    compile({ projectRoot: root, mainFile: main_file, env }).then((result) =>
+      json(result, { panel: "latex", resource: main_file, mode: "auto" }),
+    ),
   )
 
   server.registerTool("synctex", {
@@ -40,7 +42,7 @@ export function createLatexMcpServer(projectRoot: string, env: Record<string, st
     ...(args.page !== undefined ? { page: args.page } : {}),
     ...(args.x !== undefined ? { x: args.x } : {}),
     ...(args.y !== undefined ? { y: args.y } : {}),
-  })))
+  }), { panel: "latex", resource: args.main_file ?? args.file, mode: "badge" }))
 
   server.registerTool("format_check", {
     description: "Check a LaTeX project for citation/reference integrity, brace balance, figure caption/label, and template compliance",
@@ -48,13 +50,17 @@ export function createLatexMcpServer(projectRoot: string, env: Record<string, st
       main_file: z.string(),
       template: z.enum(["ieee", "acm"]).optional(),
     },
-  }, ({ main_file, template }) => json(formatCheck({ projectRoot: root, mainFile: main_file, template })))
+  }, ({ main_file, template }) => json(formatCheck({ projectRoot: root, mainFile: main_file, template }), { panel: "latex", resource: main_file, mode: "auto" }))
 
   return { server }
 }
 
-function json(value: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(value) }] }
+function json(value: unknown, ui?: { panel: string; resource?: string; mode: "auto" | "confirm" | "badge" }) {
+  const metadata = ui ? { "researchos.ui": ui } : undefined
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(value) }],
+    ...(metadata ? { metadata } : {}),
+  }
 }
 
 if (import.meta.main) {

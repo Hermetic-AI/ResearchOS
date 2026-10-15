@@ -40,7 +40,7 @@ Questo avvia sia un server sia un client
 | Opzione    | Tipo          | Descrizione                    | Predefinito |
 | ---------- | ------------- | ------------------------------ | ----------- |
 | `hostname` | `string`      | Hostname del server            | `127.0.0.1` |
-| `port`     | `number`      | Porta del server               | `4096`      |
+| `port`     | `number`      | Porta del server               | `14096`      |
 | `signal`   | `AbortSignal` | Segnale di abort per annullare | `undefined` |
 | `timeout`  | `number`      | Timeout in ms per avvio server | `5000`      |
 | `config`   | `Config`      | Oggetto di configurazione      | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 4096,
+  port: 14096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ Se hai gia un'istanza di opencode in esecuzione, puoi creare un client per colle
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:4096",
+  baseUrl: "http://localhost:14096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | Opzione         | Tipo       | Descrizione                         | Predefinito             |
 | --------------- | ---------- | ----------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | URL del server                      | `http://localhost:4096` |
+| `baseUrl`       | `string`   | URL del server                      | `http://localhost:14096` |
 | `fetch`         | `function` | Implementazione fetch custom        | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Metodo di parsing della risposta    | `auto`                  |
 | `responseStyle` | `string`   | Stile di ritorno: `data` o `fields` | `fields`                |

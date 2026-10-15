@@ -10,12 +10,12 @@ describe("ServerScope", () => {
 
   test("keeps configured loopback servers distinct from the canonical sidecar", () => {
     expect(
-      String(ServerScope.fromServerKey("http://localhost:4096" as Parameters<typeof ServerScope.fromServerKey>[0])),
-    ).toBe("http://localhost:4096")
+      String(ServerScope.fromServerKey("http://localhost:14096" as Parameters<typeof ServerScope.fromServerKey>[0])),
+    ).toBe("http://localhost:14096")
   })
 
   test("uses a stable local scope for an explicit canonical web server", () => {
-    const key = "http://localhost:4096" as Parameters<typeof ServerScope.fromServerKey>[0]
+    const key = "http://localhost:14096" as Parameters<typeof ServerScope.fromServerKey>[0]
     expect(String(ServerScope.fromServerKey(key, key))).toBe("local")
   })
 })

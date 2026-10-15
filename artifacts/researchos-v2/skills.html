@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 技能中心</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      paper: '#FAF8F3', card: '#FFFFFF',
+      ink: { DEFAULT: '#262521', soft: '#6B6A61', faint: '#9C9B90' },
+      line: '#E7E3D8',
+      accent: { DEFAULT: '#2F4B7C', soft: '#E8EDF5' },
+      seal: '#B3402F', moss: '#5A6E4A', amber: '#A67C2E'
+    },
+    fontFamily: {
+      serif: ['"Noto Serif SC"','"Source Han Serif SC"','"Songti SC"','SimSun','Georgia','serif'],
+      sans: ['"Noto Sans SC"','"PingFang SC"','"Microsoft YaHei"','system-ui','sans-serif'],
+      mono: ['"JetBrains Mono"','Consolas','monospace']
+    }
+  } }
+}
+</script>
+<style>
+  ::-webkit-scrollbar{width:8px;height:8px} ::-webkit-scrollbar-thumb{background:#E7E3D8;border-radius:4px}
+  .smallcaps{font-variant:all-small-caps;letter-spacing:.14em}
+  .hairline{border-color:#E7E3D8}
+</style>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<!-- ══════════ 左栏导航 ══════════ -->
+<aside class="w-[224px] shrink-0 bg-card border-r hairline flex flex-col">
+  <div class="px-5 h-16 flex items-center gap-2.5 border-b hairline">
+    <span class="font-serif text-[19px] tracking-wide">Research<span class="text-seal">OS</span></span>
+    <span class="ml-auto w-2 h-2 rounded-full bg-seal" title="本地运行"></span>
+  </div>
+  <nav class="flex-1 py-4 px-3 space-y-0.5 text-[13.5px]">
+    <div class="px-3 pb-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">研究场</div>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="index.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="2"/><circle cx="17" cy="5" r="1.6"/><circle cx="18" cy="15" r="2.2"/><circle cx="9" cy="17" r="1.5"/><path d="M8.7 8.3 16 14M8.5 6.2 15.5 5.4M17 13l.3-6M10.4 16.6 16 15.6"/></svg>文献星图</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="chat.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>对话</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="workbench.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="6" rx="1.5"/><rect x="13" y="14" width="8" height="6" rx="1.5"/></svg>课题组</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="reading.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6.5A2.5 2.5 0 0 0 4 19.5z"/><path d="M8 7h7M8 11h5"/></svg>边注阅读器</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="trace.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/><path d="M3.5 10h4M16.5 14h4"/></svg>研究溯源</a>
+    <div class="px-3 pt-4 pb-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">工作台</div>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="library.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6.5A2.5 2.5 0 0 0 4 19.5z"/></svg>文献库<span class="ml-auto text-[11px] text-ink-faint">128</span></a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="translate.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h7M7.5 5c0 4-2 7-4.5 8.5M5 9c1.5 2.5 4 4 6.5 4.5M13 20l4-9 4 9M14.6 16.5h4.8"/></svg>翻译</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="notebook.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>数据分析</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md bg-accent-soft text-accent font-serif" href="skills.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 2 2 5.5L20 6l-2.5 4.5L22 13l-5.5 1L15 19l-3-3.5L9 19l.5-5L4 13l4.5-2.5L6 6l6 1.5z"/></svg>技能中心<span class="ml-auto text-[11px] text-ink-faint">13</span></a>
+    <div class="px-3 pt-4 pb-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">系统</div>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="settings.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 2h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12"/></svg>设置</a>
+  </nav>
+  <div class="px-5 py-3 border-t hairline text-[11px] text-ink-faint font-serif">Vol. II · 重构原型 · 2026-10</div>
+</aside>
+
+<!-- ══════════ 主区 ══════════ -->
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div class="font-serif text-[16px]">技能中心</div>
+    <span class="text-[12px] text-ink-faint">SKILL.md 渐进披露 · 预置 11 · 社区 1 · 本地 1</span>
+    <div class="flex-1 max-w-sm relative ml-auto">
+      <input class="w-full h-9 rounded-md border hairline bg-paper pl-9 pr-3 text-[13px] outline-none focus:border-accent focus:bg-card" placeholder="搜索已装技能，或检索社区技能库…">
+      <svg class="w-4 h-4 absolute left-3 top-2.5 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </div>
+    <button class="h-9 px-4 rounded-md bg-accent text-white text-[13px] hover:opacity-90">⇧ 上传安装</button>
+    <button class="h-9 px-4 rounded-md border hairline text-[13px] hover:bg-paper">从社区安装</button>
+  </header>
+
+  <div class="flex-1 flex min-h-0">
+    <!-- 筛选 -->
+    <div class="w-[168px] shrink-0 bg-card border-r hairline p-4 text-[12.5px] space-y-5 overflow-y-auto">
+      <div>
+        <div class="text-ink-faint text-[10.5px] smallcaps font-semibold mb-1.5">来源</div>
+        <div class="space-y-0.5">
+          <div class="px-2 py-1 rounded bg-accent-soft text-accent border-l-2 border-accent">全部 <span class="float-right text-ink-faint">13</span></div>
+          <div class="px-2 py-1 rounded hover:bg-paper text-ink-soft">预置 <span class="float-right text-ink-faint">11</span></div>
+          <div class="px-2 py-1 rounded hover:bg-paper text-ink-soft">社区 <span class="float-right text-ink-faint">1</span></div>
+          <div class="px-2 py-1 rounded hover:bg-paper text-ink-soft">本地上传 <span class="float-right text-ink-faint">1</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="text-ink-faint text-[10.5px] smallcaps font-semibold mb-1.5">分类</div>
+        <div class="space-y-0.5 text-ink-soft">
+          <div class="px-2 py-1 hover:bg-paper rounded cursor-pointer">精读与文献</div>
+          <div class="px-2 py-1 hover:bg-paper rounded cursor-pointer">写作与引用</div>
+          <div class="px-2 py-1 hover:bg-paper rounded cursor-pointer">分析与复现</div>
+          <div class="px-2 py-1 hover:bg-paper rounded cursor-pointer">排版与图表</div>
+        </div>
+      </div>
+      <div>
+        <div class="text-ink-faint text-[10.5px] smallcaps font-semibold mb-1.5">状态</div>
+        <label class="flex items-center gap-2 py-1 text-ink-soft"><input type="checkbox" checked class="accent-[#2F4B7C]">仅看已启用 <span class="text-ink-faint">11</span></label>
+      </div>
+    </div>
+
+    <!-- 技能卡网格 -->
+    <div class="flex-1 min-w-0 overflow-y-auto p-5">
+      <div class="grid grid-cols-2 gap-3 text-[12.5px]">
+        <!-- 选中卡 -->
+        <div class="bg-card border-2 border-accent rounded-lg p-4">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">paper-reading</span>
+            <span class="text-[10.5px] px-1.5 py-px rounded-sm border hairline text-ink-faint">v1.3 · 预置</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">结构化精读流程：速览定位 → 方法拆解 → 实验核对 → 生成边注与阅读笔记。</p>
+          <div class="flex gap-1.5 mt-2.5 flex-wrap"><span class="text-[10.5px] px-1.5 py-0.5 rounded-sm bg-paper border hairline text-ink-faint">触发: /read-paper · @skill · agent 自选</span><span class="text-[10.5px] px-1.5 py-0.5 rounded-sm bg-paper border hairline text-ink-faint">依赖: literature.read</span></div>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">绑定 persona：文献研究员 · 主 agent ｜ 本月调用 34 次</div>
+        </div>
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">academic-polish</span>
+            <span class="text-[10.5px] px-1.5 py-px rounded-sm border hairline text-ink-faint">v2.0 · 预置</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">英文学术润色：术语一致性、逻辑连接词、期刊语域对照。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">绑定 persona：论文写作 ｜ 调用 51 次</div>
+        </div>
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">cite-assist</span><span class="text-[10.5px] px-1.5 py-px rounded-sm border hairline text-ink-faint">预置</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">为论断检索可引文献并生成 cite key，插入 BibTeX。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">绑定 persona：文献研究员 ｜ 调用 22 次</div>
+        </div>
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">graph-rag</span><span class="text-[10.5px] px-1.5 py-px rounded-sm border hairline text-ink-faint">预置</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">基于引文图谱的多跳检索：库级问答自动标注引用来源。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">绑定 persona：图谱师 ｜ 调用 17 次</div>
+        </div>
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">reproduce-paper</span><span class="text-[10.5px] px-1.5 py-px rounded-sm border hairline text-ink-faint">预置</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">论文复现清单：环境、超参、算力估算与差异诊断。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">绑定 persona：复现医生 ｜ 调用 6 次</div>
+        </div>
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">scientific-plot</span><span class="text-[10.5px] px-1.5 py-px rounded-sm border hairline text-ink-faint">预置</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">期刊级图表规范配色与误差棒、显著性标注。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">绑定 persona：数据分析师 ｜ 调用 28 次</div>
+        </div>
+        <!-- 社区技能 -->
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">meta-review-simulator</span>
+            <span class="text-[10.5px] px-1.5 py-px rounded-sm bg-moss/10 text-moss">社区 skills.sh</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">模拟审稿人团（3 视角）生成 rebuttal 提纲与风险点。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">v0.4 · 校验通过 · 沙箱运行 <button class="text-seal hover:underline ml-1">卸载</button></div>
+        </div>
+        <!-- 本地上传 -->
+        <div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12.5px] font-semibold">cnki-export</span>
+            <span class="text-[10.5px] px-1.5 py-px rounded-sm bg-seal/10 text-seal">本地上传</span>
+            <div class="ml-auto w-8 h-4.5 rounded-full bg-accent relative"><div class="absolute right-0.5 top-0.5 w-3.5 h-3.5 rounded-full bg-white"></div></div>
+          </div>
+          <p class="text-ink-soft mt-2 leading-relaxed">导出文献库为 CNKI 引用格式（GB/T 7714）。</p>
+          <div class="text-[11px] text-ink-faint mt-2.5 border-t hairline pt-2">今天 11:20 · .opencode/skills/cnki-export/ · 对话双引擎可用</div>
+        </div>
+        <div class="col-span-2 border border-dashed hairline rounded-lg p-4 text-center text-ink-faint text-[12.5px] hover:border-accent cursor-pointer">另有 5 个预置技能（paper-structure · paper-titles · latex-troubleshoot · data-analysis · algo2e）· 向下滚动或切换筛选</div>
+      </div>
+
+      <div class="mt-5 text-[11px] text-ink-faint font-serif italic">Fig. 3 — 技能即知识包：系统提示仅常驻 name + description；正文在斜杠触发或 agent 判定相关时才载入（渐进披露），避免上下文膨胀。</div>
+    </div>
+
+    <!-- 右栏：SKILL.md 预览 -->
+    <aside class="w-[320px] shrink-0 bg-card border-l hairline flex flex-col overflow-y-auto">
+      <div class="h-12 px-4 border-b hairline flex items-center gap-2"><span class="font-serif text-[14px]">paper-reading</span><span class="ml-auto text-[11px] text-ink-faint">SKILL.md</span></div>
+      <pre class="p-4 text-[11px] font-mono leading-5 text-ink-soft whitespace-pre-wrap">---
+<span class="text-accent">name</span>: paper-reading
+<span class="text-accent">description</span>: 结构化精读论文并生成
+  可复用的阅读笔记与边注
+<span class="text-accent">tools</span>: [literature.read, graph.query]
+<span class="text-accent">triggers</span>: ["/read-paper"]
+---
+<span class="text-ink-faint"># 精读流程</span>
+1. 速览：标题/摘要/图表 → 判定相关性
+2. 方法拆解：输入→模型→损失 三段式
+3. 实验核对：表格数字与正文声明互查
+4. 产出：边注 + notes/literature/&lt;id&gt;.md</pre>
+      <div class="px-4 pb-4 space-y-2 text-[12px]">
+        <div class="border hairline rounded-md p-3">
+          <div class="font-medium mb-1">加载状态</div>
+          <div class="flex items-center gap-2 text-ink-soft"><span class="w-1.5 h-1.5 rounded-full bg-moss inline-block"></span>摘要常驻系统提示（42 tok）</div>
+          <div class="flex items-center gap-2 text-ink-soft"><span class="w-1.5 h-1.5 rounded-full bg-ink-faint inline-block"></span>正文未载入 · 触发时注入</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="flex-1 h-8 rounded-md border hairline hover:bg-paper">编辑</button>
+          <button class="flex-1 h-8 rounded-md border hairline hover:bg-paper">版本历史</button>
+          <button class="flex-1 h-8 rounded-md border hairline text-seal border-seal/30 hover:bg-seal/5">禁用</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- ══════════ 上传安装弹窗（静态展示打开态） ══════════ -->
+<div class="fixed inset-0 z-50 bg-ink/30 grid place-items-center">
+  <div class="w-[520px] bg-card rounded-xl border hairline shadow-2xl">
+    <div class="px-6 h-14 border-b hairline flex items-center justify-between">
+      <span class="font-serif text-[15px]">上传安装技能</span>
+      <button class="text-ink-faint hover:text-ink">✕</button>
+    </div>
+    <div class="p-6 space-y-4 text-[12.5px]">
+      <div class="border-2 border-dashed border-accent/40 rounded-lg p-8 text-center bg-accent-soft/40">
+        <div class="text-[14px] font-medium text-accent">拖入 SKILL.md / 技能文件夹 / .zip</div>
+        <div class="text-ink-faint mt-1">或点击选择 · 最大 2 MB · 将先安装到隔离暂存区</div>
+        <div class="mt-3 inline-block font-mono text-[11.5px] bg-card border hairline rounded px-3 py-1.5">cnki-export.zip ✓ 已选择</div>
+      </div>
+      <div class="border hairline rounded-lg">
+        <div class="px-4 py-2.5 border-b hairline font-medium">安装前校验</div>
+        <div class="px-4 py-3 space-y-1.5">
+          <div class="flex items-center gap-2 text-moss">✓ frontmatter 合法（name: cnki-export, description 存在）</div>
+          <div class="flex items-center gap-2 text-moss">✓ 声明的工具依赖均已注册（literature.export）</div>
+          <div class="flex items-center gap-2 text-moss">✓ 无 shell / 网络越权声明</div>
+          <div class="flex items-center gap-2 text-amber">⚠ 引用了未收录的格式模板 GB7714.txt —— 将随包附带</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-ink-soft">安装到：</span>
+        <label class="flex items-center gap-1.5"><input type="radio" name="scope" class="accent-[#2F4B7C]" checked>项目 <span class="font-mono text-[11px] text-ink-faint">.opencode/skills/</span></label>
+        <label class="flex items-center gap-1.5"><input type="radio" name="scope" class="accent-[#2F4B7C]">全局 <span class="font-mono text-[11px] text-ink-faint">~/.config/opencode/skills/</span></label>
+      </div>
+      <div class="border hairline rounded-md bg-paper px-3.5 py-2.5 text-[11.5px] text-ink-soft leading-relaxed">
+        <b class="text-ink">目录兼容：</b>沿用 opencode 引擎 skill 目录约定，过渡期新旧引擎读取同一目录、装一次两边可用；同时识别 <span class="font-mono text-[11px]">.claude/skills/</span> 与 <span class="font-mono text-[11px]">.agents/skills/</span> 中的既有技能。安装后在对话中经 <span class="font-mono text-[11px]">/</span> 或 <span class="font-mono text-[11px]">@skill</span> 引用，正文仅注入当回合。
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button class="h-9 px-4 rounded-md border hairline hover:bg-paper">取消</button>
+        <button class="h-9 px-5 rounded-md bg-accent text-white font-medium hover:opacity-90">校验通过 · 安装并启用</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

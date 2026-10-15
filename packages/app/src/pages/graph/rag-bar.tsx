@@ -1,8 +1,8 @@
 import { createSignal, For, Show } from "solid-js"
 import { Button } from "@opencode-ai/ui/button"
 import { Spinner } from "@opencode-ai/ui/spinner"
-import { Tag } from "@opencode-ai/ui/tag"
 import type { ServerResearchosGraphAskOutput } from "@opencode-ai/client"
+import { StatusBadge } from "@/components/researchos/module-state"
 import { nodeColors } from "./graph-colors"
 
 type AskResult = ServerResearchosGraphAskOutput["data"]
@@ -57,9 +57,14 @@ export function RagBar(props: {
                 {result().subgraph.nodes.length} nodes · {result().seeds.length} seeds
               </p>
               <Show when={result().degraded}>
-                <Tag>FTS keyword mode</Tag>
+                <StatusBadge status="degraded" label="FTS keyword mode" detail="Semantic recall is unavailable; results come from keyword search only." />
               </Show>
             </div>
+            <Show when={result().degraded}>
+              <p class="mt-2 text-11-regular text-text-weak">
+                Semantic recall is unavailable, so the graph answered with keyword (FTS) search only. Results may miss conceptually related nodes.
+              </p>
+            </Show>
             <Show when={result().sources.length > 0}>
               <div class="mt-2 flex flex-wrap gap-1.5">
                 <For each={result().sources}>
@@ -83,7 +88,13 @@ export function RagBar(props: {
             </Show>
             <Show when={result().contextPack}>
               {(pack) => (
-                <pre class="mt-3 max-h-40 overflow-y-auto whitespace-pre-wrap text-11-regular leading-5 text-text-weak">{pack()}</pre>
+                <div class="mt-3">
+                  <div class="mb-1 flex items-center justify-between gap-2">
+                    <p class="font-mono text-10-medium uppercase tracking-wider text-text-weaker">Context pack</p>
+                    <Button size="small" variant="ghost" onClick={() => void navigator.clipboard?.writeText(pack())}>Copy</Button>
+                  </div>
+                  <pre class="max-h-40 overflow-y-auto whitespace-pre-wrap text-11-regular leading-5 text-text-weak">{pack()}</pre>
+                </div>
               )}
             </Show>
             <p class="mt-2 text-11-regular text-text-weaker">

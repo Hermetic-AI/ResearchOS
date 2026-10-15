@@ -17,7 +17,9 @@ def plot_chart_create(template: str, data: dict, theme: str = "nature", spec: di
     data: exactly one of {"file": "project-relative.csv"} or {"inline": [{...}]}.
     spec: encoding/axes/legend overrides; encoding x/y is required except for heatmap.
     """
-    return chart_create(ROOT, template, data, theme, spec)
+    result = chart_create(ROOT, template, data, theme, spec)
+    result["researchos.ui"] = {"panel": "plot", "resource": result.get("chart_id"), "mode": "auto"}
+    return result
 
 
 @mcp.tool(name="plot_chart_tune")
@@ -27,7 +29,9 @@ def plot_chart_tune(chart_id: str, patch: dict) -> dict:
     If chart.py was manually edited after spec.json, code-priority mode reruns that script and
     leaves the spec untouched rather than overwriting the user's code.
     """
-    return chart_tune(ROOT, chart_id, patch)
+    result = chart_tune(ROOT, chart_id, patch)
+    result["researchos.ui"] = {"panel": "plot", "resource": chart_id, "mode": "auto"}
+    return result
 
 
 @mcp.tool(name="plot_annotate_significance")
@@ -38,7 +42,9 @@ def plot_annotate_significance(
 
     test: ttest | anova | mannwhitneyu. groups: [["control", "treated"], ...].
     """
-    return annotate_significance(ROOT, chart_id, test, groups or [])
+    result = annotate_significance(ROOT, chart_id, test, groups or [])
+    result["researchos.ui"] = {"panel": "plot", "resource": chart_id, "mode": "auto"}
+    return result
 
 
 def main() -> None:

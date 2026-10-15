@@ -4,12 +4,12 @@ import { directoryPickerKind } from "./directory-picker-policy"
 const local = {
   type: "sidecar",
   variant: "base",
-  http: { url: "http://localhost:4096" },
+  http: { url: "http://localhost:14096" },
 } as const
 const remote = {
   type: "ssh",
   host: "example.test",
-  http: { url: "http://localhost:4096" },
+  http: { url: "http://localhost:14096" },
 } as const
 
 describe("directoryPickerKind", () => {

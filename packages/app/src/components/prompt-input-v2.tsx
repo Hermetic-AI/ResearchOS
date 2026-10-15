@@ -373,10 +373,27 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     })),
   )
   // researchos:end
+  const RESEARCHOS_AGENT_NAMES = new Set([
+    "literature",
+    "graph",
+    "paper-writer",
+    "latex-editor",
+    "data-analyst",
+    "plot",
+    "reproduce-doctor",
+    "translator",
+  ])
   const context = createMemo<PromptInputV2Suggestion[]>(() => [
     ...references(),
     ...props.controls.agents.available
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
+      .toSorted((a, b) => {
+        const aResearch = RESEARCHOS_AGENT_NAMES.has(a.name)
+        const bResearch = RESEARCHOS_AGENT_NAMES.has(b.name)
+        if (aResearch && !bResearch) return -1
+        if (!aResearch && bResearch) return 1
+        return 0
+      })
       .map((agent) => ({
         id: `agent:${agent.name}`,
         kind: "agent" as const,

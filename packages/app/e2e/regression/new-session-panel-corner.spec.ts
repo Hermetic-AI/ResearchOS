@@ -4,7 +4,7 @@ import { expectAppVisible } from "../utils/waits"
 
 const draftID = "draft_new_session_panel_corner"
 const directory = "C:/OpenCode/NewSessionPanelCorner"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 
 test.use({
   viewport: { width: 935, height: 522 },

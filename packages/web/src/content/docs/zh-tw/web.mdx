@@ -36,7 +36,7 @@ opencode web
 預設情況下，OpenCode 會選擇一個可用連接埠。你也可以指定連接埠：
 
 ```bash
-opencode web --port 4096
+opencode web --port 14096
 ```
 
 ### 主機名稱
@@ -50,8 +50,8 @@ opencode web --hostname 0.0.0.0
 使用 `0.0.0.0` 時，OpenCode 會同時顯示本地位址和網路位址：
 
 ```
-  Local access:       http://localhost:4096
-  Network access:     http://192.168.1.100:4096
+  Local access:       http://localhost:14096
+  Network access:     http://192.168.1.100:14096
 ```
 
 ### mDNS 探索
@@ -114,10 +114,10 @@ OPENCODE_SERVER_PASSWORD=secret opencode web
 
 ```bash
 # 啟動 Web 伺服器
-opencode web --port 4096
+opencode web --port 14096
 
 # 在另一個終端機中連接 TUI
-opencode attach http://localhost:4096
+opencode attach http://localhost:14096
 ```
 
 這樣你就可以同時使用 Web 介面和終端機，共享相同的工作階段和狀態。
@@ -131,7 +131,7 @@ opencode attach http://localhost:4096
 ```json
 {
   "server": {
-    "port": 4096,
+    "port": 14096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

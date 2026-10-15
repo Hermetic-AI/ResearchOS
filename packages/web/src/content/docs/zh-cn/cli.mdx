@@ -70,10 +70,10 @@ opencode attach [url]
 
 ```bash
 # Start the backend server for web/mobile access
-opencode web --port 4096 --hostname 0.0.0.0
+opencode web --port 14096 --hostname 0.0.0.0
 
 # In another terminal, attach the TUI to the running backend
-opencode attach http://10.20.30.40:4096
+opencode attach http://10.20.30.40:14096
 ```
 
 #### 标志
@@ -334,7 +334,7 @@ opencode run Explain the use of context in Go
 opencode serve
 
 # In another terminal, run commands that attach to it
-opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
+opencode run --attach http://localhost:14096 "Explain async/await in JavaScript"
 ```
 
 #### 标志
@@ -351,7 +351,7 @@ opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
 | <nobr><code>{"--file"}</code></nobr>     | `-f` | 附加到消息的文件                                                    |
 | <nobr><code>{"--format"}</code></nobr>   |      | 格式：default（格式化输出）或 json（原始 JSON 事件）                |
 | <nobr><code>{"--title"}</code></nobr>    |      | 会话标题（未提供值时使用截断的提示词）                              |
-| <nobr><code>{"--attach"}</code></nobr>   |      | 连接到正在运行的 opencode 服务器（例如 http://localhost:4096）      |
+| <nobr><code>{"--attach"}</code></nobr>   |      | 连接到正在运行的 opencode 服务器（例如 http://localhost:14096）      |
 | <nobr><code>{"--password"}</code></nobr> | `-p` | 基本认证密码（默认使用 `OPENCODE_SERVER_PASSWORD`）                 |
 | <nobr><code>{"--username"}</code></nobr> | `-u` | 基本认证用户名（默认使用 `OPENCODE_SERVER_USERNAME` 或 `opencode`） |
 | <nobr><code>{"--dir"}</code></nobr>      |      | 运行目录，或附加时远程服务器上的路径                                |

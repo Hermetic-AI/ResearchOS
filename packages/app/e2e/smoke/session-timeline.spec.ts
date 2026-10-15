@@ -131,7 +131,7 @@ test.describe("smoke: session timeline", () => {
           JSON.stringify(
             [sourceID, targetID].map((sessionId) => ({
               type: "session",
-              server: "http://127.0.0.1:4096",
+              server: "http://127.0.0.1:14096",
               dirBase64,
               sessionId,
             })),
@@ -257,7 +257,7 @@ test.describe("smoke: session timeline", () => {
           JSON.stringify(
             [sourceID, targetID].map((sessionId) => ({
               type: "session",
-              server: "http://127.0.0.1:4096",
+              server: "http://127.0.0.1:14096",
               dirBase64,
               sessionId,
             })),

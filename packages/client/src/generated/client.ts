@@ -122,6 +122,8 @@ import type {
   ServerResearchosAssetsTestOutput,
   ServerResearchosAssetsFileWriteInput,
   ServerResearchosAssetsFileWriteOutput,
+  ServerResearchosAssetsNoteWriteInput,
+  ServerResearchosAssetsNoteWriteOutput,
   ServerResearchosAssetsPresetInstallInput,
   ServerResearchosAssetsPresetInstallOutput,
   ServerResearchosLiteratureSearchInput,
@@ -138,14 +140,22 @@ import type {
   ServerResearchosLiteratureCitationsOutput,
   ServerResearchosLiteratureSimilarInput,
   ServerResearchosLiteratureSimilarOutput,
+  ServerResearchosLiteratureReadInput,
+  ServerResearchosLiteratureReadOutput,
   ServerResearchosLiteratureUpdateInput,
   ServerResearchosLiteratureUpdateOutput,
+  ServerResearchosLiteratureSelectInput,
+  ServerResearchosLiteratureSelectOutput,
+  ServerResearchosGraphStatusInput,
+  ServerResearchosGraphStatusOutput,
   ServerResearchosGraphGetInput,
   ServerResearchosGraphGetOutput,
   ServerResearchosGraphNodeInput,
   ServerResearchosGraphNodeOutput,
   ServerResearchosGraphAskInput,
   ServerResearchosGraphAskOutput,
+  ServerResearchosGraphReindexInput,
+  ServerResearchosGraphReindexOutput,
   ServerResearchosGraphSaveLayoutInput,
   ServerResearchosGraphSaveLayoutOutput,
   ServerResearchosLatexFilesInput,
@@ -1183,6 +1193,19 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      noteWrite: (input: ServerResearchosAssetsNoteWriteInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosAssetsNoteWriteOutput>(
+          {
+            method: "POST",
+            path: `/api/researchos-assets/note/write`,
+            query: { location: input["location"] },
+            body: { path: input["path"], content: input["content"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       presetInstall: (input: ServerResearchosAssetsPresetInstallInput, requestOptions?: RequestOptions) =>
         request<ServerResearchosAssetsPresetInstallOutput>(
           {
@@ -1258,7 +1281,13 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/literature/import`,
             query: { location: input?.["location"] },
-            body: { path: input?.["path"], url: input?.["url"], zoteroPath: input?.["zoteroPath"] },
+            body: {
+              path: input?.["path"],
+              url: input?.["url"],
+              zoteroPath: input?.["zoteroPath"],
+              fileName: input?.["fileName"],
+              contentBase64: input?.["contentBase64"],
+            },
             successStatus: 200,
             declaredStatuses: [400, 500, 401],
             empty: false,
@@ -1289,6 +1318,19 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      read: (input: ServerResearchosLiteratureReadInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureReadOutput>(
+          {
+            method: "POST",
+            path: `/api/literature/papers/${encodeURIComponent(input.id)}/read`,
+            query: { location: input["location"] },
+            body: { query: input["query"], k: input["k"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
       update: (input: ServerResearchosLiteratureUpdateInput, requestOptions?: RequestOptions) =>
         request<ServerResearchosLiteratureUpdateOutput>(
           {
@@ -1302,8 +1344,33 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      select: (input?: ServerResearchosLiteratureSelectInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosLiteratureSelectOutput>(
+          {
+            method: "POST",
+            path: `/api/literature/selection`,
+            query: { location: input?.["location"] },
+            body: { paperId: input?.["paperId"], title: input?.["title"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     "server.researchos-graph": {
+      status: (input?: ServerResearchosGraphStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosGraphStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/graph/status`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       get: (input?: ServerResearchosGraphGetInput, requestOptions?: RequestOptions) =>
         request<ServerResearchosGraphGetOutput>(
           {
@@ -1337,6 +1404,18 @@ export function make(options: ClientOptions) {
             body: { question: input["question"], center_node: input["center_node"], depth: input["depth"] },
             successStatus: 200,
             declaredStatuses: [400, 500, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      reindex: (input?: ServerResearchosGraphReindexInput, requestOptions?: RequestOptions) =>
+        request<ServerResearchosGraphReindexOutput>(
+          {
+            method: "POST",
+            path: `/api/graph/reindex`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [500, 401, 400],
             empty: false,
           },
           requestOptions,

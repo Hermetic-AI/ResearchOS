@@ -15,6 +15,9 @@ import { useNotification } from "@/context/notification"
 import { usePermission } from "@/context/permission"
 import { messageAgentColor } from "@/utils/agent"
 import { sessionTitle } from "@/utils/session-title"
+// researchos:start
+import { lookupSessionScope } from "@/components/researchos/session-scope"
+// researchos:end
 import { sessionPermissionRequest } from "../session/composer/session-request-tree"
 import { childSessionOnPath, getProjectAvatarSource, hasProjectPermissions } from "./helpers"
 
@@ -105,6 +108,9 @@ const SessionRow = (props: {
   warmFocus: () => void
 }): JSX.Element => {
   const title = () => sessionTitle(props.session.title)
+  // researchos:start
+  const scope = createMemo(() => lookupSessionScope(props.session.directory, props.session.id))
+  // researchos:end
 
   return (
     <A
@@ -139,6 +145,11 @@ const SessionRow = (props: {
         </div>
       </Show>
       <span class="text-14-regular text-text-strong min-w-0 flex-1 truncate">{title()}</span>
+      {/* researchos:start */}
+      <Show when={scope()}>
+        {(value) => <span class="shrink-0 font-mono text-10-regular text-text-weaker">{value().module}</span>}
+      </Show>
+      {/* researchos:end */}
     </A>
   )
 }

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 数据分析</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+<aside id="shell"></aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div>
+      <div class="font-serif text-[16px]">数据分析 · Notebook</div>
+      <div class="text-[11px] text-ink-faint mt-0.5">粘贴 CSV → 列画像 → 配对 t 检验 → 期刊图表与 LaTeX 产物</div>
+    </div>
+    <div class="ml-auto flex items-center gap-3 text-[12px] text-ink-soft shrink-0">
+      <div class="flex items-center gap-4 border hairline rounded-md px-3.5 h-9 bg-paper">
+        <span><b class="text-ink font-serif" id="st-ds">0</b> 数据集</span><span class="text-line">|</span>
+        <span><b class="text-ink font-serif" id="st-res">0</b> 检验</span><span class="text-line">|</span>
+        <span><b class="text-seal font-serif" id="st-sig">0</b> 显著</span>
+      </div>
+      <button id="newData" class="h-9 px-4 rounded-md bg-accent text-white text-[13px] hover:opacity-90">＋ 导入数据</button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto min-h-0">
+    <div class="p-6 space-y-6 max-w-[1000px]">
+
+      <form id="importForm" class="hidden bg-card border border-accent/40 rounded-lg p-4 ring-1 ring-accent/10">
+        <div class="grid grid-cols-4 gap-3 items-end">
+          <label class="text-[11px] text-ink-faint">名称
+            <input id="fName" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent" placeholder="fid_vs_steps.csv"></label>
+          <label class="col-span-3 text-[11px] text-ink-faint">CSV 内容（首行表头；数字列自动识别）
+            <textarea id="fCsv" rows="6" class="mt-1 block w-full rounded-md border hairline bg-paper p-2 font-mono text-[11.5px] outline-none focus:border-accent" placeholder="seed,ddpm_fid,ddim_fid&#10;1,18.42,6.87"></textarea></label>
+        </div>
+        <div class="flex items-center gap-2 mt-3 text-[12px]">
+          <button type="submit" class="h-8 px-3.5 rounded-md bg-accent text-white hover:opacity-90">入库并画像</button>
+          <button type="button" id="sample" class="h-8 px-3 rounded-md border hairline hover:bg-paper text-ink-soft">填入示例数据</button>
+          <button type="button" id="cancelImport" class="h-8 px-3 rounded-md border hairline hover:bg-paper text-ink-soft">取消</button>
+          <span id="importError" class="text-seal"></span>
+          <span class="ml-auto text-[10.5px] text-ink-faint">示例为合成数值，仅演示流程</span>
+        </div>
+      </form>
+
+      <section>
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="smallcaps text-[12px] font-semibold text-ink-faint">数据集 · Datasets</h2>
+          <span class="text-[11px] text-ink-faint">原始 CSV 落盘，统计随时可复算</span>
+        </div>
+        <div id="datasets" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+        <div id="dsEmpty" class="hidden border border-dashed hairline rounded-lg p-8 text-center text-[13px] text-ink-faint font-serif">
+          还没有数据集。点右上「＋ 导入数据」粘贴一份 CSV，或先填入示例数据。
+        </div>
+      </section>
+
+      <section class="bg-card border hairline rounded-lg p-5">
+        <div class="flex items-baseline justify-between mb-3">
+          <h2 class="smallcaps text-[12px] font-semibold text-ink-faint">统计检验 · Stat Test</h2>
+          <span class="text-[11px] text-ink-faint">配对 t 检验 · 双侧 · 差值零方差自动拒绝</span>
+        </div>
+        <div class="grid grid-cols-5 gap-3 items-end">
+          <label class="text-[11px] text-ink-faint">数据集
+            <select id="tDataset" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent"></select></label>
+          <label class="text-[11px] text-ink-faint">x 列
+            <select id="tX" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent"></select></label>
+          <label class="text-[11px] text-ink-faint">y 列
+            <select id="tY" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent"></select></label>
+          <label class="text-[11px] text-ink-faint">α
+            <input id="tAlpha" type="number" step="0.01" min="0.001" max="0.5" value="0.05" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 font-mono text-[12px] outline-none focus:border-accent"></label>
+          <button id="runTest" class="h-8 px-3.5 rounded-md bg-accent text-white text-[12.5px] hover:opacity-90">运行检验</button>
+        </div>
+        <div id="testError" class="hidden mt-3 text-[12px] text-seal font-serif"></div>
+      </section>
+
+      <section id="outputs" class="space-y-5"></section>
+      <div id="outputsEmpty" class="border border-dashed hairline rounded-lg p-6 text-center text-[12.5px] text-ink-faint font-serif">
+        还没有检验产物。选好数据集与两列后点「运行检验」。
+      </div>
+    </div>
+  </div>
+</main>
+
+<aside class="w-[262px] shrink-0 bg-card border-l hairline flex flex-col">
+  <div class="h-12 px-4 border-b hairline flex items-center justify-between">
+    <span class="font-serif text-[14px]">实验产物</span>
+    <span class="text-[10.5px] text-ink-faint" id="productCount">—</span>
+  </div>
+  <div class="flex-1 overflow-y-auto p-4 text-[12px] space-y-2" id="products"></div>
+  <div class="p-4 border-t hairline text-[11px] text-ink-faint leading-relaxed font-serif italic">
+    图表默认套用期刊版式：衬线轴标签 · Fig. 编号自动续排 · 显著项以朱红标出。统计口径为双侧配对 t 检验，p 值由不完全 Beta 函数直接算出。
+  </div>
+</aside>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const api = (p, o) => fetch(p, o).then(r => r.json())
+const SAMPLE = `seed,steps,ddpm_fid,ddim_fid
+1,10,18.42,6.87
+2,10,17.95,6.71
+3,10,18.88,7.02
+4,10,18.21,6.95
+5,10,18.05,6.80`
+
+const detailCache = {}
+let datasets = []
+let results = []
+let hypotheses = []
+
+const num = (v, d = 3) => Number(v).toFixed(d)
+const pText = (p) => p < 0.001 ? "< 0.001" : p.toFixed(4)
+const when = (ts) => new Date(ts).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+
+async function detail(id) {
+  if (detailCache[id] === undefined) detailCache[id] = await api(`/api/notebook/datasets/${id}`)
+  return detailCache[id]
+}
+
+function profileTable(rows) {
+  return `<table class="w-full text-[11.5px] font-mono">
+    <thead><tr class="text-left text-ink-faint border-b hairline smallcaps font-semibold">
+      <th class="py-1">列</th><th>类型</th><th>n</th><th>缺失</th><th>均值 ± SD</th><th>min</th><th>max</th></tr></thead>
+    <tbody>${rows.map((c) => `<tr class="border-b hairline">
+      <td class="py-1 font-serif">${Shell.esc(c.name)}</td>
+      <td class="${c.kind === "number" ? "text-accent" : "text-ink-faint"}">${c.kind}</td>
+      <td>${c.n}</td><td>${c.missing}</td>
+      <td>${c.mean === null ? "—" : `${num(c.mean, 2)} ± ${c.sd === null ? "—" : num(c.sd, 2)}`}</td>
+      <td>${c.min ?? "—"}</td><td>${c.max ?? "—"}</td></tr>`).join("")}</tbody></table>`
+}
+
+function datasetCard(d) {
+  return `<div class="bg-card border hairline rounded-lg p-4">
+    <div class="flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-paper border hairline grid place-items-center text-[11px] font-serif shrink-0">表</span>
+      <div class="min-w-0">
+        <div class="font-serif text-[13.5px] leading-snug truncate">${Shell.esc(d.name)}</div>
+        <div class="text-[10.5px] text-ink-faint font-mono">${d.row_count} 行 × ${d.columns.length} 列 · ${when(d.created_at)}</div>
+      </div>
+      <button class="ml-auto shrink-0 h-7 px-2.5 rounded border hairline hover:bg-paper text-[11.5px] pick" data-id="${d.id}">选为检验数据</button>
+      <button class="shrink-0 h-7 px-2.5 rounded border hairline hover:bg-paper text-[11.5px] drop text-seal" data-id="${d.id}">删除</button>
+    </div>
+    <details class="mt-3" data-id="${d.id}">
+      <summary class="text-[11.5px] text-ink-faint cursor-pointer hover:text-accent">列画像与前 8 行</summary>
+      <div class="mt-2 profile">读取中…</div>
+    </details>
+  </div>`
+}
+
+// Journal-style paired plot: each pair index links the two series, seal dashed bar marks the first difference.
+function chart(pairs, r, fig) {
+  const w = 460, h = 236, padL = 54, padR = 14, padT = 18, padB = 42
+  const xs = pairs.map((_, i) => padL + (i * (w - padL - padR)) / Math.max(pairs.length - 1, 1))
+  const values = pairs.flatMap((p) => [p.x, p.y])
+  const lo = Math.min(...values), hi = Math.max(...values)
+  const span = hi - lo || 1
+  const y = (v) => h - padB - ((v - (lo - span * 0.08)) / (span * 1.16)) * (h - padB - padT)
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => lo - span * 0.08 + f * span * 1.16)
+  const line = (key, color) => `<polyline points="${pairs.map((p, i) => `${xs[i]},${y(p[key])}`).join(" ")}" fill="none" stroke="${color}" stroke-width="1.8"/>
+    ${pairs.map((p, i) => `<circle cx="${xs[i]}" cy="${y(p[key])}" r="3.2" fill="${color}"/>`).join("")}`
+  const legend = `<g font-size="11" font-family="Noto Serif SC, Georgia, serif">
+      <rect x="${w - 150}" y="${padT}" width="136" height="36" rx="4" fill="#FAF8F3" stroke="#E7E3D8"/>
+      <circle cx="${w - 136}" cy="${padT + 12}" r="3.2" fill="#2F4B7C"/><text x="${w - 126}" y="${padT + 16}" fill="#262521">${Shell.esc(r.x)}</text>
+      <circle cx="${w - 136}" cy="${padT + 27}" r="3.2" fill="#5A6E4A"/><text x="${w - 126}" y="${padT + 31}" fill="#262521">${Shell.esc(r.y)}</text></g>`
+  return `<svg viewBox="0 0 ${w} ${h}" class="w-full max-w-lg bg-card">
+    <line x1="${padL}" y1="${h - padB}" x2="${w - padR}" y2="${h - padB}" stroke="#E7E3D8"/>
+    <line x1="${padL}" y1="${h - padB}" x2="${padL}" y2="${padT}" stroke="#E7E3D8"/>
+    ${ticks.map((t) => `<line x1="${padL}" y1="${y(t)}" x2="${w - padR}" y2="${y(t)}" stroke="#F1EDE2"/>
+      <text x="${padL - 6}" y="${y(t) + 3}" font-size="9.5" fill="#9C9B90" text-anchor="end" font-family="JetBrains Mono, monospace">${t.toFixed(1)}</text>`).join("")}
+    ${line("x", "#2F4B7C")}${line("y", "#5A6E4A")}
+    <path d="M${xs[0]} ${y(pairs[0].x)} L${xs[0]} ${y(pairs[0].y)}" stroke="#B3402F" stroke-width="1" stroke-dasharray="2 3"/>
+    <text x="${padL + 10}" y="${padT + 10}" font-size="10.5" fill="#B3402F" font-family="Noto Serif SC, Georgia, serif">Δ̄ = ${num(r.mean_diff, 2)} · ${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`} · n = ${r.n}</text>
+    ${pairs.map((_, i) => `<text x="${xs[i]}" y="${h - padB + 14}" font-size="9.5" fill="#9C9B90" text-anchor="middle" font-family="JetBrains Mono, monospace">${i + 1}</text>`).join("")}
+    <text x="${(padL + w - padR) / 2}" y="${h - 12}" font-size="11" fill="#6B6A61" text-anchor="middle" font-family="Noto Serif SC, Georgia, serif">配对样本序号</text>
+    <text x="14" y="${(padT + h - padB) / 2}" font-size="11" fill="#6B6A61" text-anchor="middle" transform="rotate(-90 14 ${(padT + h - padB) / 2})" font-family="Noto Serif SC, Georgia, serif">观测值</text>
+    ${legend}
+  </svg><div class="text-[11px] text-ink-faint font-serif italic mt-1">Fig. ${fig} — ${Shell.esc(r.x)} 与 ${Shell.esc(r.y)} 的逐对观测；朱红虚线标出第一对的差值方向。</div>`
+}
+
+function statisticTable(r) {
+  const row = (label, value, cls) => `<tr class="border-b hairline"><td class="py-1.5 text-ink-faint font-serif">${label}</td><td class="font-mono ${cls ?? ""}">${value}</td></tr>`
+  return `<table class="w-full text-[12.5px]">
+    <tbody>
+      ${row(`均值 ${Shell.esc(r.x)}`, num(r.mean_x, 3))}
+      ${row(`均值 ${Shell.esc(r.y)}`, num(r.mean_y, 3))}
+      ${row("均值差 Δ̄", `${num(r.mean_diff, 3)}`, r.significant ? "text-seal" : "")}
+      ${row("差值 SD", num(r.sd_diff, 3))}
+      ${row("标准误 SE", num(r.se_diff, 4))}
+      ${row("t", num(r.t, 3), r.significant ? "text-seal" : "")}
+      ${row("自由度 df", r.df)}
+      ${row("p（双侧）", pText(r.p), r.significant ? "text-seal font-semibold" : "")}
+      ${row("结论", `<span class="font-serif">${r.significant ? `在 α=${r.alpha} 下显著，${r.direction === "x_y" ? r.x : r.y} 更大` : `在 α=${r.alpha} 下不显著`}</span>`)}
+    </tbody></table>`
+}
+
+function resultCard(entry, fig) {
+  const r = entry.result
+  return `<article class="bg-card border hairline rounded-lg overflow-hidden" id="res-${entry.id}">
+    <div class="px-4 py-2 flex items-center gap-2 text-[11px] text-ink-faint border-b hairline">
+      <span class="celltag text-accent border !border-accent/40">STAT</span>
+      <span class="font-mono">paired_t</span>
+      <span class="ml-auto font-serif">${Shell.esc(r.x)} vs ${Shell.esc(r.y)} · ${when(entry.created_at)}</span>
+    </div>
+    <div class="p-4 grid grid-cols-2 gap-5">
+      <div>
+        <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">检验结果 · Test</div>
+        ${statisticTable(r)}
+        <div class="mt-3 flex gap-2 text-[11.5px]">
+          <button class="h-7 px-2.5 rounded border hairline hover:bg-paper show-latex" data-id="${entry.id}">LaTeX 片段</button>
+          <button class="h-7 px-2.5 rounded border hairline hover:bg-paper link-evidence" data-id="${entry.id}">写入证据链</button>
+          <a href="/trace.html" class="h-7 px-2.5 rounded border hairline hover:bg-paper grid place-items-center">溯源</a>
+        </div>
+        <pre class="latex hidden mt-3 bg-paper border hairline rounded-md p-2.5 font-mono text-[10.5px] leading-relaxed whitespace-pre overflow-x-auto">${Shell.esc(entry.latex)}</pre>
+        <div class="evidence hidden mt-3 border-t hairline pt-3 space-y-2">
+          <div class="text-[10.5px] smallcaps font-semibold text-ink-faint">回流假设 · Evidence</div>
+          <div class="flex gap-2">
+            <select class="h-7 px-1.5 rounded border hairline bg-paper text-[11.5px] hypothesis flex-1 outline-none">
+              ${hypotheses.length === 0 ? `<option value="">（暂无假设）</option>` : hypotheses.map((h) => `<option value="${h.id}">${Shell.esc(h.statement.slice(0, 22))}</option>`).join("")}
+            </select>
+            <select class="h-7 px-1 rounded border hairline bg-paper text-[11.5px] kind outline-none">
+              <option value="support">支持</option><option value="refute">反驳</option></select>
+          </div>
+          <div class="flex gap-2">
+            <button class="h-7 px-2.5 rounded bg-seal text-white text-[11.5px] submit-evidence" data-id="${entry.id}">写入</button>
+            <span class="evidence-note text-[11px] text-moss self-center"></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">图表 · Figure</div>
+        <div class="chart" data-id="${entry.id}">读取数据中…</div>
+      </div>
+    </div>
+  </article>`
+}
+
+async function renderOutputs() {
+  $("outputsEmpty").classList.toggle("hidden", results.length > 0)
+  $("outputs").innerHTML = results.map((e, i) => resultCard(e, results.length - i)).join("")
+  for (const [i, entry] of results.entries()) {
+    const host = document.querySelector(`.chart[data-id="${entry.id}"]`)
+    if (!host) continue
+    const data = await detail(entry.dataset_id)
+    const pairs = data.rows
+      .map((row) => ({ x: row[entry.result.x], y: row[entry.result.y] }))
+      .filter((p) => typeof p.x === "number" && typeof p.y === "number")
+    host.innerHTML = pairs.length >= 2 ? chart(pairs, entry.result, results.length - i) : `<div class="text-[11.5px] text-ink-faint">有效配对不足 2 对，无法绘图。</div>`
+  }
+  $("st-res").textContent = String(results.length)
+  $("st-sig").textContent = String(results.filter((e) => e.significant).length)
+  $("productCount").textContent = `${results.length} 项 · ${datasets.length} 数据集`
+  $("products").innerHTML = results.length === 0
+    ? `<div class="text-[11.5px] text-ink-faint italic">产物会出现在这里：检验结果 + LaTeX 片段。</div>`
+    : results.map((e, i) => `<div class="rounded-md border hairline p-2.5 hover:border-accent/50 cursor-pointer jump" data-id="${e.id}">
+        <div class="font-serif">Fig. ${results.length - i} — ${Shell.esc(e.x)} vs ${Shell.esc(e.y)}</div>
+        <div class="text-ink-faint text-[11px] mt-0.5 font-mono">t=${num(e.result.t, 2)} · p=${pText(e.result.p)} ${e.significant ? '<span class="text-seal">显著</span>' : ""}</div>
+        <div class="text-ink-faint text-[10.5px] mt-0.5">paired_t · n=${e.pair_count} · ${when(e.created_at)}</div></div>`).join("") +
+      `<div class="rounded-md border hairline p-2.5">
+        <div class="font-serif">datasets · 原始 CSV</div>
+        <div class="text-ink-faint text-[11px] mt-0.5">${datasets.length} 份已落盘，可随时复算</div></div>`
+}
+
+async function loadDatasets() {
+  datasets = await api("/api/notebook/datasets")
+  $("dsEmpty").classList.toggle("hidden", datasets.length > 0)
+  $("datasets").innerHTML = datasets.map(datasetCard).join("")
+  $("st-ds").textContent = String(datasets.length)
+  Shell.render("notebook", { notebook: datasets.length ? String(datasets.length) : undefined })
+  const options = datasets.map((d) => `<option value="${d.id}">${Shell.esc(d.name)} · ${d.row_count} 行</option>`).join("")
+  $("tDataset").innerHTML = options || `<option value="">（先导入数据）</option>`
+  await fillColumns()
+}
+
+async function fillColumns() {
+  const id = $("tDataset").value
+  if (!id) { $("tX").innerHTML = $("tY").innerHTML = `<option value="">—</option>`; return }
+  const data = await detail(id)
+  const numeric = data.profile.filter((c) => c.kind === "number").map((c) => c.name)
+  const html = numeric.map((name) => `<option value="${Shell.esc(name)}">${Shell.esc(name)}</option>`).join("")
+  $("tX").innerHTML = html || `<option value="">（无数字列）</option>`
+  $("tY").innerHTML = html || `<option value="">（无数字列）</option>`
+  if (numeric.length > 1) $("tY").selectedIndex = 1
+}
+
+async function loadResults() {
+  results = await api("/api/notebook/results")
+  await renderOutputs()
+}
+
+$("newData").onclick = () => $("importForm").classList.toggle("hidden")
+$("cancelImport").onclick = () => $("importForm").classList.add("hidden")
+$("sample").onclick = () => { $("fCsv").value = SAMPLE; $("fName").value = "fid_vs_steps_demo.csv" }
+
+$("importForm").onsubmit = async (e) => {
+  e.preventDefault()
+  $("importError").textContent = ""
+  const csv = $("fCsv").value.trim()
+  if (csv === "") { $("importError").textContent = "请粘贴 CSV 内容"; return }
+  const response = await fetch("/api/notebook/datasets", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: $("fName").value.trim(), csv }),
+  })
+  const body = await response.json()
+  if (!response.ok) { $("importError").textContent = body.error ?? "导入失败"; return }
+  $("importForm").classList.add("hidden")
+  $("fCsv").value = ""
+  delete detailCache[body.dataset.id]
+  await loadDatasets()
+  $("tDataset").value = body.dataset.id
+  await fillColumns()
+}
+
+$("tDataset").onchange = fillColumns
+
+$("datasets").onclick = async (e) => {
+  const pick = e.target.closest(".pick")
+  if (pick) { $("tDataset").value = pick.dataset.id; await fillColumns(); document.querySelector("#tDataset").scrollIntoView({ block: "center" }); return }
+  const drop = e.target.closest(".drop")
+  if (!drop) return
+  await fetch(`/api/notebook/datasets/${drop.dataset.id}`, { method: "DELETE" })
+  delete detailCache[drop.dataset.id]
+  await loadDatasets()
+  await loadResults()
+}
+
+$("datasets").addEventListener("toggle", async (e) => {
+  const box = e.target.matches("details") ? e.target : null
+  if (!box || box.querySelector(".profile").textContent !== "读取中…") return
+  const data = await detail(box.dataset.id)
+  box.querySelector(".profile").innerHTML = `${profileTable(data.profile)}
+    <div class="mt-2 text-[10.5px] smallcaps font-semibold text-ink-faint mb-1">前 ${Math.min(data.rows.length, 8)} 行 · Head</div>
+    <div class="overflow-x-auto"><table class="w-full text-[11px] font-mono">
+      <thead><tr class="text-left text-ink-faint border-b hairline">${data.dataset.columns.map((c) => `<th class="py-1 pr-3">${Shell.esc(c)}</th>`).join("")}</tr></thead>
+      <tbody>${data.rows.slice(0, 8).map((row) => `<tr class="border-b hairline">${data.dataset.columns.map((c) => `<td class="py-1 pr-3">${Shell.esc(row[c] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table></div>`
+}, true)
+
+$("runTest").onclick = async () => {
+  $("testError").classList.add("hidden")
+  if (!$("tDataset").value || !$("tX").value) { $("testError").textContent = "请先导入数据集并选择数字列"; $("testError").classList.remove("hidden"); return }
+  const response = await fetch("/api/notebook/tests", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ dataset: $("tDataset").value, x: $("tX").value, y: $("tY").value, alpha: Number($("tAlpha").value) }),
+  })
+  const body = await response.json()
+  if (!response.ok) { $("testError").textContent = body.error ?? "检验失败"; $("testError").classList.remove("hidden"); return }
+  await loadResults()
+  document.querySelector("#outputs article")?.scrollIntoView({ block: "center" })
+}
+
+$("outputs").onclick = async (e) => {
+  const latex = e.target.closest(".show-latex")
+  if (latex) { document.querySelector(`#res-${latex.dataset.id} .latex`).classList.toggle("hidden"); return }
+  const link = e.target.closest(".link-evidence")
+  if (link) { document.querySelector(`#res-${link.dataset.id} .evidence`).classList.toggle("hidden"); return }
+  const submit = e.target.closest(".submit-evidence")
+  if (!submit) return
+  const card = document.querySelector(`#res-${submit.dataset.id}`)
+  const note = card.querySelector(".evidence-note")
+  const hypothesisId = card.querySelector(".hypothesis").value
+  if (!hypothesisId) { note.textContent = "请先在溯源页提出假设"; note.className = "evidence-note text-[11px] text-seal self-center"; return }
+  const entry = results.find((r) => r.id === submit.dataset.id)
+  const r = entry.result
+  const statement = card.querySelector(".hypothesis").selectedOptions[0]?.textContent ?? ""
+  const source = datasets.find((d) => d.id === entry.dataset_id)?.name ?? entry.dataset_id
+  const body = {
+    kind: card.querySelector(".kind").value,
+    note: `配对 t 检验 ${r.x} vs ${r.y}：Δ̄=${num(r.mean_diff, 3)}，t=${num(r.t, 3)}，${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`}（n=${r.n}，α=${r.alpha}，数据集 ${source}）${r.significant ? " 显著" : " 不显著"}`,
+  }
+  const response = await fetch(`/api/hypotheses/${hypothesisId}/evidence`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+  })
+  note.textContent = response.ok ? `已写入「${statement}」证据链 ✓` : "写入失败"
+  note.className = `evidence-note text-[11px] ${response.ok ? "text-moss" : "text-seal"} self-center`
+}
+
+$("products").onclick = (e) => {
+  const jump = e.target.closest(".jump")
+  if (jump) document.querySelector(`#res-${jump.dataset.id}`)?.scrollIntoView({ block: "center" })
+}
+
+async function boot() {
+  hypotheses = await api("/api/hypotheses")
+  await loadDatasets()
+  await loadResults()
+}
+boot()
+</script>
+</body>
+</html>

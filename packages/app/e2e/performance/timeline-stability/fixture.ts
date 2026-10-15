@@ -110,7 +110,7 @@ export async function setupTimeline(
     decodeOptions,
   )
   const transport = await installSseTransport<EventPayload>(page, {
-    server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
+    server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`,
     retry: input.eventRetry ?? 20,
   })
   await mockOpenCodeServer(page, {

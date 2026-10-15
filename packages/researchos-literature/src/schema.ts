@@ -72,12 +72,26 @@ CREATE TABLE IF NOT EXISTS external_paper (
   doi   TEXT
 );
 
+CREATE TABLE IF NOT EXISTS paper_chunk (
+  chunk_id TEXT PRIMARY KEY,
+  paper_id TEXT NOT NULL REFERENCES paper(id) ON DELETE CASCADE,
+  section  TEXT,
+  seq      INTEGER NOT NULL,
+  text     TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_paper_year ON paper(year);
 CREATE INDEX IF NOT EXISTS idx_paper_venue ON paper(venue);
 CREATE INDEX IF NOT EXISTS idx_edge_to ON citation_edge(to_id);
+CREATE INDEX IF NOT EXISTS idx_chunk_paper ON paper_chunk(paper_id);
 
 CREATE VIRTUAL TABLE IF NOT EXISTS paper_embedding USING vec0(
   paper_id TEXT PRIMARY KEY,
+  embedding float[384]
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS paper_chunk_embedding USING vec0(
+  chunk_id TEXT PRIMARY KEY,
   embedding float[384]
 );
 `

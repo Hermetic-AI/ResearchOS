@@ -26,6 +26,11 @@ const RecommendInput = z.object({
   paperId: z.string().min(1),
   limit: z.number().int().min(1).max(50).default(10),
 })
+const ReadInput = z.object({
+  paperId: z.string().min(1),
+  query: z.string().min(1),
+  k: z.number().int().min(1).max(50).default(6),
+})
 
 const command = process.argv[2]
 const input: unknown = JSON.parse(await Bun.stdin.text())
@@ -55,6 +60,9 @@ try {
   } else if (command === "recommend") {
     const payload = RecommendInput.parse(input)
     console.log(JSON.stringify(await library.recommendSimilar(payload.paperId, payload.limit)))
+  } else if (command === "read") {
+    const payload = ReadInput.parse(input)
+    console.log(JSON.stringify(await library.read(payload.paperId, payload.query, payload.k)))
   } else {
     throw new Error(`Unknown literature command: ${command ?? ""}`)
   }

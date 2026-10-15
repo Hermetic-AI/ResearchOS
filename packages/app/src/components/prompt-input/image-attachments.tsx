@@ -1,4 +1,4 @@
-import { Component, For, Show } from "solid-js"
+import { Component, For, Show, createSignal } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
@@ -21,6 +21,8 @@ type PromptImageAttachmentsProps = {
   commentActive?: (item: PromptCommentItem) => boolean
   onOpenComment?: (item: PromptCommentItem) => void
   onRemoveComment?: (item: PromptCommentItem) => void
+  onImport?: (attachment: ImageAttachmentPart) => void | Promise<void>
+  importLabel?: string
 }
 
 const fallbackClass = "size-16 rounded-md bg-surface-base flex items-center justify-center border border-border-base"
@@ -34,9 +36,30 @@ const removeClass =
   "absolute -top-1.5 -right-1.5 size-5 rounded-full bg-surface-raised-stronger-non-alpha border border-border-base flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface-raised-base-hover"
 const removeClassV2 =
   "absolute -top-1 -right-1 size-4 rounded-full bg-v2-icon-icon-muted outline-solid outline-1 outline-v2-icon-icon-contrast flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+const importClass =
+  "absolute -top-1.5 -left-1.5 size-5 rounded-full bg-surface-raised-stronger-non-alpha border border-border-base flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface-raised-base-hover disabled:opacity-50"
+const importClassV2 =
+  "absolute -top-1 -left-1 size-4 rounded-full bg-v2-icon-icon-muted outline-solid outline-1 outline-v2-icon-icon-contrast flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
 const nameClass = "absolute bottom-0 left-0 right-0 px-1 py-0.5 bg-black/50 rounded-b-md"
 
 export const PromptImageAttachments: Component<PromptImageAttachmentsProps> = (props) => {
+  const [importing, setImporting] = createSignal<ReadonlySet<string>>(new Set())
+
+  const importAttachment = async (attachment: ImageAttachmentPart) => {
+    if (!props.onImport) return
+    if (importing().has(attachment.id)) return
+    setImporting((ids) => new Set(ids).add(attachment.id))
+    try {
+      await props.onImport(attachment)
+    } finally {
+      setImporting((ids) => {
+        const next = new Set(ids)
+        next.delete(attachment.id)
+        return next
+      })
+    }
+  }
+
   return (
     <Show when={props.attachments.length > 0 || (props.newLayoutDesigns && (props.comments?.length ?? 0) > 0)}>
       <div data-slot="prompt-attachments" classList={{ relative: props.newLayoutDesigns }}>
@@ -124,6 +147,25 @@ export const PromptImageAttachments: Component<PromptImageAttachmentsProps> = (p
                   </Show>
                 </button>
               )
+              const importButton = () => (
+                <Show when={attachment.mime === "application/pdf" && props.onImport && props.importLabel}>
+                  <button
+                    type="button"
+                    onClick={() => importAttachment(attachment)}
+                    disabled={importing().has(attachment.id)}
+                    class={props.newLayoutDesigns ? importClassV2 : importClass}
+                    aria-label={props.importLabel}
+                    title={props.importLabel}
+                  >
+                    <Show
+                      when={props.newLayoutDesigns}
+                      fallback={<Icon name="archive" class="size-3 text-text-weak" />}
+                    >
+                      <IconV2 name="archive" class="text-v2-icon-icon-contrast" />
+                    </Show>
+                  </button>
+                </Show>
+              )
               // v2 keeps the remove button outside the tooltip trigger so hovering it dismisses the tooltip
               return (
                 <Show
@@ -133,6 +175,7 @@ export const PromptImageAttachments: Component<PromptImageAttachmentsProps> = (p
                       <div class="relative group">
                         {media()}
                         {name()}
+                        {importButton()}
                         {remove()}
                       </div>
                     </Tooltip>
@@ -145,6 +188,7 @@ export const PromptImageAttachments: Component<PromptImageAttachmentsProps> = (p
                         <div class={imageHairlineClassV2} />
                       </Show>
                     </TooltipV2>
+                    {importButton()}
                     {remove()}
                   </div>
                 </Show>

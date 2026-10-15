@@ -1,4 +1,3 @@
-import { createMemo } from "solid-js"
 import { useNavigate } from "@solidjs/router"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
@@ -6,22 +5,14 @@ import { Icon } from "@opencode-ai/ui/icon"
 import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
 import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
-import { useLayout } from "@/context/layout"
-import { useServerSync } from "@/context/server-sync"
-import { researchosModules } from "./researchos-rail"
+import { researchosModules, useResearchosDirectory } from "./researchos-rail"
 
 // 新布局（/server/:serverKey/session/:id）没有 dir 路由参数，
-// 目录从当前会话的 Session 记录解析；researchos 路由仍挂在 legacy DirectoryLayout 下
+// 目录从当前会话的 Session 记录解析；主页则回落到当前选中的项目；
+// researchos 路由仍挂在 legacy DirectoryLayout 下
 export function ResearchosModulesMenu() {
-  const layout = useLayout()
-  const sync = useServerSync()
   const navigate = useNavigate()
-  const directory = createMemo(() => {
-    const route = layout.route()
-    if (route.type === "dir-new-sesssion") return route.dir
-    if (route.type !== "session") return undefined
-    return sync().session.get(route.sessionId)?.directory
-  })
+  const directory = useResearchosDirectory()
   const open = (route: string) => {
     const dir = directory()
     if (!dir) return
@@ -50,6 +41,7 @@ export function ResearchosModulesMenu() {
               <DropdownMenu.Item onSelect={() => open(module.route)}>
                 <Icon name={module.icon} size="small" />
                 <DropdownMenu.ItemLabel>{module.label}</DropdownMenu.ItemLabel>
+                <DropdownMenu.ItemDescription>{module.description}</DropdownMenu.ItemDescription>
               </DropdownMenu.Item>
             ))}
           </DropdownMenu.Group>

@@ -5,7 +5,7 @@ import { nextTabAfterClose, pushClosedTab, removeClosedTabs, takeClosedTab, type
 import type { SessionTab, Tab } from "./tabs"
 import type { ServerConnection } from "./server"
 
-const server = "local\nhttp://localhost:4096" as ServerConnection.Key
+const server = "local\nhttp://localhost:14096" as ServerConnection.Key
 
 function sessionTab(sessionId: string): SessionTab {
   return { type: "session", server, sessionId }

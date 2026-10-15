@@ -10,7 +10,7 @@ const sessionB = "ses_terminal_tab_b"
 const titleA = "Alpha session"
 const titleB = "Beta session"
 const ptyID = "pty_tab_switch"
-const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "14096"}`
 // Marks the terminal DOM node so a remount (fresh node) is detectable.
 const PROBE = "original"
 
