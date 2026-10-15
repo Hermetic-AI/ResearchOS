@@ -1,9 +1,9 @@
-export * as ResearchOSContext from "./researchos-context"
+export * as ResearchOSContext from "./researchos-context.js"
 
 import { Effect, Layer, Schema } from "effect"
 import { join } from "path"
 import { FSUtil } from "./fs-util"
-import { Location } from "./location"
+import { Location } from "./location.js"
 import { SystemContext } from "./system-context/index"
 import { SystemContextRegistry } from "./system-context/registry"
 import { makeLocationNode } from "./effect/app-node"

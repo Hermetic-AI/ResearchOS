@@ -1,8 +1,8 @@
 import { Schema } from "effect"
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
+import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api"
 import { Location } from "@opencode/schema/location"
-import { InvalidRequestError, UnknownError } from "../errors"
-import { LocationQuery, locationQueryOpenApi } from "./location"
+import { InvalidRequestError, UnknownError } from "../errors.js"
+import { LocationQuery, locationQueryOpenApi } from "./location.js"
 
 const SuggestionKind = Schema.Literals(["title", "structure", "rewrite", "algorithm", "table", "md", "cite"])
 const SuggestionStatus = Schema.Literals(["pending", "accepted", "rejected", "partial"])

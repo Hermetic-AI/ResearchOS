@@ -31,6 +31,15 @@ import { VcsHandler } from "./handlers/vcs"
 import { EventFeed } from "./event-feed"
 import { MigrationHandler } from "./handlers/migration"
 import { ConfigHandler } from "./handlers/config"
+import { ResearchosAssetsHandler } from "./handlers/researchos-assets"
+import { ResearchosLiteratureHandler } from "./handlers/researchos-literature"
+import { ResearchosGraphHandler } from "./handlers/researchos-graph"
+import { ResearchosLatexHandler } from "./handlers/researchos-latex"
+import { ResearchosWritingHandler } from "./handlers/researchos-writing"
+import { ResearchosDataHandler } from "./handlers/researchos-data"
+import { ResearchosPlotHandler } from "./handlers/researchos-plot"
+import { ResearchosReproduceHandler } from "./handlers/researchos-reproduce"
+import { ResearchosTranslateHandler } from "./handlers/researchos-translate"
 
 export const handlers = Layer.mergeAll(
   ServerHandler,
@@ -64,4 +73,13 @@ export const handlers = Layer.mergeAll(
   WorktreeHandler,
   VcsHandler,
   ConfigHandler,
+  ResearchosAssetsHandler,
+  ResearchosLiteratureHandler,
+  ResearchosGraphHandler,
+  ResearchosLatexHandler,
+  ResearchosWritingHandler,
+  ResearchosDataHandler,
+  ResearchosPlotHandler,
+  ResearchosReproduceHandler,
+  ResearchosTranslateHandler,
 )

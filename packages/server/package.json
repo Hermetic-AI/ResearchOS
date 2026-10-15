@@ -32,6 +32,15 @@
     "@opencode/schema": "workspace:*",
     "@opencode/simulation": "workspace:*",
     "@opencode/util": "workspace:*",
+    "@researchos/api-hub": "workspace:*",
+    "@researchos/data": "workspace:*",
+    "@researchos/graph": "workspace:*",
+    "@researchos/latex": "workspace:*",
+    "@researchos/literature": "workspace:*",
+    "@researchos/plot-core": "workspace:*",
+    "@researchos/reproduce": "workspace:*",
+    "@researchos/translate": "workspace:*",
+    "@researchos/writing": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -34,6 +34,15 @@ import { WorktreeGroup } from "./groups/worktree.js"
 import { VcsGroup } from "./groups/vcs.js"
 import { MigrationGroup } from "./groups/migration.js"
 import { ConfigGroup } from "./groups/config.js"
+import { ResearchosAssetsGroup } from "./groups/researchos-assets.js"
+import { ResearchosLiteratureGroup } from "./groups/researchos-literature.js"
+import { ResearchosGraphGroup } from "./groups/researchos-graph.js"
+import { ResearchosLatexGroup } from "./groups/researchos-latex.js"
+import { ResearchosWritingGroup } from "./groups/researchos-writing.js"
+import { ResearchosDataGroup } from "./groups/researchos-data.js"
+import { ResearchosPlotGroup } from "./groups/researchos-plot.js"
+import { ResearchosReproduceGroup } from "./groups/researchos-reproduce.js"
+import { ResearchosTranslateGroup } from "./groups/researchos-translate.js"
 
 type LocationGroups<LocationId extends HttpApiMiddleware.AnyId> =
   | HttpApiGroup.AddMiddleware<typeof AgentGroup, LocationId>
@@ -52,6 +61,15 @@ type LocationGroups<LocationId extends HttpApiMiddleware.AnyId> =
   | HttpApiGroup.AddMiddleware<typeof ReferenceGroup, LocationId>
   | HttpApiGroup.AddMiddleware<typeof VcsGroup, LocationId>
   | HttpApiGroup.AddMiddleware<typeof ConfigGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosAssetsGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosLiteratureGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosGraphGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosLatexGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosWritingGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosDataGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosPlotGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosReproduceGroup, LocationId>
+  | HttpApiGroup.AddMiddleware<typeof ResearchosTranslateGroup, LocationId>
 
 type PtyGroups<LocationId extends HttpApiMiddleware.AnyId, LocationService> = ReturnType<
   typeof makePtyGroup<LocationId, LocationService>
@@ -190,6 +208,15 @@ const makeApiFromGroup = <
     .add(MigrationGroup)
     .add(WebSearchGroup.middleware(locationMiddleware))
     .add(ConfigGroup.middleware(locationMiddleware))
+    .add(ResearchosAssetsGroup.middleware(locationMiddleware))
+    .add(ResearchosLiteratureGroup.middleware(locationMiddleware))
+    .add(ResearchosGraphGroup.middleware(locationMiddleware))
+    .add(ResearchosLatexGroup.middleware(locationMiddleware))
+    .add(ResearchosWritingGroup.middleware(locationMiddleware))
+    .add(ResearchosDataGroup.middleware(locationMiddleware))
+    .add(ResearchosPlotGroup.middleware(locationMiddleware))
+    .add(ResearchosReproduceGroup.middleware(locationMiddleware))
+    .add(ResearchosTranslateGroup.middleware(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
         title: "opencode HttpApi",

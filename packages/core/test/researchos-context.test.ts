@@ -10,9 +10,9 @@ import { ResearchOSContext } from "@opencode/core/researchos-context"
 import { AbsolutePath } from "@opencode/core/schema"
 import { SystemContext } from "@opencode/core/system-context"
 import { SystemContextRegistry } from "@opencode/core/system-context/registry"
-import { location } from "./fixture/location"
-import { tmpdir } from "./fixture/tmpdir"
-import { testEffect } from "./lib/effect"
+import { location } from "./fixture/location.js"
+import { tmpdir } from "./fixture/tmpdir.js"
+import { testEffect } from "./lib/effect.js"
 
 const it = testEffect(Layer.empty)
 

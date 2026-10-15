@@ -9,7 +9,7 @@ import {
   createAcademicHub,
 } from "@researchos/api-hub"
 import { Effect, FileSystem } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { HttpApiBuilder } from "effect/http-api"
 import { mkdir, rename, rm } from "fs/promises"
 import { applyEdits, modify, parse, type ParseError } from "jsonc-parser"
 import path from "path"

@@ -3,7 +3,7 @@ import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import { checkBoltBackend, citeKeyResolver, createEmbedder, embedGraphNodes, graphRag, loadGraphBackend, modelsDir, openRepository, openStore, parseFile, type Embedder, type GraphEdge, type GraphNode, type GraphRepository, type Store, type Subgraph } from "@researchos/graph"
 import { dbPath, LiteratureDB } from "@researchos/literature"
 import { Effect } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { HttpApiBuilder } from "effect/http-api"
 import { Api } from "../api"
 import { response } from "../location"
 
