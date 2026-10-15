@@ -20,6 +20,9 @@ const serverHost = process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"
 
 const serverPort = process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"
 
+// Windows runners point this at an installed Chrome when the pinned Playwright browser build is absent.
+const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH
+
 const command = built
   ? `bun run build && bun e2e/utils/serve.ts --host 127.0.0.1 --port ${port}`
   : `bun run dev -- --host 127.0.0.1 --port ${port} --strictPort`
@@ -62,9 +65,11 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     // CI retries failures, so the retry records the video; local runs have no retries.
-    video: process.env.CI ? "on-first-retry" : "retain-on-failure",
+    video:
+      process.env.PLAYWRIGHT_DISABLE_VIDEO === "1" ? "off" : process.env.CI ? "on-first-retry" : "retain-on-failure",
     // The PWA worker precaches the whole build in every test; e2e/service-worker covers it.
     serviceWorkers: "block",
+    ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
   // The touch-scroll project exists only for scheduling: in the chromium project, mobile-timeline-scroll
   // is one long serial group that ends up running alone on a single worker. Projects queue in

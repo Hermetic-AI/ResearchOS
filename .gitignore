@@ -36,4 +36,15 @@ RELEASE_REVIEW.md
 logs/
 *.bun-build
 tsconfig.tsbuildinfo
+
+# Python bridges in packages/researchos-mcp
+**/__pycache__/
+*.py[cod]
+
+# ResearchOS local state and generated diagnostics
+.researchos/
+**/.researchos/
+.sisyphus/sessions/
+docs/screens/
+**/.tmp-workspace-*/
 /artifacts/

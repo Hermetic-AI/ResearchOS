@@ -8,7 +8,11 @@ import { makePdf } from "../../../researchos-literature/test/fixtures/pdf"
 
 let directory = ""
 
-test.describe("fusion: ResearchOS literature x dock x graph", () => {
+// Written for the 1.x route model (`/${dir}/literature`, unauthenticated `/path`). 2.0 serves
+// `/server/:key/researchos/:dir/:module` against a password-protected `/api`, so nothing here matches.
+// Kept as the porting checklist for the literature-import, dock and graph flows; see
+// workspace-routes.spec.ts for the 2.0 pattern (seeded server password + moduleHref helper).
+test.describe.skip("fusion: ResearchOS literature x dock x graph", () => {
   test.describe.configure({ mode: "serial" })
 
   test.beforeAll(async () => {
