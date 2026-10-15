@@ -1,0 +1,18 @@
+{
+  "name": "@researchos/data",
+  "version": "0.1.0",
+  "description": "ResearchOS Data Analysis Center — artifact store, data profiling, experiment linking",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 技能中心</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<aside id="shell"></aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div class="font-serif text-[16px]">技能中心</div>
+    <span class="text-[12px] text-ink-faint" id="meta">SKILL.md 渐进披露</span>
+    <div class="flex-1 max-w-sm relative ml-auto">
+      <input id="search" class="w-full h-9 rounded-md border hairline bg-paper pl-9 pr-3 text-[13px] outline-none focus:border-accent focus:bg-card" placeholder="搜索已装技能…">
+      <svg class="w-4 h-4 absolute left-3 top-2.5 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </div>
+    <button id="open-install" class="h-9 px-4 rounded-md bg-accent text-white text-[13px] hover:opacity-90">⇧ 上传安装</button>
+  </header>
+
+  <div class="flex-1 min-h-0 overflow-y-auto p-5">
+    <div id="grid" class="grid grid-cols-2 gap-3 text-[12.5px]"></div>
+    <div class="mt-5 text-[11px] text-ink-faint font-serif italic">Fig. 3 — 技能即知识包：系统提示仅常驻 name + description；正文在 @/ 触发或 agent 判定相关时才载入本回合（渐进披露），避免上下文膨胀。</div>
+  </div>
+</main>
+
+<!-- 安装弹窗 -->
+<div id="modal" class="fixed inset-0 z-50 hidden bg-ink/30 grid place-items-center">
+  <div class="w-[560px] bg-card rounded-xl border hairline shadow-2xl">
+    <div class="px-6 h-14 border-b hairline flex items-center justify-between">
+      <span class="font-serif text-[15px]">上传安装技能</span>
+      <button id="close-install" class="text-ink-faint hover:text-ink">✕</button>
+    </div>
+    <form id="install-form" class="p-6 space-y-4 text-[12.5px]">
+      <div class="flex gap-3">
+        <input id="folder" class="flex-1 h-9 rounded border hairline bg-paper px-3 font-mono outline-none focus:border-accent" placeholder="folder 名（= skill name，如 cnki-export）">
+      </div>
+      <textarea id="markdown" rows="9" class="w-full rounded border hairline bg-paper p-3 font-mono text-[11.5px] outline-none focus:border-accent" placeholder="---&#10;name: cnki-export&#10;description: 导出文献库为 GB/T 7714 引用格式&#10;---&#10;# 用法&#10;…"></textarea>
+      <div id="install-msg" class="text-[12px]"></div>
+      <div class="border hairline rounded-md bg-paper px-3.5 py-2.5 text-[11.5px] text-ink-soft leading-relaxed">
+        <b class="text-ink">目录兼容：</b>安装到项目 <span class="font-mono">.opencode/skills/&lt;folder&gt;/SKILL.md</span>，沿用 opencode 引擎目录约定，过渡期新旧引擎读取同一目录。安装前校验 frontmatter 合法、name 与 folder 一致、description 存在，并拦截含 shell/网络/exec 越权声明的工具。
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="cancel-install" class="h-9 px-4 rounded-md border hairline hover:bg-paper">取消</button>
+        <button type="submit" class="h-9 px-5 rounded-md bg-accent text-white font-medium hover:opacity-90">校验并安装</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const SRC = { project: ["项目", "bg-accent-soft text-accent"], global: ["全局", "bg-moss/10 text-moss"] }
+let skills = [], query = ""
+
+function render() {
+  const box = $("grid")
+  const list = query ? skills.filter(s => (s.name + (s.description ?? "")).toLowerCase().includes(query.toLowerCase())) : skills
+  $("meta").textContent = `已载入 ${skills.length} 个技能 · 显示 ${list.length}`
+  box.innerHTML = ""
+  for (const s of list) {
+    const [sl, sc] = SRC[s.scope] ?? SRC.global
+    const card = document.createElement("div")
+    card.className = "bg-card border hairline rounded-lg p-4 hover:border-accent"
+    card.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="font-mono text-[12.5px] font-semibold">${Shell.esc(s.name)}</span>
+        <span class="text-[10.5px] px-1.5 py-px rounded-sm ${sc}">${sl}</span>
+      </div>
+      <p class="text-ink-soft mt-2 leading-relaxed">${Shell.esc(s.description ?? "（无描述）")}</p>
+      <div class="text-[10.5px] text-ink-faint mt-2.5 border-t hairline pt-2 font-mono truncate">${Shell.esc(s.location)}</div>
+      <div class="text-[11px] text-ink-faint mt-1">${Math.ceil((s.content?.length ?? 0) / 4)} tok · 摘要常驻，正文按需注入</div>`
+    box.appendChild(card)
+  }
+  if (list.length === 0) box.innerHTML = `<div class="col-span-2 text-ink-faint italic text-[13px]">无匹配技能。</div>`
+}
+
+async function load() {
+  Shell.render("skills", {})
+  skills = await fetch("/api/skills").then(r => r.json())
+  Shell.render("skills", { skills: String(skills.length) })
+  render()
+}
+
+$("search").addEventListener("input", (e) => { query = e.target.value; render() })
+
+const modal = $("modal")
+const show = (v) => modal.classList.toggle("hidden", !v)
+$("open-install").addEventListener("click", () => { show(true); $("install-msg").innerHTML = "" })
+$("close-install").addEventListener("click", () => show(false))
+$("cancel-install").addEventListener("click", () => show(false))
+
+$("install-form").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const folder = $("folder").value.trim()
+  const markdown = $("markdown").value
+  const msg = $("install-msg")
+  msg.innerHTML = `<span class="text-ink-faint">校验中…</span>`
+  const res = await fetch("/api/skills/install", { method: "POST", body: JSON.stringify({ folder, markdown }) }).then(r => r.json())
+  if (res.ok) {
+    msg.innerHTML = `<span class="text-moss">✓ 已安装到 ${Shell.esc(res.path)}</span>`
+    await load()
+    setTimeout(() => show(false), 800)
+  } else {
+    const problems = (res.problems ?? []).map(p => `<li>${Shell.esc(p.message ?? JSON.stringify(p))}</li>`).join("")
+    msg.innerHTML = `<div class="text-seal">✗ 校验未通过<ul class="list-disc pl-5 mt-1 space-y-0.5">${problems}</ul></div>`
+  }
+})
+
+load()
+</script>
+</body>
+</html>

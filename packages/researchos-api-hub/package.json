@@ -1,0 +1,22 @@
+{
+  "name": "@researchos/api-hub",
+  "version": "0.1.0",
+  "description": "ResearchOS API Hub — unified registry, rate limiting, SQLite caching, and retry for external academic APIs",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./adapters/*": "./src/adapters/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}

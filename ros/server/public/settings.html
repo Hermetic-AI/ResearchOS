@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 设置</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<aside id="shell"></aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div class="font-serif text-[16px]">设置</div>
+  </header>
+  <div class="flex-1 overflow-y-auto">
+    <div class="max-w-[640px] mx-auto px-6 py-8 space-y-5 text-[13px]" id="body">
+      <div class="text-ink-faint">读取运行状态中…</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const row = (k, v, extra) => `<div class="flex items-baseline gap-3 py-2 border-b hairline"><span class="text-ink-soft w-28 shrink-0">${k}</span><span class="font-mono text-[12.5px] ${extra || ""}">${v}</span></div>`
+
+async function load() {
+  Shell.render("settings")
+  const h = await fetch("/api/health").then(r => r.json()).catch(() => null)
+  if (!h) { $("body").innerHTML = `<div class="text-seal">无法读取 /api/health</div>`; return }
+  $("body").innerHTML = `
+    <div class="bg-card border hairline rounded-lg p-5">
+      <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-1">运行时 Runtime</div>
+      ${row("Provider", Shell.esc(h.provider))}
+      ${row("Model", Shell.esc(h.model), h.provider === "mock" ? "text-amber" : "text-moss")}
+      ${row("项目目录", Shell.esc(h.directory))}
+      ${row("数据库", Shell.esc(h.db ?? "ros.db"))}
+      ${row("已注册工具", `<span class="text-accent">${(h.tools ?? []).map(Shell.esc).join(" · ") || "—"}</span>`)}
+    </div>
+    <div class="bg-card border hairline rounded-lg p-5">
+      <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">技能目录 Skill roots</div>
+      <div class="text-ink-soft leading-relaxed text-[12.5px]">扫描 <span class="font-mono">.opencode/skills</span>、<span class="font-mono">.claude/skills</span>、<span class="font-mono">.agents/skills</span>、全局 <span class="font-mono">~/.config/opencode/skills</span> 与环境变量 <span class="font-mono">RESEARCHOS_SKILLS_DIR</span>。到<a href="/skills.html" class="text-accent hover:underline">技能中心</a>查看已载入技能与上传安装。</div>
+    </div>
+    <div class="bg-card border hairline rounded-lg p-5">
+      <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">密钥安全</div>
+      <div class="text-ink-soft leading-relaxed text-[12.5px]">配置文件位于用户主目录 <span class="font-mono">~/.researchos/researchos.config.json</span>（仓库外）。API Key 用 <span class="font-mono">\${ENV_VAR}</span> 占位注入，明文不落库、不进 git。</div>
+    </div>
+    <div class="bg-card border hairline rounded-lg p-5 opacity-70">
+      <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">在建 In progress</div>
+      <ul class="text-ink-soft space-y-1 list-disc pl-5 text-[12.5px]">
+        <li>可视化 provider/model 切换与 maxSteps 编辑（当前改配置文件后重启）</li>
+        <li>文献库已上线：papers/citations 表 + FTS5 关键词检索 + <span class="font-mono">literature_search</span> 工具 + 阅读页「粘贴全文分段 → ¶段落锚定批注」；GROBID PDF 自动解析、向量语义近邻（需 sqlite-vec）、graph-RAG 多跳问答在建</li>
+        <li>课题组与数据分析已上线：persona 派单跑在 core-agent 循环上；数据分析页为 CSV 入库 + 列画像 + 配对 t 检验（p 值由不完全 Beta 直接算）+ 期刊图表与 LaTeX，可回流假设证据链。受控 Python kernel 执行、独立样本/效应量、其余检验方法在建</li>
+        <li>学术翻译页的后端对照稿与术语表持久化在建</li>
+        <li>Electron 桌面外壳与本地密钥环（P4）</li>
+      </ul>
+    </div>`
+}
+load()
+</script>
+</body>
+</html>

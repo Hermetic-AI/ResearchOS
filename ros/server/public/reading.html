@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 边注阅读器</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<aside id="shell"></aside>
+
+<main class="flex-1 flex min-w-0">
+  <!-- 论文视图：有 ?paper=id 时展示元数据+摘要，否则为文献库选择器 -->
+  <section id="reader" class="flex-1 min-w-0 border-r hairline overflow-y-auto bg-paper"></section>
+
+  <!-- 右栏：边注列表 + 新增（真实数据，按 paper_ref 绑定） -->
+  <aside class="w-[340px] shrink-0 bg-card flex flex-col">
+    <div class="h-16 px-4 border-b hairline flex items-center justify-between gap-2">
+      <span class="font-serif text-[14px]">边注</span>
+      <input id="filter" class="w-40 h-8 rounded border hairline bg-paper px-2.5 text-[12px] font-mono outline-none focus:border-accent" placeholder="按文献键筛选 paper_ref">
+    </div>
+    <form id="add" class="p-4 border-b hairline space-y-2 text-[12.5px]">
+      <div class="flex gap-2">
+        <input id="paperRef" class="flex-1 min-w-0 h-8 rounded border hairline bg-paper px-2.5 font-mono outline-none focus:border-accent" placeholder="文献键 *">
+        <input id="page" class="w-14 h-8 rounded border hairline bg-paper px-2 text-[12px] outline-none focus:border-accent" placeholder="页">
+        <input id="para" class="w-14 h-8 rounded border hairline bg-paper px-2 text-[12px] outline-none focus:border-accent" placeholder="段">
+      </div>
+      <textarea id="note" rows="2" class="w-full rounded border hairline bg-paper p-2.5 outline-none focus:border-accent" placeholder="边注内容 *"></textarea>
+      <button class="w-full h-8 rounded-md bg-accent text-white text-[12.5px] hover:opacity-90">＋ 保存边注</button>
+    </form>
+    <div id="list" class="flex-1 overflow-y-auto p-4 space-y-3 text-[12.5px]"></div>
+  </aside>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const api = (p, o) => fetch(p, o).then(r => r.json())
+const SOURCE = { manual: "手动", arxiv: "arXiv", crossref: "Crossref", semantic_scholar: "S2", pubmed: "PubMed", zotero: "Zotero" }
+const paperId = new URLSearchParams(location.search).get("paper") || ""
+
+function paraCard(p, notes) {
+  return `
+    <div id="para-${p.seq}" class="group border hairline rounded-lg p-4 bg-card/50">
+      <div class="flex items-center gap-2 text-[10.5px] text-ink-faint mb-2">
+        <span class="font-mono">¶${p.seq}</span>${p.page != null ? `<span class="font-mono">p.${p.page}</span>` : ""}
+        ${notes.length > 0 ? `<span class="text-seal">${notes.length} 条批注</span>` : ""}
+        <button class="anchor-note ml-auto text-accent hover:underline" data-para="${p.seq}">＋批注</button>
+      </div>
+      <p class="text-[14px] leading-[1.95] font-serif whitespace-pre-wrap">${Shell.esc(p.text)}</p>
+      ${notes.map(a => `<div class="mt-3 border-l-2 border-l-seal bg-paper rounded-r-lg px-3 py-2 text-[12.5px]">
+        <div class="text-[10px] text-ink-faint mb-0.5">${new Date(a.created_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+        <div class="text-ink leading-relaxed">${Shell.esc(a.note)}</div>
+      </div>`).join("")}
+    </div>`
+}
+
+async function renderPaper(paper) {
+  const [paras, notes] = await Promise.all([
+    api(`/api/library/${encodeURIComponent(paper.id)}/paragraphs`),
+    api(`/api/annotations?paper=${encodeURIComponent(paper.id)}`),
+  ])
+  const byPara = {}
+  for (const a of notes) if (a.para != null) (byPara[a.para] ??= []).push(a)
+  const authors = (JSON.parse(paper.authors || "[]")).join(", ") || "作者未记录"
+  const el = $("reader")
+  el.innerHTML = `
+    <div class="max-w-[640px] mx-auto px-8 py-8">
+      <a href="/library.html" class="text-[12px] text-accent hover:underline">← 文献库</a>
+      <div class="mt-3 font-serif text-[19px] leading-snug">${Shell.esc(paper.title)}</div>
+      <div class="mt-2 text-[12.5px] text-ink-soft">${Shell.esc(authors)}</div>
+      <div class="mt-1.5 flex gap-1.5 flex-wrap text-[10.5px]">
+        ${[paper.year, paper.venue, SOURCE[paper.source] ?? paper.source, `被引 ${paper.citation_count}`, `id ${paper.id}`].filter(Boolean)
+          .map(t => `<span class="px-1.5 py-0.5 rounded-sm bg-card border hairline text-ink-faint">${Shell.esc(String(t))}</span>`).join("")}
+      </div>
+      ${paper.abstract ? `<div class="mt-6 border-t hairline pt-5">
+        <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">摘要 Abstract</div>
+        <p class="text-[14px] text-ink leading-[1.9] font-serif">${Shell.esc(paper.abstract)}</p>
+      </div>` : ""}
+      <div class="mt-6 border-t hairline pt-5">
+        <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-3">正文 Body · ${paras.length} 段</div>
+        <details ${paras.length === 0 ? "open" : ""} class="mb-4">
+          <summary class="text-[11.5px] text-ink-faint hover:text-accent cursor-pointer">粘贴全文分段导入（按空行分段，导入会替换现有正文）</summary>
+          <form id="paste" class="mt-2 space-y-2 text-[12.5px]">
+            <textarea id="pasteText" rows="7" class="w-full rounded border hairline bg-paper p-2.5 outline-none focus:border-accent font-mono text-[12px]" placeholder="粘贴论文正文，用空行分隔段落……"></textarea>
+            <button class="h-8 px-4 rounded-md bg-accent text-white text-[12.5px] hover:opacity-90">导入分段</button>
+          </form>
+        </details>
+        ${paras.length === 0 ? `<div class="text-[12.5px] text-ink-faint italic border hairline rounded-lg p-4 bg-card/60">尚无正文。PDF/GROBID 自动解析在建；粘贴全文分段后，边注可锚定到具体段落（¶）。</div>` :
+          `<div class="space-y-4">${paras.map(p => paraCard(p, byPara[p.seq] ?? [])).join("")}</div>`}
+      </div>
+    </div>`
+  for (const btn of el.querySelectorAll(".anchor-note"))
+    btn.addEventListener("click", () => {
+      $("para").value = btn.dataset.para
+      $("paperRef").value = paper.id
+      $("note").focus()
+      $("note").scrollIntoView({ block: "center" })
+    })
+  const form = $("paste")
+  if (form !== null)
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault()
+      const items = $("pasteText").value.split(/\n\s*\n/).map((t) => t.trim()).filter((t) => t !== "").map((t) => ({ text: t }))
+      if (items.length === 0) return
+      await api(`/api/library/${encodeURIComponent(paper.id)}/paragraphs`, { method: "POST", body: JSON.stringify({ paragraphs: items }) })
+      renderPaper(paper)
+    })
+}
+
+async function renderPicker() {
+  const papers = await api("/api/library")
+  const el = $("reader")
+  el.innerHTML = `
+    <div class="max-w-[640px] mx-auto px-8 py-8">
+      <div class="font-serif text-[16px]">边注阅读器</div>
+      <div class="mt-1 text-[11px] text-ink-faint smallcaps">从文献库选择一篇开始阅读</div>
+      <div class="mt-5 space-y-2 text-[13px]">
+        ${papers.length === 0 ? `<div class="text-ink-faint">文献库为空，先去<a href="/library.html" class="text-accent hover:underline">文献库</a>收录。</div>` :
+          papers.map(p => `<a href="/reading.html?paper=${p.id}" class="block border hairline rounded-lg p-3.5 hover:border-accent bg-card">
+            <div class="font-serif text-[13.5px]">${Shell.esc(p.title)}</div>
+            <div class="text-[11px] text-ink-faint mt-1">${(JSON.parse(p.authors || "[]")).slice(0, 3).join(", ") || "—"}${p.year ? " · " + p.year : ""} · 被引 ${p.citation_count}</div>
+          </a>`).join("")}
+      </div>
+    </div>`
+}
+
+async function loadAnnotations() {
+  const key = $("filter").value.trim()
+  const url = key ? `/api/annotations?paper=${encodeURIComponent(key)}` : "/api/annotations"
+  const items = await api(url)
+  const box = $("list")
+  box.innerHTML = ""
+  if (items.length === 0) { box.innerHTML = `<div class="text-ink-faint italic">暂无边注${key ? `（文献键「${Shell.esc(key)}」）` : ""}。</div>`; return }
+  const groups = {}
+  for (const a of items) (groups[a.paper_ref] ??= []).push(a)
+  for (const [ref, list] of Object.entries(groups)) {
+    const h = document.createElement("div")
+    h.className = "font-mono text-[11px] text-ink-faint smallcaps mt-1 flex items-center gap-2"
+    h.innerHTML = `${Shell.esc(ref)}${ref === paperId ? ' <span class="text-accent">· 当前</span>' : ""}`
+    box.appendChild(h)
+    for (const a of list) {
+      const card = document.createElement("div")
+      card.className = "border hairline rounded-lg p-3 border-l-2 border-l-seal"
+      card.innerHTML = `
+        <div class="flex items-center gap-2 text-[10.5px] text-ink-faint mb-1">
+          ${a.page != null ? `<span class="font-mono">p.${a.page}</span>` : ""}
+          ${a.para != null ? `<span class="font-mono">¶${a.para}</span>` : ""}
+          <span class="ml-auto">${new Date(a.created_at).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+        </div>
+        ${a.quote ? `<div class="text-ink-faint italic border-l-2 border-line pl-2 mb-1.5">“${Shell.esc(a.quote)}”</div>` : ""}
+        <div class="text-ink leading-relaxed">${Shell.esc(a.note)}</div>`
+      const del = document.createElement("button")
+      del.className = "mt-2 text-[11px] text-ink-faint hover:text-seal"
+      del.textContent = "删除"
+      del.addEventListener("click", async () => { await api(`/api/annotations/${a.id}`, { method: "DELETE" }); loadAnnotations() })
+      card.appendChild(del)
+      box.appendChild(card)
+    }
+  }
+}
+
+$("add").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const paperRef = $("paperRef").value.trim(), note = $("note").value.trim()
+  if (!paperRef || !note) return
+  const page = $("page").value.trim(), para = $("para").value.trim()
+  await api("/api/annotations", {
+    method: "POST",
+    body: JSON.stringify({ paperRef, note, page: page ? Number(page) : null, para: para ? Number(para) : null }),
+  })
+  $("note").value = ""; $("page").value = ""; $("para").value = ""
+  loadAnnotations()
+  if (paperId && paperRef === paperId) reloadPaper()
+})
+$("filter").addEventListener("input", loadAnnotations)
+
+let currentPaper = null
+function reloadPaper() { if (currentPaper) renderPaper(currentPaper) }
+
+async function boot() {
+  Shell.render("reading")
+  const el = $("reader")
+  if (paperId) {
+    $("paperRef").value = paperId
+    $("filter").value = paperId
+    const paper = await fetch(`/api/library/${encodeURIComponent(paperId)}`).then(r => r.ok ? r.json() : null).catch(() => null)
+    if (paper === null) { el.innerHTML = `<div class="text-seal text-[13px] p-8">未找到该文献，或已被删除。<a href="/library.html" class="underline">回文献库</a></div>`; loadAnnotations(); return }
+    currentPaper = paper
+    renderPaper(paper)
+  } else {
+    renderPicker()
+  }
+  loadAnnotations()
+}
+boot()
+</script>
+</body>
+</html>

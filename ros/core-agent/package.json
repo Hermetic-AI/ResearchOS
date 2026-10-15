@@ -1,0 +1,21 @@
+{
+  "name": "@researchos/core-agent",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@researchos/core-config": "workspace:*",
+    "@researchos/core-db": "workspace:*",
+    "@researchos/core-provider": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}

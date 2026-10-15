@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 文献库</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+<aside id="shell"></aside>
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div class="font-serif text-[16px]">文献库</div>
+    <span class="text-[12px] text-ink-faint" id="count">—</span>
+    <div class="flex-1 max-w-md relative ml-auto">
+      <input id="q" class="w-full h-9 rounded-md border hairline bg-paper pl-9 pr-3 text-[13px] outline-none focus:border-accent focus:bg-card" placeholder="检索标题 / 摘要 / 全文段落…（FTS5 关键词）">
+      <svg class="w-4 h-4 absolute left-3 top-2.5 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    </div>
+    <a href="/" class="h-9 px-3 rounded-md border hairline text-[13px] hover:bg-paper flex items-center">星图 →</a>
+  </header>
+
+  <div class="flex-1 flex min-h-0">
+    <section class="flex-1 min-w-0 overflow-y-auto p-5">
+      <div id="list" class="grid grid-cols-2 gap-3 text-[12.5px]"></div>
+      <div id="empty" class="hidden text-center text-ink-faint text-[13px] mt-16">文献库为空 · 在右侧「收录文献」添加第一篇</div>
+    </section>
+
+    <aside class="w-[320px] shrink-0 bg-card border-l hairline flex flex-col overflow-y-auto">
+      <div class="h-12 px-4 border-b hairline flex items-center font-serif text-[14px]">收录文献</div>
+      <form id="add" class="p-4 space-y-3 text-[12.5px]">
+        <div><label class="text-ink-faint">标题 *</label><input name="title" required class="mt-1 w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent"></div>
+        <div class="flex gap-2">
+          <div class="flex-1"><label class="text-ink-faint">年份</label><input name="year" type="number" class="mt-1 w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent"></div>
+          <div class="flex-1"><label class="text-ink-faint">被引</label><input name="citationCount" type="number" class="mt-1 w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent"></div>
+        </div>
+        <div><label class="text-ink-faint">作者（逗号分隔）</label><input name="authors" class="mt-1 w-full h-8 rounded-md border hairline bg-paper px-2.5 outline-none focus:border-accent"></div>
+        <div><label class="text-ink-faint">来源</label>
+          <select name="source" class="mt-1 w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent">
+            <option value="manual">手动</option><option value="arxiv">arXiv</option><option value="crossref">Crossref</option><option value="semantic_scholar">Semantic Scholar</option><option value="zotero">Zotero</option>
+          </select>
+        </div>
+        <div><label class="text-ink-faint">摘要</label><textarea name="abstract" rows="4" class="mt-1 w-full rounded-md border hairline bg-paper px-2.5 py-1.5 outline-none focus:border-accent"></textarea></div>
+        <button class="w-full h-9 rounded-md bg-accent text-white text-[13px] hover:opacity-90">＋ 收录</button>
+        <div id="msg" class="text-[11.5px] text-ink-faint leading-relaxed"></div>
+      </form>
+      <div class="px-4 pb-4 text-[11px] text-ink-faint font-serif italic leading-relaxed">关键词检索走 FTS5；向量语义近邻需 sqlite-vec（当前降级，缺扩展不影响关键词链路与星图）。</div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const SOURCE = { manual: "手动", arxiv: "arXiv", crossref: "Crossref", semantic_scholar: "S2", pubmed: "PubMed", zotero: "Zotero" }
+
+async function loadPapers() {
+  const q = $("q").value.trim()
+  let data = [], passages = []
+  if (q) {
+    const s = await fetch(`/api/search?q=${encodeURIComponent(q)}`).then(r => r.json())
+    data = s.results ?? []
+    passages = s.passages ?? []
+  } else {
+    data = await fetch("/api/library").then(r => r.json())
+  }
+  $("count").textContent = q ? `命中 ${data.length} 篇${passages.length > 0 ? ` · 全文 ${passages.length} 段` : ""} · ${q}` : `共 ${data.length} 篇`
+  $("empty").classList.toggle("hidden", data.length > 0 || passages.length > 0)
+  const pass = passages.length > 0
+    ? `<div class="col-span-2 border hairline rounded-lg p-3 bg-card/60">
+        <div class="smallcaps text-[10.5px] font-semibold text-ink-faint mb-2">全文命中 · 正文段落 ${passages.length} 段（点击直达阅读）</div>
+        ${passages.map(a => `<a href="/reading.html?paper=${a.paper_id}" class="block py-1.5 border-t hairline first:border-t-0 hover:bg-paper">
+          <span class="font-mono text-[10.5px] text-seal">¶${a.seq}${a.page != null ? ` p.${a.page}` : ""}</span>
+          <span class="text-[12px] font-serif">${Shell.esc(a.paper_title)}</span>
+          <div class="text-[11.5px] text-ink-soft mt-0.5 leading-relaxed">${Shell.esc(a.text.slice(0, 90))}…</div>
+        </a>`).join("")}
+      </div>` : ""
+  $("list").innerHTML = pass + data.map(card).join("")
+}
+
+function card(p) {
+  const authors = (JSON.parse(p.authors || "[]")).join(", ") || "—"
+  return `<div class="bg-card border hairline rounded-lg p-4 hover:border-accent">
+    <div class="flex items-start gap-2">
+      <div class="font-serif text-[13.5px] leading-snug">${Shell.esc(p.title)}</div>
+    </div>
+    <div class="text-ink-faint text-[11px] mt-1">${Shell.esc(authors)}${p.year ? " · " + p.year : ""}${p.venue ? " · " + Shell.esc(p.venue) : ""}</div>
+    <div class="flex gap-1.5 mt-2.5 flex-wrap">
+      <span class="text-[10.5px] px-1.5 py-0.5 rounded-sm bg-paper border hairline text-ink-faint">${SOURCE[p.source] ?? p.source}</span>
+      <span class="text-[10.5px] px-1.5 py-0.5 rounded-sm bg-paper border hairline text-ink-faint">被引 ${p.citation_count}</span>
+      ${p.is_read ? '<span class="text-[10.5px] px-1.5 py-0.5 rounded-sm bg-moss/10 text-moss">已精读</span>' : ""}
+      ${p.is_favorite ? '<span class="text-[10.5px] px-1.5 py-0.5 rounded-sm bg-amber/10 text-amber">收藏</span>' : ""}
+    </div>
+    ${p.abstract ? `<p class="text-ink-soft mt-2.5 leading-relaxed line-clamp-3">${Shell.esc(p.abstract)}</p>` : ""}
+    <div class="flex items-center gap-2 mt-3 border-t hairline pt-2.5 text-[11.5px]">
+      <a href="/reading.html?paper=${p.id}" class="h-7 px-2.5 rounded border hairline hover:bg-paper flex items-center">边注</a>
+      <button data-act="read" data-id="${p.id}" class="h-7 px-2.5 rounded border hairline hover:bg-paper">${p.is_read ? "取消已读" : "标已读"}</button>
+      <button data-act="fav" data-id="${p.id}" class="h-7 px-2.5 rounded border hairline hover:bg-paper">${p.is_favorite ? "取消收藏" : "收藏"}</button>
+      <button data-act="del" data-id="${p.id}" class="ml-auto h-7 px-2 text-seal hover:underline">删除</button>
+    </div>
+  </div>`
+}
+
+$("list").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-act]")
+  if (!btn) return
+  const { act, id } = btn.dataset
+  if (act === "del") {
+    await fetch(`/api/library/${id}`, { method: "DELETE" })
+  } else {
+    const cur = await fetch(`/api/library/${id}`).then(r => r.json())
+    const patch = act === "read" ? { isRead: !cur.is_read } : { isFavorite: !cur.is_favorite }
+    await fetch(`/api/library/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(patch) })
+  }
+  loadPapers()
+})
+
+$("q").addEventListener("input", () => { clearTimeout(window._t); window._t = setTimeout(loadPapers, 250) })
+
+$("add").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const f = new FormData(e.target)
+  const title = (f.get("title") || "").trim()
+  if (!title) return
+  const body = {
+    title,
+    year: Number(f.get("year")) || null,
+    citationCount: Number(f.get("citationCount")) || 0,
+    authors: String(f.get("authors") || "").split(",").map(s => s.trim()).filter(Boolean),
+    source: String(f.get("source") || "manual"),
+    abstract: (f.get("abstract") || "").trim() || null,
+  }
+  const r = await fetch("/api/library", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
+  const j = await r.json()
+  $("msg").textContent = r.ok ? `已收录 → ${j.id}` : `失败：${j.error ?? r.status}`
+  if (r.ok) { e.target.reset(); $("q").value = ""; loadPapers() }
+})
+
+Shell.render("library")
+$("q").value = new URLSearchParams(location.search).get("q") || ""
+loadPapers()
+</script>
+</body>
+</html>

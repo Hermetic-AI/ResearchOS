@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 研究溯源</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<aside id="shell"></aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div class="font-serif text-[16px]">研究溯源</div>
+    <span class="text-[12px] text-ink-faint" id="meta">loading…</span>
+    <div class="flex items-center gap-1.5 ml-auto text-[12px]" id="filters"></div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto">
+    <div class="max-w-[720px] mx-auto px-6 py-8">
+      <ol id="timeline" class="relative border-l hairline ml-2 space-y-6"></ol>
+    </div>
+  </div>
+</main>
+
+<script>
+const KIND = { chat: ["对话", "bg-accent"], job: ["派单", "bg-accent"], skill_load: ["技能", "bg-seal"], hypothesis: ["假设", "bg-moss"], evidence: ["证据", "bg-moss"], note: ["边注", "bg-seal"], literature: ["文献", "bg-amber"], data: ["数据", "bg-amber"] }
+const $ = (id) => document.getElementById(id)
+let events = [], filter = ""
+
+function render() {
+  const list = filter ? events.filter(e => e.kind === filter) : events
+  $("meta").textContent = `${list.length} 条事件`
+  const ol = $("timeline")
+  ol.innerHTML = ""
+  if (list.length === 0) {
+    ol.innerHTML = `<li class="text-ink-faint italic text-[13px] pl-6">尚无记录。先在<a href="/chat.html" class="text-accent hover:underline">对话页</a>发一条消息，或到<a href="/hypotheses.html" class="text-accent hover:underline">假设画布</a>提出假设。</li>`
+    return
+  }
+  for (const e of list) {
+    const [label, color] = KIND[e.kind] ?? [e.kind, "bg-ink-faint"]
+    const li = document.createElement("li")
+    li.className = "relative pl-6"
+    li.innerHTML = `
+      <span class="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full ${color} ring-4 ring-paper"></span>
+      <div class="flex items-baseline gap-2 text-[12px]">
+        <span class="smallcaps font-semibold text-ink-faint">${label}</span>
+        ${e.subject_ref ? `<span class="font-mono text-[11px] text-ink-soft">${Shell.esc(e.subject_ref)}</span>` : ""}
+        <span class="ml-auto text-[11px] text-ink-faint">${new Date(e.ts).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+      </div>
+      <div class="mt-0.5 text-[13.5px] text-ink leading-relaxed">${Shell.esc(e.summary)}</div>`
+    ol.appendChild(li)
+  }
+}
+
+function renderFilters() {
+  const bar = $("filters")
+  bar.innerHTML = ""
+  const mk = (key, label) => {
+    const b = document.createElement("button")
+    b.textContent = label
+    b.className = "h-8 px-3 rounded-md border " + (filter === key ? "border-accent text-accent bg-accent-soft" : "hairline hover:bg-paper text-ink-soft")
+    b.addEventListener("click", () => { filter = key; renderFilters(); render() })
+    bar.appendChild(b)
+  }
+  mk("", "全部")
+  for (const k of Object.keys(KIND)) if (events.some(e => e.kind === k)) mk(k, KIND[k][0])
+}
+
+async function load() {
+  Shell.render("trace")
+  events = await fetch("/api/trace?limit=200").then(r => r.json())
+  renderFilters(); render()
+}
+load()
+</script>
+</body>
+</html>

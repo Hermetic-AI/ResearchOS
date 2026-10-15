@@ -1,0 +1,27 @@
+{
+  "name": "@researchos/writing",
+  "version": "0.1.0",
+  "description": "ResearchOS Paper Writing Assistant — deterministic CSV/MD→LaTeX conversion, BibTeX upsert, suggestion store, word-diff for polish review",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "workspace:*",
+    "@researchos/literature": "workspace:*",
+    "diff": "9.0.0",
+    "markdown-it": "14.3.0",
+    "papaparse": "5.5.4"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/markdown-it": "14.1.2",
+    "@types/papaparse": "5.5.2"
+  }
+}

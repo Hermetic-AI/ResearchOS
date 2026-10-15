@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 假设画布</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="/assets/theme.js"></script>
+<link rel="stylesheet" href="/assets/base.css">
+<script src="/assets/shell.js"></script>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<aside id="shell"></aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <div class="font-serif text-[16px]">假设画布</div>
+    <span class="text-[12px] text-ink-faint" id="meta">loading…</span>
+    <a href="/trace.html" class="ml-auto h-9 px-3 rounded-md border hairline hover:bg-paper text-[12.5px] text-ink-soft">查看证据链 →</a>
+  </header>
+
+  <div class="flex-1 overflow-y-auto">
+    <div class="max-w-[760px] mx-auto px-6 py-8">
+      <form id="add" class="flex gap-2 mb-6">
+        <input id="stmt" class="flex-1 h-10 rounded-md border hairline bg-paper px-4 text-[13.5px] outline-none focus:border-accent focus:bg-card" placeholder="提出一个可证伪的研究假设…">
+        <button class="h-10 px-5 rounded-md bg-accent text-white text-[13px] hover:opacity-90">提出</button>
+      </form>
+      <div id="cards" class="space-y-4 text-[12.5px]"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id)
+const STATUS = [["open", "待定"], ["supported", "支持"], ["refuted", "反驳"], ["archived", "归档"]]
+const BADGE = { open: "bg-paper text-ink-faint", supported: "bg-moss/10 text-moss", refuted: "bg-seal/10 text-seal", archived: "bg-paper text-ink-faint" }
+let hyps = []
+
+const api = (p, o) => fetch(p, o).then(r => r.json())
+const post = (p, b) => api(p, { method: "POST", body: JSON.stringify(b) })
+const patch = (p, b) => api(p, { method: "PATCH", body: JSON.stringify(b) })
+
+function card(h) {
+  const accent = h.status === "supported" ? "border-l-moss" : h.status === "refuted" ? "border-l-seal" : h.status === "archived" ? "border-l-ink-faint" : "border-l-accent"
+  const el = document.createElement("div")
+  el.className = `bg-card border hairline ${accent} border-l-2 rounded-lg p-5`
+
+  const head = document.createElement("div")
+  head.className = "flex items-center gap-3"
+  const stmt = document.createElement("div")
+  stmt.className = "font-serif text-[15px] flex-1"
+  stmt.textContent = h.statement
+  const badge = document.createElement("span")
+  badge.className = `text-[10.5px] px-1.5 py-0.5 rounded ${BADGE[h.status] ?? BADGE.open}`
+  badge.textContent = (STATUS.find(s => s[0] === h.status) || ["", h.status])[1]
+  const sel = document.createElement("select")
+  sel.className = "h-8 text-[12px] rounded border hairline bg-paper outline-none cursor-pointer"
+  for (const [v, l] of STATUS) { const o = document.createElement("option"); o.value = v; o.textContent = l; if (v === h.status) o.selected = true; sel.appendChild(o) }
+  sel.addEventListener("change", async () => { await patch(`/api/hypotheses/${h.id}`, { status: sel.value }); load() })
+  head.append(stmt, badge, sel)
+
+  const tally = document.createElement("div")
+  tally.className = "flex gap-4 mt-2 text-[11.5px] text-ink-faint"
+  tally.innerHTML = `支持 <b class="text-moss">${h.support_count ?? 0}</b> · 反驳 <b class="text-seal">${h.refute_count ?? 0}</b>`
+
+  el.append(head, tally)
+
+  api(`/api/hypotheses/${h.id}/evidence`).then(ev => {
+    const ul = document.createElement("ul")
+    ul.className = "mt-3 space-y-1 border-t hairline pt-3"
+    for (const e of ev) {
+      const li = document.createElement("li")
+      li.className = "flex items-baseline gap-2"
+      li.innerHTML = `<span class="${e.kind === "support" ? "text-moss" : "text-seal"}">${e.kind === "support" ? "▲" : "▼"}</span><span class="flex-1">${Shell.esc(e.note)}</span>${e.paper_ref ? `<span class="font-mono text-[11px] text-ink-faint">${Shell.esc(e.paper_ref)}</span>` : ""}`
+      ul.appendChild(li)
+    }
+    const row = document.createElement("div")
+    row.className = "flex gap-2 mt-3"
+    const note = document.createElement("input")
+    note.className = "flex-1 h-8 rounded border hairline bg-paper px-3 text-[12.5px] outline-none focus:border-accent"
+    note.placeholder = "添加证据…"
+    const ref = document.createElement("input")
+    ref.className = "w-28 h-8 rounded border hairline bg-paper px-3 text-[12px] font-mono outline-none focus:border-accent"
+    ref.placeholder = "文献键"
+    const btn = (kind, label, cls) => { const b = document.createElement("button"); b.className = cls; b.textContent = label; b.addEventListener("click", async () => { if (!note.value.trim()) return; await post(`/api/hypotheses/${h.id}/evidence`, { kind, note: note.value.trim(), paperRef: ref.value.trim() || null }); load() }); return b }
+    const del = document.createElement("button")
+    del.className = "h-8 px-3 rounded border hairline text-ink-faint hover:text-seal hover:border-seal/40"
+    del.textContent = "删除"
+    del.addEventListener("click", async () => { await api(`/api/hypotheses/${h.id}`, { method: "DELETE" }); load() })
+    row.append(note, ref,
+      btn("support", "记支持", "h-8 px-3 rounded border border-moss/40 text-moss hover:bg-moss/5"),
+      btn("refute", "记反驳", "h-8 px-3 rounded border border-seal/40 text-seal hover:bg-seal/5"),
+      del)
+    el.append(ul, row)
+  })
+
+  return el
+}
+
+function render() {
+  const box = $("cards")
+  $("meta").textContent = `${hyps.length} 个假设`
+  box.innerHTML = ""
+  if (hyps.length === 0) {
+    box.innerHTML = `<div class="text-ink-faint italic text-[13px]">尚无假设。写下第一个待检验的研究想法。</div>`
+    return
+  }
+  for (const h of hyps) box.appendChild(card(h))
+}
+
+async function load() {
+  Shell.render("starmap")
+  hyps = await api("/api/hypotheses")
+  render()
+}
+$("add").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const statement = $("stmt").value.trim()
+  if (!statement) return
+  $("stmt").value = ""
+  await post("/api/hypotheses", { statement })
+  load()
+})
+load()
+</script>
+</body>
+</html>

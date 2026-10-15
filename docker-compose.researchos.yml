@@ -1,0 +1,41 @@
+name: researchos
+
+# SQLite is the default and needs no container. Start one optional graph backend:
+#   docker compose -f docker-compose.researchos.yml --profile neo4j up -d
+#   docker compose -f docker-compose.researchos.yml --profile memgraph up -d
+#   docker compose -f docker-compose.researchos.yml --profile tugraph up -d
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    profiles: [neo4j]
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: ${RESEARCHOS_NEO4J_AUTH:-neo4j/researchos}
+    volumes:
+      - researchos-neo4j:/data
+
+  memgraph:
+    image: memgraph/memgraph:latest
+    profiles: [memgraph]
+    ports:
+      - "7687:7687"
+      - "7444:7444"
+    command: ["--bolt-server-name-for-init=memgraph"]
+    volumes:
+      - researchos-memgraph:/var/lib/memgraph
+
+  tugraph:
+    image: tugraph/tugraph-runtime-centos7:latest
+    profiles: [tugraph]
+    ports:
+      - "7070:7070"
+      - "7687:7687"
+    volumes:
+      - researchos-tugraph:/var/lib/lgraph/data
+
+volumes:
+  researchos-neo4j:
+  researchos-memgraph:
+  researchos-tugraph:
