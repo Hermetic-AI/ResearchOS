@@ -1,5 +1,5 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
+import { Button } from "@opencode/ui/button"
+import { Spinner } from "@opencode/ui/spinner"
 import { Show, createEffect, createMemo, createResource, onCleanup } from "solid-js"
 import { usePlatform } from "@/context/platform"
 import { useSDK } from "@/context/sdk"

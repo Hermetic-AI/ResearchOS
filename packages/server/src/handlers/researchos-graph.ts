@@ -1,5 +1,5 @@
-import { Location } from "@opencode-ai/core/location"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Location } from "@opencode/core/location"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import { checkBoltBackend, citeKeyResolver, createEmbedder, embedGraphNodes, graphRag, loadGraphBackend, modelsDir, openRepository, openStore, parseFile, type Embedder, type GraphEdge, type GraphNode, type GraphRepository, type Store, type Subgraph } from "@researchos/graph"
 import { dbPath, LiteratureDB } from "@researchos/literature"
 import { Effect } from "effect"

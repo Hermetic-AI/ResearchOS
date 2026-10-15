@@ -1,6 +1,6 @@
 import { resolve } from "path"
-import { Location } from "@opencode-ai/core/location"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Location } from "@opencode/core/location"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import {
   PlotStore,
   editDiagram,

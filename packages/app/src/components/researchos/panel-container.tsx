@@ -1,4 +1,4 @@
-import { Icon } from "@opencode-ai/ui/icon"
+import { Icon } from "@opencode/ui/icon"
 import { Match, Show, Switch, createSignal, type ParentProps } from "solid-js"
 import { useResearchosShell } from "./shell-context"
 import { LiteraturePanel } from "@/pages/literature/literature-panel"

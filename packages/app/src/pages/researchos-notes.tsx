@@ -1,5 +1,5 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
+import { Button } from "@opencode/ui/button"
+import { Icon } from "@opencode/ui/icon"
 import { For, Show, createMemo, createResource, createSignal } from "solid-js"
 import { useNavigate, useParams } from "@solidjs/router"
 import { usePlatform } from "@/context/platform"

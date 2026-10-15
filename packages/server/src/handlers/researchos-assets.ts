@@ -1,9 +1,9 @@
-import { Global } from "@opencode-ai/core/global"
-import { Location } from "@opencode-ai/core/location"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { CommandV2 } from "@opencode-ai/core/command"
-import { SkillV2 } from "@opencode-ai/core/skill"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Global } from "@opencode/core/global"
+import { Location } from "@opencode/core/location"
+import { AgentV2 } from "@opencode/core/agent"
+import { CommandV2 } from "@opencode/core/command"
+import { SkillV2 } from "@opencode/core/skill"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import {
   HubImpl,
   createAcademicHub,

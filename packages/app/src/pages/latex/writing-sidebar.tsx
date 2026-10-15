@@ -1,4 +1,4 @@
-import { Button } from "@opencode-ai/ui/button"
+import { Button } from "@opencode/ui/button"
 import { For, Show, createMemo, createSignal } from "solid-js"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 

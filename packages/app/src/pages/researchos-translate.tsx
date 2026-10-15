@@ -1,4 +1,4 @@
-import { Button } from "@opencode-ai/ui/button"
+import { Button } from "@opencode/ui/button"
 import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js"
 import { useSearchParams } from "@solidjs/router"
 import { usePlatform } from "@/context/platform"

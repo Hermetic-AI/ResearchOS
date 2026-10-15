@@ -1,10 +1,10 @@
 import { useNavigate } from "@solidjs/router"
-import { base64Encode } from "@opencode-ai/core/util/encode"
-import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
-import { Icon } from "@opencode-ai/ui/icon"
-import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
-import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
-import { TooltipV2 } from "@opencode-ai/ui/v2/tooltip-v2"
+import { base64Encode } from "@opencode/core/util/encode"
+import { DropdownMenu } from "@opencode/ui/dropdown-menu"
+import { Icon } from "@opencode/ui/icon"
+import { IconButtonV2 } from "@opencode/ui/v2/icon-button-v2"
+import { Icon as IconV2 } from "@opencode/ui/v2/icon"
+import { TooltipV2 } from "@opencode/ui/v2/tooltip-v2"
 import { researchosModules, useResearchosDirectory } from "./researchos-rail"
 
 // 新布局（/server/:serverKey/session/:id）没有 dir 路由参数，

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from "fs"
 import { resolve, sep } from "path"
-import { tool, type Plugin, type PluginModule } from "@opencode-ai/plugin"
+import { tool, type Plugin, type PluginModule } from "@opencode/plugin"
 import { convertCsvToLatex, convertMdToLatex } from "./convert"
 import { mergeBibtex } from "./bibtex"
 import { bibtexFromLibrary } from "./library"

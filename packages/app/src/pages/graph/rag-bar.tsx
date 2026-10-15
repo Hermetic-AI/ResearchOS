@@ -1,7 +1,7 @@
 import { createSignal, For, Show } from "solid-js"
-import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import type { ServerResearchosGraphAskOutput } from "@opencode-ai/client"
+import { Button } from "@opencode/ui/button"
+import { Spinner } from "@opencode/ui/spinner"
+import type { ServerResearchosGraphAskOutput } from "@opencode/client"
 import { StatusBadge } from "@/components/researchos/module-state"
 import { nodeColors } from "./graph-colors"
 

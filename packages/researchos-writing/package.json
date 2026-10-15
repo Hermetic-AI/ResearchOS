@@ -13,7 +13,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "workspace:*",
+    "@opencode/plugin": "workspace:*",
     "@researchos/literature": "workspace:*",
     "diff": "9.0.0",
     "markdown-it": "14.3.0",

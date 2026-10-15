@@ -1,4 +1,4 @@
-import { OpenCode } from "@opencode-ai/client"
+import { OpenCode } from "@opencode/client"
 import { authTokenFromCredentials } from "@/utils/server"
 
 export function createResearchosClient(input: {

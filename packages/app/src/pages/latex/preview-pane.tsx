@@ -1,6 +1,6 @@
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url"
 import { createEffect, createSignal, onCleanup, Show } from "solid-js"
-import { Spinner } from "@opencode-ai/ui/spinner"
+import { Spinner } from "@opencode/ui/spinner"
 
 export function PreviewPane(props: {
   data?: string

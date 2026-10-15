@@ -1,4 +1,4 @@
-import { Button } from "@opencode-ai/ui/button"
+import { Button } from "@opencode/ui/button"
 import { For, Show, createSignal } from "solid-js"
 import { svgUrl, type PlotArtifact, type PlotClient } from "./types"
 

@@ -1,6 +1,6 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { Location } from "@opencode-ai/schema/location"
+import { Location } from "@opencode/schema/location"
 import { InvalidRequestError, UnknownError } from "../errors"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 

@@ -1,6 +1,6 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
-import { Spinner } from "@opencode-ai/ui/spinner"
+import { Button } from "@opencode/ui/button"
+import { Icon } from "@opencode/ui/icon"
+import { Spinner } from "@opencode/ui/spinner"
 import { type ParentProps, Show } from "solid-js"
 import type { ResearchosServiceStatus } from "./health"
 

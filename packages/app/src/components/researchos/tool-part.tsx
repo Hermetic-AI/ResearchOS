@@ -1,5 +1,5 @@
-import { PART_MAPPING } from "@opencode-ai/session-ui/message-part"
-import type { MessagePartProps } from "@opencode-ai/session-ui/message-part"
+import { PART_MAPPING } from "@opencode/session-ui/message-part"
+import type { MessagePartProps } from "@opencode/session-ui/message-part"
 import { createMemo, Show } from "solid-js"
 import { PanelCard } from "./panel-card"
 import { parsePanelDirective } from "./panel-protocol"

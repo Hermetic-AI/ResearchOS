@@ -1,8 +1,8 @@
 import { createMemo, createResource, For, Show } from "solid-js"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { Tag } from "@opencode-ai/ui/tag"
+import { Spinner } from "@opencode/ui/spinner"
+import { Tag } from "@opencode/ui/tag"
 import { useNavigate, useParams } from "@solidjs/router"
-import type { ServerResearchosGraphNodeOutput } from "@opencode-ai/client"
+import type { ServerResearchosGraphNodeOutput } from "@opencode/client"
 import { nodeColors } from "./graph-colors"
 
 type NodeDetail = ServerResearchosGraphNodeOutput["data"]

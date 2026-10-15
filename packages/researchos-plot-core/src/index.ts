@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs"
 import { basename, dirname, extname, relative, resolve } from "path"
-import { tool, type Plugin, type PluginModule } from "@opencode-ai/plugin"
+import { tool, type Plugin, type PluginModule } from "@opencode/plugin"
 import { includeGraphicsSnippet } from "./latex"
 import { PlotStore, resolveInside } from "./store"
 

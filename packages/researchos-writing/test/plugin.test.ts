@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { mkdtemp, rm, writeFile } from "fs/promises"
 import { join } from "path"
 import { tmpdir } from "os"
-import type { PluginInput, ToolContext } from "@opencode-ai/plugin"
+import type { PluginInput, ToolContext } from "@opencode/plugin"
 import WritingPluginDefault, { WritingPlugin } from "../src/index"
 
 function fakeContext(directory: string): ToolContext {

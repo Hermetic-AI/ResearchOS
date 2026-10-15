@@ -1,4 +1,4 @@
-import type { ServerResearchosLiteratureGetOutput, ServerResearchosLiteratureReadOutput } from "@opencode-ai/client"
+import type { ServerResearchosLiteratureGetOutput, ServerResearchosLiteratureReadOutput } from "@opencode/client"
 import type { DirectorySDK } from "@/context/sdk"
 import type { createResearchosClient } from "@/utils/researchos-client"
 

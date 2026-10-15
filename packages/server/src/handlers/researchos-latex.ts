@@ -1,5 +1,5 @@
-import { Location } from "@opencode-ai/core/location"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Location } from "@opencode/core/location"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import { compile, formatCheck, LatexStore, listSources, readBuildPdf, readSource, synctexQuery, writeSource } from "@researchos/latex"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
