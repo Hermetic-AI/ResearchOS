@@ -1,15 +1,16 @@
 import path from "path"
 
 const chrome = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-const executablePath = process.platform === "win32" && await Bun.file(chrome).exists() ? chrome : undefined
-const serverUrl = "http://127.0.0.1:14096/global/health"
-const server = await responds(serverUrl)
+const executablePath = process.platform === "win32" && (await Bun.file(chrome).exists()) ? chrome : undefined
+const serverUrl = "http://127.0.0.1:14096/api/info"
+const server = (await responds(serverUrl))
   ? undefined
   : Bun.spawn({
-      cmd: [process.execPath, "run", "--cwd", "packages/opencode", "src/index.ts", "serve", "--port", "14096"],
+      cmd: [process.execPath, "run", "--cwd", "packages/cli", "src/index.ts", "serve", "--port", "14096"],
       cwd: path.join(import.meta.dir, ".."),
       stdout: "inherit",
       stderr: "inherit",
+      env: { ...process.env, OPENCODE_PASSWORD: process.env.OPENCODE_PASSWORD ?? "researchos-smoke" },
     })
 
 if (server) await waitForServer()
@@ -32,7 +33,11 @@ process.exit(exitCode)
 
 async function responds(url: string) {
   try {
-    return (await fetch(url, { signal: AbortSignal.timeout(1_000) })).ok
+    const password = process.env.OPENCODE_PASSWORD ?? "researchos-smoke"
+    const headers = { Authorization: `Basic ${btoa(`opencode:${password}`)}` }
+    const response = await fetch(url, { headers, signal: AbortSignal.timeout(1_000) })
+    // A 401 still proves a server owns the port; reusing it beats spawning a second one that fails to bind.
+    return response.ok || response.status === 401
   } catch {
     return false
   }
