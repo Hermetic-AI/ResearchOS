@@ -45,6 +45,10 @@ export interface MockServerConfig {
   server?: string
   provider: Resolvable<MockProviderCatalog>
   integrations?: Resolvable<unknown[]>
+  // researchos: papers served to the composer's @paper mention source. Defaults to an empty library.
+  literaturePapers?: Resolvable<unknown[]>
+  // researchos: records `POST /api/researchos-assets/note/write` (Save as quick note).
+  onNoteWrite?: (input: { path?: string; content?: string }) => void
   // Runs on POST /api/credential/:id/activate; the fixture swaps its integrations and catalog to the new account.
   onCredentialActivate?: (credentialID: string) => void
   // Runs on PATCH /api/credential/:id with the request body; the fixture applies the new label.
@@ -867,6 +871,17 @@ function mockHandlers(
           }),
         provider: () =>
           Effect.succeed({ location: location(config), data: currentProviders(resolve(config.provider)) }),
+        // researchos: @paper mention source; scenarios can seed papers with `literaturePapers`.
+        literaturePapers: () =>
+          Effect.succeed({ location: location(config), data: resolve(config.literaturePapers ?? []) }),
+        // researchos: "Save as quick note". Records the write and echoes the path back like the server does.
+        noteWrite: (ctx) => {
+          const body = ctx.payload as { path?: string; content?: string }
+
+          config.onNoteWrite?.(body)
+
+          return Effect.succeed({ location: location(config), data: { path: body.path ?? "" } })
+        },
         model: () => Effect.succeed({ location: location(config), data: currentModels(resolve(config.provider)) }),
         modelDefault: () =>
           Effect.succeed({ location: location(config), data: currentDefaultModel(resolve(config.provider)) }),

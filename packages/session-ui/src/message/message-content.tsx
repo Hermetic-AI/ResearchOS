@@ -86,7 +86,7 @@ function modelLabel(
 
 function MessageActionButton(
   props: Pick<ComponentProps<"button">, "disabled" | "onMouseDown" | "onClick" | "aria-label"> & {
-    icon: "check" | "copy" | "reset" | "arrow-down-to-line" | "outline-trash"
+    icon: "check" | "copy" | "reset" | "arrow-down-to-line" | "outline-trash" | "pencil-line"
     label: JSX.Element
   },
 ) {
@@ -673,6 +673,7 @@ export function AssistantTextContent(props: {
   text: string
   message: SessionMessageAssistant
   showCopy: boolean
+  actions?: SessionUserActions
   turnDurationMs?: number | null
 }) {
   const data = useData()
@@ -748,6 +749,15 @@ export function AssistantTextContent(props: {
               onClick={copy}
               aria-label={copied() ? i18n.t("ui.message.copied") : i18n.t("ui.message.copyResponse")}
             />
+            <Show when={props.actions?.saveQuickNote}>
+              <MessageActionButton
+                icon="pencil-line"
+                label="Save as quick note"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => props.actions?.saveQuickNote?.(props.text)}
+                aria-label="Save as quick note"
+              />
+            </Show>
             <Show when={meta()}>
               <span data-slot="text-part-meta" class="text-12-regular text-text-weak cursor-default">
                 {meta()}

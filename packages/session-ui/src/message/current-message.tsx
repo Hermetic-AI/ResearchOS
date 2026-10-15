@@ -47,6 +47,7 @@ export function SessionAssistantContent(props: {
   content: SessionMessageAssistant["content"][number]
   contentID: string
   showAssistantCopyPartID?: string | null
+  actions?: SessionUserActions
   turnDurationMs?: number | null
   defaultOpen?: boolean
   reasoningDefaultOpen?: boolean
@@ -63,6 +64,7 @@ export function SessionAssistantContent(props: {
             text={content().text}
             message={props.message}
             showCopy={props.showAssistantCopyPartID === props.contentID}
+            actions={props.actions}
             turnDurationMs={props.turnDurationMs}
           />
         )}

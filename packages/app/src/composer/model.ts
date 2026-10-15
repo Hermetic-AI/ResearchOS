@@ -37,6 +37,19 @@ export type ComposerModel = ComposerEditorModel & {
   readonly model: ComposerControls["model"]
 }
 
+// researchos:start — ResearchOS agents are the ones this app is used for; keep them first in @mention order
+const RESEARCHOS_AGENT_NAMES = new Set([
+  "literature",
+  "graph",
+  "paper-writer",
+  "latex-editor",
+  "data-analyst",
+  "plot",
+  "reproduce-doctor",
+  "translator",
+])
+// researchos:end
+
 const sendFailedTitle = {
   shell: "prompt.toast.shellSendFailed.title",
   command: "prompt.toast.commandSendFailed.title",
@@ -257,6 +270,13 @@ export function createComposerModel(adapter: ComposerAdapter, options?: { queue?
     ...adapter
       .controls()
       .agents.available.filter((agent) => !agent.hidden && agent.mode !== "primary")
+      .toSorted((a, b) => {
+        const aResearch = RESEARCHOS_AGENT_NAMES.has(a.name)
+        const bResearch = RESEARCHOS_AGENT_NAMES.has(b.name)
+        if (aResearch && !bResearch) return -1
+        if (!aResearch && bResearch) return 1
+        return 0
+      })
       .map((agent) => ({
         id: `agent:${agent.name}`,
         kind: "agent" as const,

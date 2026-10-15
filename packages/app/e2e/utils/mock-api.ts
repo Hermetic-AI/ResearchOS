@@ -94,6 +94,15 @@ const Group = HttpApiGroup.make("mock")
   .add(HttpApiEndpoint.get("config", "/api/config", { success: Json }))
   .add(HttpApiEndpoint.get("agent", "/api/agent", { success: Json }))
   .add(HttpApiEndpoint.get("provider", "/api/provider", { success: Json }))
+  // researchos: the composer fetches literature papers for @paper mentions on every session mount.
+  .add(HttpApiEndpoint.get("literaturePapers", "/api/literature/papers", { success: Json }))
+  // researchos: "Save as quick note" persists assistant replies through this endpoint.
+  .add(
+    HttpApiEndpoint.post("noteWrite", "/api/researchos-assets/note/write", {
+      payload: JsonPayload,
+      success: Json,
+    }),
+  )
   .add(HttpApiEndpoint.get("model", "/api/model", { success: Json }))
   .add(HttpApiEndpoint.get("modelDefault", "/api/model/default", { success: Json }))
   .add(HttpApiEndpoint.get("integrationList", "/api/integration", { success: Json }))

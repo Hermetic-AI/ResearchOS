@@ -33,6 +33,9 @@ import { resolveSessionComposerSelection } from "./selection"
 import { createSessionRequestModel } from "../requests/model"
 import type { Region } from "@/runtime/extension/panels"
 import { SessionLocationMissing } from "./location-missing"
+// researchos:start — "Save as quick note" on assistant replies
+import { createResearchosClient } from "@/utils/researchos-client"
+// researchos:end
 
 export function createActiveSessionRegion(input: {
   session: SessionModel
@@ -208,6 +211,38 @@ export function createActiveSessionRegion(input: {
       server.api.session.inbox.cancel({ sessionID, inboxID: messageID }).then(() => undefined, notifyFailed),
   }
 
+  // researchos:start — persist an assistant reply under notes/quick/ in the project
+  const saveQuickNote: NonNullable<SessionUserActions["saveQuickNote"]> = (text) => {
+    const trimmed = text.trim()
+
+    if (!trimmed) return
+
+    const date = new Date().toISOString().slice(0, 10)
+    const slug =
+      trimmed
+        .slice(0, 40)
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .toLowerCase() || "note"
+    const content = `---\ncreated: ${new Date().toISOString()}\n---\n\n${trimmed}\n`
+
+    createResearchosClient({
+      baseUrl: server.url,
+      fetch: platform.fetch,
+      password: server.server.http.password,
+    })
+      ["server.researchos-assets"].asset.noteWrite({
+        location: { directory: location().directory },
+        path: `notes/quick/${date}-${slug}.md`,
+        content,
+      })
+      .then(
+        (result) => showToast({ title: "Saved as quick note", description: result.data.path, variant: "success" }),
+        notifyFailed,
+      )
+  }
+  // researchos:end
+
   useComposerCommands()
   useSessionCommands({
     session: input.session,
@@ -281,6 +316,7 @@ export function createActiveSessionRegion(input: {
           return pendingSteer
         },
         openAttachment,
+        saveQuickNote,
       } satisfies SessionUserActions,
     },
     requests: state,
