@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ResearchOS · 翻译</title>
+<title>ResearchOS · 学术翻译</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="/assets/theme.js"></script>
 <link rel="stylesheet" href="/assets/base.css">
@@ -11,17 +11,528 @@
 </head>
 <body class="h-screen flex bg-paper text-ink overflow-hidden">
 <aside id="shell"></aside>
+
 <main class="flex-1 flex flex-col min-w-0">
-  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6"><div class="font-serif text-[16px]">学术翻译</div></header>
-  <div id="body" class="flex-1 overflow-y-auto"></div>
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <h1 id="title" class="font-serif text-[15.5px] truncate">学术翻译</h1>
+    <span id="arxiv" class="badge shrink-0 text-ink-faint hidden"></span>
+    <span id="engineNote" class="text-[12px] text-ink-faint shrink-0 font-serif">en → zh</span>
+    <div class="ml-auto flex items-center gap-3 shrink-0">
+      <div class="flex items-center gap-0 border hairline rounded-md overflow-hidden text-[12px]">
+        <button id="modeBoth" class="h-8 px-2.5 bg-accent text-white font-serif">双语对照</button>
+        <button id="modeZh" class="h-8 px-2.5 hover:bg-paper text-ink-soft border-l hairline">仅译文</button>
+      </div>
+      <div class="text-[12px] text-ink-soft font-serif">进度 <b id="prog" class="text-accent">0/0</b> 段</div>
+      <div class="w-28 h-1 rounded bg-line overflow-hidden"><div id="progBar" class="h-full bg-accent" style="width:0%"></div></div>
+      <select id="paperPick" class="h-8 rounded-md border hairline text-[12px] px-1.5 bg-paper outline-none focus:border-accent max-w-[180px]"></select>
+    </div>
+  </header>
+
+  <div class="flex-1 flex min-h-0">
+    <div class="w-[232px] shrink-0 bg-card border-r hairline p-3 text-[12.5px] overflow-y-auto">
+      <div class="text-ink-faint text-[10.5px] smallcaps font-semibold px-2 mb-2">章节结构 · 按分段锚点</div>
+      <div id="tree" class="space-y-0.5"></div>
+
+      <div id="start" class="mt-4 border-t hairline pt-3 px-1 space-y-2">
+        <div class="text-ink-faint text-[10.5px] smallcaps font-semibold">新建对照稿</div>
+        <select id="libPick" class="w-full h-7 rounded-md border hairline text-[12px] px-1 bg-paper outline-none focus:border-accent"></select>
+        <button id="importBtn" class="w-full h-7 rounded-md border hairline text-ink-soft hover:bg-paper">从文献库导入分段</button>
+        <button id="demoBtn" class="w-full h-7 rounded-md border hairline text-ink-soft hover:bg-paper">载入示例对照稿（内置 demo）</button>
+        <div id="startNote" class="text-[11px] text-ink-faint font-serif leading-relaxed">导入需要该文献已在阅读页存过全文分段。</div>
+      </div>
+
+      <div class="mt-4 border-t hairline pt-3 px-1 text-[12px] text-ink-soft space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-ink-faint text-[10.5px] smallcaps font-semibold">引擎</span>
+          <select id="enginePick" class="h-7 rounded-md border hairline text-[12px] px-1 bg-paper outline-none focus:border-accent max-w-[130px]">
+            <option>LLM（派单给学术翻译）</option>
+            <option disabled>LibreTranslate（未接入）</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-ink-faint text-[10.5px] smallcaps font-semibold">风格</span>
+          <select id="stylePick" class="h-7 rounded-md border hairline text-[12px] px-1 bg-paper outline-none focus:border-accent max-w-[130px]">
+            <option>学术直译</option>
+            <option>流畅意译</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-3 px-1">
+        <a href="/library.html" class="block text-[12px] text-accent hover:underline">← 返回文献库</a>
+        <a href="/reading.html" class="block text-[12px] text-accent hover:underline mt-1">→ 边注阅读器分段</a>
+      </div>
+    </div>
+
+    <div id="pairs" class="flex-1 min-w-0 grid grid-cols-2 gap-4 p-5 overflow-y-auto content-start"></div>
+
+    <aside class="w-[244px] shrink-0 bg-card border-l hairline p-4 text-[12.5px] overflow-y-auto">
+      <div class="flex items-center mb-3">
+        <span class="font-serif text-[13.5px]">术语一致性</span>
+        <span id="termCount" class="ml-auto text-[11px] text-ink-faint font-serif"></span>
+      </div>
+      <div id="terms" class="space-y-1.5"></div>
+
+      <form id="termForm" class="mt-2.5 space-y-1.5">
+        <input id="tSource" placeholder="英文术语，如 score function" class="w-full h-7 rounded-md border hairline text-[12px] px-2 bg-paper outline-none focus:border-accent">
+        <input id="tTarget" placeholder="定译，如 得分函数（留空＝待定义）" class="w-full h-7 rounded-md border hairline text-[12px] px-2 bg-paper outline-none focus:border-accent">
+        <div class="flex gap-1.5">
+          <input id="tNote" placeholder="备注" class="flex-1 h-7 rounded-md border hairline text-[12px] px-2 bg-paper outline-none focus:border-accent">
+          <button class="h-7 px-2 rounded-md bg-accent text-white text-[12px] hover:opacity-90">入表</button>
+        </div>
+      </form>
+
+      <div class="font-serif text-[13.5px] mt-5 mb-2">保护规则</div>
+      <label class="flex items-center gap-2 py-1 text-ink-soft"><input type="checkbox" data-kind="formula" checked class="accent-[#2F4B7C]">公式（LaTeX/Unicode）</label>
+      <label class="flex items-center gap-2 py-1 text-ink-soft"><input type="checkbox" data-kind="number" checked class="accent-[#2F4B7C]">数字与单位</label>
+      <label class="flex items-center gap-2 py-1 text-ink-soft"><input type="checkbox" data-kind="cite" checked class="accent-[#2F4B7C]">引用键 cite{…}</label>
+      <label class="flex items-center gap-2 py-1 text-ink-soft"><input type="checkbox" data-kind="caption" checked class="accent-[#2F4B7C]">图表编号</label>
+      <div id="protectNote" class="mt-4 px-2.5 py-2 rounded-md bg-paper border hairline text-[11.5px] text-ink-faint font-serif leading-relaxed"></div>
+      <div class="mt-3 text-[11px] text-ink-faint font-serif italic leading-relaxed">
+        勾选只改变本页的高亮与命中统计；透传校验始终覆盖全部四类。术语命中以细虚线标出，⚠ 项需在定稿前人工复核。
+      </div>
+
+      <div class="mt-5 border-t hairline pt-4 space-y-2">
+        <a id="exportMd" href="#" class="block w-full h-8 rounded-md border hairline text-ink-soft hover:bg-paper text-center leading-8">导出译文 Markdown</a>
+        <a id="exportHtml" href="#" class="block w-full h-8 rounded-md bg-accent text-white hover:opacity-90 text-center leading-8">导出双语 HTML</a>
+      </div>
+      <div class="mt-4 text-[11px] text-ink-faint font-serif italic">对照稿逐段即时入库（SQLite upsert），无草稿定时器。</div>
+    </aside>
+  </div>
 </main>
+
 <script>
-Shell.render("translate")
-Shell.comingSoon(document.getElementById("body"), "学术翻译 · 对照译文",
-  "段落级中英对照翻译，保留术语一致性、公式与引用锚点，译文与术语表随文献入库。当前可先在对话页选择翻译类技能进行试译。",
-  ["翻译工作流：分段 → 术语表约束 → 对照排版 → 回读校对",
-   "与文献库联动：@paper 引用整段翻译并落边注",
-   "术语一致性检查复用 cite-assist / academic-polish 技能"])
+const $ = (id) => document.getElementById(id)
+const KIND_LABEL = { formula: "公式", number: "数字", cite: "引用", caption: "图表编号" }
+const state = { paper: "", draft: null, mode: "both", section: "", provider: "mock", model: "", kinds: { formula: true, number: true, cite: true, caption: true }, busy: "" }
+
+const api = (path, init) => fetch(path, init).then(r => r.json())
+const segOf = (id) => (state.draft?.segments ?? []).find(s => s.id === id)
+
+function highlight(text, needles) {
+  const math = /\$\$[^$]*\$\$|\$[^$\n]+\$|\\\([\s\S]+?\\\)|\\\[[\s\S]+?\\\]|\\begin\{[^{}]*\}[\s\S]*?\\end\{[^{}]*\}/g
+  const out = []
+  let last = 0
+  for (const m of text.matchAll(math)) {
+    out.push(termWrap(text.slice(last, m.index), needles))
+    out.push(`<span class="formula">${Shell.esc(m[0])}</span>`)
+    last = m.index + m[0].length
+  }
+  out.push(termWrap(text.slice(last), needles))
+  return out.join("")
+}
+
+function termWrap(text, needles) {
+  let html = Shell.esc(text)
+  for (const needle of needles) {
+    const escNeedle = Shell.esc(needle).trim()
+    if (!escNeedle) continue
+    html = html.split(escNeedle).join(`<span class="term">${escNeedle}</span>`)
+  }
+  return html
+}
+
+const sourceNeedles = () => (state.draft?.glossary ?? []).map(t => t.source).filter(Boolean)
+const targetNeedles = () => (state.draft?.glossary ?? []).map(t => t.target).filter(Boolean)
+
+function mark(total) {
+  if (total.todo === total.total) return `<span class="text-ink-faint">·</span>`
+  if (total.final === total.total) return `<span class="text-moss font-serif">✓</span>`
+  return `<span class="text-amber">▍</span>`
+}
+
+function renderTree() {
+  const audit = state.draft?.audit
+  if (!audit || audit.sections.length === 0) {
+    $("tree").innerHTML = `<div class="px-2 py-1.5 text-ink-faint font-serif">尚无对照稿</div>`
+    return
+  }
+  $("tree").innerHTML = audit.sections.map(s => {
+    const active = s.section === state.section
+    const cls = active ? "flex items-center gap-2 px-2 py-1.5 rounded-md bg-accent-soft text-accent font-serif cursor-pointer"
+      : "flex items-center gap-2 px-2 py-1.5 text-ink-soft cursor-pointer hover:bg-paper"
+    const done = s.final === s.total ? "" : `<span class="ml-auto text-[10.5px] text-ink-faint font-sans">${s.final + s.draft}/${s.total}</span>`
+    return `<div class="${cls}" data-jump="${Shell.esc(s.section)}">${mark(s)}<span class="truncate">${Shell.esc(s.section)}</span>${done}</div>`
+  }).join("")
+  document.querySelectorAll("[data-jump]").forEach(el => el.addEventListener("click", () => {
+    state.section = el.dataset.jump
+    renderTree()
+    renderRail()
+    document.querySelector(`[data-anchor="${CSS.escape(el.dataset.jump)}"]`)?.scrollIntoView({ block: "start" })
+  }))
+}
+
+function statusChip(segment) {
+  if (segment.status === "final") return `<span class="badge text-moss shrink-0">定稿 ${new Date(segment.updated_at).toLocaleDateString("zh-CN")}</span>`
+  if (segment.status === "draft") return `<span class="badge text-accent shrink-0">草稿 · ${Shell.esc(segment.engine || "未记引擎")}</span>`
+  return `<span class="badge text-ink-faint shrink-0">待译</span>`
+}
+
+function sourceCard(segment, count) {
+  const page = segment.page === null ? "" : `p.${segment.page} · `
+  return `<div data-anchor="${Shell.esc(segment.section)}" class="bg-card border hairline rounded-md p-5 text-[13px] leading-7 text-ink-soft font-serif">
+    <div class="flex items-center justify-between mb-2.5 gap-2">
+      <div class="text-ink-faint text-[10.5px] smallcaps font-semibold truncate">原文 · §${Shell.esc(segment.section)}</div>
+      <span class="badge text-ink-faint shrink-0">${page}¶${segment.seq}/${count}</span>
+    </div>
+    <p>${highlight(segment.source, sourceNeedles())}</p>
+    <div class="flex gap-2 mt-4 text-[12px] font-sans">
+      <button data-copy="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">⧉ 复制原文</button>
+      <button data-gloss="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">＋ 选中文字入术语表</button>
+    </div>
+  </div>`
+}
+
+function targetCard(segment, wide) {
+  const zh = segment.target.trim()
+  if (state.mode === "zh" && !zh) return ""
+  const live = state.busy === segment.id
+  const border = segment.status === "final" ? "border-l-2 !border-l-moss" : zh || live ? "border-l-2 !border-l-accent" : "border-dashed"
+  const span = wide ? " col-span-2" : ""
+  const head = `<div class="text-[10.5px] smallcaps font-semibold mb-2.5 flex items-center gap-1.5 ${segment.status === "final" ? "text-moss" : "text-accent"}">
+      ${live ? `<svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3a9 9 0 1 0 9 9"/></svg>` : ""}
+      译文 · §${Shell.esc(segment.section)} ¶${segment.seq}${live ? "（流式生成中）" : ""}
+    </div>`
+  if (!zh && !live) return `<div class="${span} bg-card border ${border} rounded-md p-5 text-[13px] leading-7 font-serif text-ink-faint">
+      ${head}
+      <div class="text-[12.5px]">待译 —— 派单给学术翻译 agent，或点右侧「编辑」直接录入人工译文。</div>
+      <div class="flex gap-2 mt-4 text-[12px] font-sans">
+        <button data-run="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">▶ 派单翻译本节</button>
+        <button data-edit="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">✏ 编辑</button>
+      </div>
+    </div>`
+  return `<div class="${span} bg-card border ${border} rounded-md p-5 text-[13px] leading-7 text-ink font-serif">
+    ${head}
+    <div data-body="${segment.id}">${highlight(zh, targetNeedles())}${live ? "▍" : ""}</div>
+    <div class="flex items-center gap-2 mt-3 text-[11.5px] font-sans text-ink-faint">${statusChip(segment)}</div>
+    <div class="flex gap-2 mt-3 text-[12px] font-sans">
+      <button data-run="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">🔁 重译本节</button>
+      <button data-edit="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">✏ 编辑</button>
+      <button data-final="${segment.id}" class="px-2.5 py-1 rounded-md border hairline text-ink-soft hover:bg-paper">✓ 定稿</button>
+    </div>
+  </div>`
+}
+
+function editorCard(segment) {
+  return `<div class="col-span-2 bg-card border hairline rounded-md p-5">
+    <div class="text-[10.5px] smallcaps font-semibold text-ink-faint mb-2">编辑译文 · §${Shell.esc(segment.section)} ¶${segment.seq}</div>
+    <textarea id="editBody" rows="5" class="w-full rounded-md border hairline text-[13px] leading-7 p-3 bg-paper outline-none focus:border-accent font-serif">${Shell.esc(segment.target)}</textarea>
+    <div class="flex items-center gap-2 mt-2.5 text-[12px]">
+      <select id="editStatus" class="h-8 rounded-md border hairline px-1.5 bg-paper">
+        <option value="draft">草稿</option><option value="final">定稿</option><option value="todo">待译</option>
+      </select>
+      <span class="text-ink-faint font-serif">保存为人工译文（engine 记为 manual）</span>
+      <button id="editSave" class="ml-auto h-8 px-3 rounded-md bg-accent text-white text-[12.5px] hover:opacity-90">保存入库</button>
+      <button id="editCancel" class="h-8 px-3 rounded-md border hairline text-[12.5px] text-ink-soft hover:bg-paper">取消</button>
+    </div>
+  </div>`
+}
+
+function renderPairs(editing) {
+  const draft = state.draft
+  const host = $("pairs")
+  if (!draft || draft.segments.length === 0) {
+    host.innerHTML = `<div class="col-span-2 border border-dashed hairline rounded-md p-8 text-center text-[12.5px] text-ink-faint font-serif leading-relaxed">
+      这篇文献还没有对照分段。左侧「从文献库导入分段」把阅读页存过的全文段落转成对照稿；<br>或先载入内置示例，观察术语一致性、保护片段透传校验与导出的真实行为。
+    </div>`
+    return
+  }
+  const perSection = new Map()
+  for (const s of draft.segments) perSection.set(s.section, (perSection.get(s.section) ?? 0) + 1)
+  const rows = draft.segments.map(segment => {
+    const count = perSection.get(segment.section)
+    if (state.mode === "zh") return editing === segment.id ? editorCard(segment) : targetCard(segment, true)
+    return sourceCard(segment, count) + (editing === segment.id ? editorCard(segment) : targetCard(segment))
+  })
+  host.innerHTML = rows.join("")
+  wirePairs(editing)
+}
+
+function wirePairs(editing) {
+  const grab = (attr) => document.querySelectorAll(`[data-${attr}]`)
+  grab("edit").forEach(el => el.addEventListener("click", () => renderPairs(el.dataset.edit)))
+  grab("final").forEach(el => el.addEventListener("click", () => {
+    const segment = segOf(el.dataset.final)
+    saveSegment(segment, segment.target, "final", segment.engine)
+  }))
+  grab("run").forEach(el => el.addEventListener("click", () => dispatchTranslate(el.dataset.run)))
+  grab("copy").forEach(el => el.addEventListener("click", async () => {
+    const segment = segOf(el.dataset.copy)
+    await navigator.clipboard.writeText(segment.source)
+    note(`已复制 §${segment.section} ¶${segment.seq} 的原文`)
+  }))
+  grab("gloss").forEach(el => el.addEventListener("click", () => {
+    const picked = String(window.getSelection() ?? "").trim()
+    $("tSource").value = picked.slice(0, 60)
+    $("tSource").focus()
+    note(picked ? `选中「${picked}」，补上定译后入表` : "先在原文里选中一个术语，再填定译入表")
+  }))
+  if (editing) {
+    $("editSave").addEventListener("click", () => {
+      const segment = segOf(editing)
+      saveSegment(segment, $("editBody").value, $("editStatus").value, "manual")
+    })
+    $("editCancel").addEventListener("click", () => renderPairs(null))
+  }
+}
+
+function renderRail() {
+  const draft = state.draft
+  const audit = draft?.audit
+  const glossary = draft?.glossary ?? []
+  const idOf = new Map(glossary.map(t => [t.source, t.id]))
+  if (!audit) return
+  $("termCount").textContent = `${audit.terms.length} 条 · 已用 ${audit.terms.filter(t => t.status === "used").length}`
+  const LABEL = { used: (t) => `${t.target} ✓${t.count}`, missing: (t) => `${t.target} 未采用 ⚠`, pending: () => "未定义 ⚠", unused: (t) => `${t.target} 未出现` }
+  $("terms").innerHTML = audit.terms.length === 0
+    ? `<div class="px-2.5 py-2 rounded-md bg-paper border hairline text-[11.5px] text-ink-faint font-serif">术语表为空。加几条定译，派单时会自动带上并要求沿用。</div>`
+    : audit.terms.map(t => {
+      const warn = t.status === "missing" || t.status === "pending"
+      const border = warn ? " border-l-2 !border-l-amber" : ""
+      const color = warn ? "text-amber" : "text-ink-soft"
+      return `<div class="flex justify-between gap-2 px-2.5 py-1.5 rounded-md bg-paper border hairline${border}">
+        <span class="truncate" title="${Shell.esc(t.source)}">${Shell.esc(t.source)}</span>
+        <span class="${color} shrink-0 font-serif flex items-center gap-1.5">${LABEL[t.status](t)}
+          <button data-delterm="${idOf.get(t.source) ?? ""}" class="text-ink-faint hover:text-seal" title="移出术语表">✕</button></span>
+      </div>`
+    }).join("")
+  document.querySelectorAll("[data-delterm]").forEach(el => el.addEventListener("click", async () => {
+    if (!el.dataset.delterm) return
+    await fetch(`/api/glossary/${el.dataset.delterm}`, { method: "DELETE" })
+    await loadDraft(state.paper)
+  }))
+  renderProtect()
+}
+
+function renderProtect() {
+  const audit = state.draft?.audit
+  const rollup = audit?.sections.find(s => s.section === state.section) ?? audit?.sections[0]
+  if (!rollup) { $("protectNote").textContent = "选中章节后显示该节的保护片段命中与透传情况。"; return }
+  const shown = Object.keys(rollup.protected).filter(kind => state.kinds[kind] && rollup.protected[kind] > 0)
+  const hits = shown.map(kind => `${KIND_LABEL[kind]} ×${rollup.protected[kind]}`).join(" · ")
+  const leaks = audit.leaks.filter(leak => leak.section === rollup.section && state.kinds[leak.kind])
+  const translated = rollup.total - rollup.todo
+  const tail = translated === 0 ? "该节尚未译出，无透传记录" : leaks.length === 0 ? `已译 ${translated} 段，均已原样透传` : `已译 ${translated} 段，漏 ${leaks.length} 处：${leaks.map(l => `${KIND_LABEL[l.kind]}「${l.text}」`).join("、")}`
+  $("protectNote").textContent = `§${rollup.section} 保护命中：${hits || "无"}。${tail}。`
+}
+
+function renderHeader() {
+  const paper = state.draft?.paper
+  $("title").textContent = paper?.title ?? "学术翻译"
+  const badge = $("arxiv")
+  if (paper?.arxiv_id) { badge.textContent = `arXiv ${paper.arxiv_id}`; badge.classList.remove("hidden") } else badge.classList.add("hidden")
+  const gloss = (state.draft?.glossary ?? []).length
+  $("engineNote").textContent = `en → zh · ${state.provider}/${state.model} · 术语表 ${gloss} 条`
+  const audit = state.draft?.audit
+  const done = audit ? audit.translated : 0
+  const total = audit ? audit.segments : 0
+  $("prog").textContent = `${done}/${total}`
+  $("progBar").style.width = total ? `${Math.round((done / total) * 100)}%` : "0%"
+  const href = (format) => state.paper ? `/api/translate/export?paper=${encodeURIComponent(state.paper)}&format=${format}` : "#"
+  $("exportMd").href = href("md")
+  $("exportHtml").href = href("html")
+  $("exportMd").classList.toggle("opacity-50", !state.paper)
+  $("exportHtml").classList.toggle("opacity-50", !state.paper)
+  Shell.render("translate", { translate: total ? `${done}/${total}` : undefined })
+}
+
+let toastTimer = null
+function note(text) {
+  $("protectNote").textContent = text
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(renderProtect, 4000)
+}
+
+async function loadPapers() {
+  const papers = await api("/api/translate/papers")
+  if (state.paper && !papers.some(p => p.ref === state.paper))
+    papers.unshift({ ref: state.paper, title: `${state.paper}（尚无分段）`, segments: 0, translated: 0 })
+  if (!state.paper && papers[0]) state.paper = papers[0].ref
+  $("paperPick").innerHTML = papers.length === 0
+    ? `<option value="">（暂无对照稿）</option>`
+    : papers.map(p => `<option value="${Shell.esc(p.ref)}" ${p.ref === state.paper ? "selected" : ""}>${Shell.esc(p.title)} · ${p.translated}/${p.segments}</option>`).join("")
+  return papers
+}
+
+async function loadLibrary() {
+  const library = await api("/api/library")
+  $("libPick").innerHTML = library.length === 0
+    ? `<option value="">（文献库为空）</option>`
+    : library.map(p => `<option value="${Shell.esc(p.id)}">${Shell.esc(p.title).slice(0, 40)}</option>`).join("")
+}
+
+async function loadDraft(ref) {
+  if (!ref) { state.draft = null; renderTree(); renderPairs(); renderRail(); renderHeader(); return }
+  state.paper = ref
+  const draft = await api(`/api/translate/draft?paper=${encodeURIComponent(ref)}`)
+  state.draft = draft
+  state.section = draft.audit.sections[0]?.section ?? ""
+  renderTree()
+  renderPairs()
+  renderRail()
+  renderHeader()
+}
+
+async function saveSegment(segment, target, status, engine) {
+  const body = {
+    paper: state.paper, section: segment.section, seq: segment.seq, page: segment.page,
+    source: segment.source, target, status, engine,
+  }
+  const saved = await api("/api/translate/segments", { method: "POST", body: JSON.stringify(body) })
+  if (saved.error) { note(saved.error); return }
+  const leaks = saved.audit.leaks
+  await loadDraft(state.paper)
+  note(leaks.length === 0
+    ? `§${segment.section} ¶${segment.seq} 已入库：保护片段全部透传，术语命中 ${saved.audit.applied.length} 条`
+    : `§${segment.section} ¶${segment.seq} 已入库：漏 ${leaks.length} 处（${leaks.map(l => `${KIND_LABEL[l.kind]}「${l.text}」`).join("、")}）`)
+}
+
+async function dispatchTranslate(id) {
+  const segment = segOf(id)
+  const style = $("stylePick").value
+  state.busy = id
+  renderPairs()
+  const task = `学术翻译（${style}）：把下面英文段落译为中文。公式 LaTeX/Unicode、数字与单位、引用键 cite{…}、图表编号必须原样保留；只输出译文。\n\n${segment.source}`
+  try {
+    const job = await api("/api/lab/jobs", { method: "POST", body: JSON.stringify({ persona: "trans", title: `译 §${segment.section} ¶${segment.seq}`, task }) })
+    if (job.error) { note(`派单失败：${job.error}`); return }
+    const response = await fetch(`/api/threads/${job.thread.id}/messages`, { method: "POST", body: JSON.stringify({ content: task }) })
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+    let candidate = ""
+    for (;;) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      buffer += decoder.decode(chunk.value, { stream: true })
+      const lines = buffer.split("\n")
+      buffer = lines.pop() ?? ""
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue
+        const ev = JSON.parse(line.slice(5))
+        if (ev.type === "text_delta") {
+          candidate += ev.text
+          const body = document.querySelector(`[data-body="${segment.id}"]`)
+          if (body) body.innerHTML = `${highlight(candidate, targetNeedles())}▍`
+        }
+        if (ev.type === "error") note(`agent 报错：${ev.message}`)
+      }
+    }
+    state.busy = ""
+    if (!candidate.trim()) { renderPairs(); note("引擎没有返回译文候选。"); return }
+    const keep = window.confirm(`保留候选译文并入库为草稿？\n\n${candidate.slice(0, 160)}${candidate.length > 160 ? "…" : ""}`)
+    if (keep) { await saveSegment(segment, candidate.trim(), "draft", `${state.provider}/${state.model}`); return }
+    renderPairs()
+  } finally {
+    state.busy = ""
+  }
+}
+
+$("modeBoth").addEventListener("click", () => {
+  state.mode = "both"
+  $("modeBoth").className = "h-8 px-2.5 bg-accent text-white font-serif"
+  $("modeZh").className = "h-8 px-2.5 hover:bg-paper text-ink-soft border-l hairline"
+  renderPairs()
+})
+$("modeZh").addEventListener("click", () => {
+  state.mode = "zh"
+  $("modeZh").className = "h-8 px-2.5 bg-accent text-white font-serif"
+  $("modeBoth").className = "h-8 px-2.5 hover:bg-paper text-ink-soft border-l hairline"
+  renderPairs()
+})
+$("paperPick").addEventListener("change", (e) => loadDraft(e.target.value))
+document.querySelectorAll("[data-kind]").forEach(el => el.addEventListener("change", () => {
+  state.kinds[el.dataset.kind] = el.checked
+  renderProtect()
+}))
+$("termForm").addEventListener("submit", async (e) => {
+  e.preventDefault()
+  const source = $("tSource").value.trim()
+  if (!source) { note("先填英文术语。"); return }
+  const saved = await api("/api/glossary", { method: "POST", body: JSON.stringify({ source, target: $("tTarget").value.trim(), note: $("tNote").value.trim() }) })
+  if (saved.error) { note(saved.error); return }
+  $("tSource").value = ""; $("tTarget").value = ""; $("tNote").value = ""
+  await loadDraft(state.paper)
+  note(`术语表已保存 ${source}`)
+})
+$("importBtn").addEventListener("click", async () => {
+  const ref = $("libPick").value
+  if (!ref) { note("文献库里还没有条目。"); return }
+  const result = await api("/api/translate/import", { method: "POST", body: JSON.stringify({ paper: ref }) })
+  await loadPapers()
+  await loadDraft(ref)
+  if (result.paragraphs === 0) { note("该文献还没有正文分段，先到阅读页粘贴全文分段。"); return }
+  note(result.imported ? `导入 ${result.imported} 段对照稿（跳过已有 ${result.paragraphs - result.imported} 段）` : "这些段落已经在对照稿里了。")
+})
+
+const DEMO = {
+  paper: {
+    title: "Score-Based Generative Modeling through Stochastic Differential Equations",
+    arxivId: "2011.13456",
+    year: 2021,
+    venue: "ICLR",
+    source: "arxiv",
+    authors: ["Yang Song", "Jascha Sohl-Dickstein", "Diederik P. Kingma", "Abhishek Kumar", "Stefan Ermon", "Ben Poole"],
+  },
+  terms: [
+    ["probability flow ODE", "概率流 ODE"],
+    ["score function", "得分函数"],
+    ["high-fidelity", "高保真"],
+    ["adaptive step size", "自适应步长"],
+    ["churn", ""],
+  ],
+  segments: [
+    {
+      section: "4.1", seq: 1, page: 12, status: "draft",
+      source: "We consider the probability flow ODE associated with the reverse SDE in Eq. (15), which enables high-fidelity sampling with a small number of function evaluations. In practice we train $\\varepsilon_\\theta(x, t)$ with the objective in Eq. (8) and solve the ODE using Dormand–Prince with adaptive step size: 50 steps reach an FID of 2.20 on CIFAR-10.",
+      target: "我们考虑与式 (15) 中反向 SDE 相关联的概率流 ODE，它让少量函数求值即可实现高保真采样。实践中用式 (8) 的目标训练 $\\varepsilon_\\theta(x, t)$，并采用带自适应步长的 Dormand–Prince 方法求解该 ODE：50 步即可在 CIFAR 数据集上达到 FID 2.20。",
+    },
+    {
+      section: "4.2", seq: 1, page: 13, status: "final",
+      source: "Following Ho et al. (2020), we train an MLP with 3 hidden layers and a score function of width 256; each batch holds 128 samples and training runs 40 epochs on 4 GPUs, with Figure 2 showing the generated samples.",
+      target: "沿用 Ho 等人 (2020) 的做法：用 3 层隐层网络训练宽度为 256 的得分函数，每个批次放 128 个样本，在 4 块 GPU 上训练 40 epochs，图 2 给出了生成的样本。",
+    },
+    {
+      section: "4.3", seq: 1, page: 14, status: "todo",
+      source: "We further compare churn with the probability flow ODE solver: the sampler needs 350 NFEs to match Table 4, while the churn variant reaches the same FID with 100 NFEs.",
+      target: "",
+    },
+  ],
+}
+$("demoBtn").addEventListener("click", async () => {
+  const paper = await api("/api/library", { method: "POST", body: JSON.stringify(DEMO.paper) })
+  if (paper.error) { note(`示例文献入库失败：${paper.error}`); return }
+  const ref = paper.id
+  for (const term of DEMO.terms)
+    await api("/api/glossary", { method: "POST", body: JSON.stringify({ source: term[0], target: term[1] }) })
+  for (const item of DEMO.segments)
+    await api("/api/translate/segments", {
+      method: "POST",
+      body: JSON.stringify({
+        paper: ref, section: item.section, seq: item.seq, page: item.page,
+        source: item.source, target: item.target, status: item.status,
+        engine: item.target ? "manual/示例" : "",
+      }),
+    })
+  await loadPapers()
+  await loadDraft(ref)
+  note("已载入内置示例：§4.1 故意漏掉 CIFAR-10 的版本号，§4.2 全部透传，§4.3 待译且 churn 未定译。")
+})
+
+async function boot() {
+  const health = await api("/api/health")
+  state.provider = health.provider
+  state.model = health.model
+  const wanted = new URLSearchParams(location.search).get("paper") ?? ""
+  await loadLibrary()
+  if (wanted) {
+    state.paper = wanted
+    $("libPick").value = wanted
+  }
+  const papers = await loadPapers()
+  await loadDraft(state.paper || papers[0]?.ref || "")
+}
+boot()
 </script>
 </body>
 </html>

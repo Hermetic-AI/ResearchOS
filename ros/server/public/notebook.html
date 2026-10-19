@@ -16,7 +16,7 @@
   <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
     <div>
       <div class="font-serif text-[16px]">数据分析 · Notebook</div>
-      <div class="text-[11px] text-ink-faint mt-0.5">粘贴 CSV → 列画像 → 配对 t 检验 → 期刊图表与 LaTeX 产物</div>
+      <div class="text-[11px] text-ink-faint mt-0.5">粘贴 CSV → 列画像 → 配对 / Welch t 检验 → 期刊图表与 LaTeX 产物</div>
     </div>
     <div class="ml-auto flex items-center gap-3 text-[12px] text-ink-soft shrink-0">
       <div class="flex items-center gap-4 border hairline rounded-md px-3.5 h-9 bg-paper">
@@ -61,11 +61,18 @@
       <section class="bg-card border hairline rounded-lg p-5">
         <div class="flex items-baseline justify-between mb-3">
           <h2 class="smallcaps text-[12px] font-semibold text-ink-faint">统计检验 · Stat Test</h2>
-          <span class="text-[11px] text-ink-faint">配对 t 检验 · 双侧 · 差值零方差自动拒绝</span>
+          <span class="text-[11px] text-ink-faint">t 检验（配对 / Welch）+ 非参数秩检验（Wilcoxon / Mann-Whitney）· 双侧</span>
         </div>
-        <div class="grid grid-cols-5 gap-3 items-end">
+        <div class="grid grid-cols-6 gap-3 items-end">
           <label class="text-[11px] text-ink-faint">数据集
             <select id="tDataset" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent"></select></label>
+          <label class="text-[11px] text-ink-faint">方法
+            <select id="tMethod" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent">
+              <option value="paired_t">配对 t</option>
+              <option value="welch_t">Welch 两样本</option>
+              <option value="wilcoxon">Wilcoxon 符号秩</option>
+              <option value="mann_whitney">Mann-Whitney U</option>
+            </select></label>
           <label class="text-[11px] text-ink-faint">x 列
             <select id="tX" class="mt-1 block w-full h-8 rounded-md border hairline bg-paper px-2 outline-none focus:border-accent"></select></label>
           <label class="text-[11px] text-ink-faint">y 列
@@ -92,7 +99,7 @@
   </div>
   <div class="flex-1 overflow-y-auto p-4 text-[12px] space-y-2" id="products"></div>
   <div class="p-4 border-t hairline text-[11px] text-ink-faint leading-relaxed font-serif italic">
-    图表默认套用期刊版式：衬线轴标签 · Fig. 编号自动续排 · 显著项以朱红标出。统计口径为双侧配对 t 检验，p 值由不完全 Beta 函数直接算出。
+    图表默认套用期刊版式：衬线轴标签 · Fig. 编号自动续排 · 显著项以朱红标出。统计口径为双侧检验：t 检验（配对 / Welch，p 值由不完全 Beta 函数直接算出）与非参数秩检验（Wilcoxon 符号秩 / Mann-Whitney U，无结时枚举精确零分布，有结改用连续性校正的正态近似）；对话页可用 data_analyze 工具复算同一份数据。
   </div>
 </aside>
 
@@ -113,6 +120,12 @@ let hypotheses = []
 
 const num = (v, d = 3) => Number(v).toFixed(d)
 const pText = (p) => p < 0.001 ? "< 0.001" : p.toFixed(4)
+// Rank results carry no t/df, so the annotation picks the statistic the test actually reports.
+const isT = (r) => r.t !== undefined && r.t !== null
+const shiftText = (r) => isT(r) ? `Δ̄ = ${num(r.mean_diff, 2)}` : `HL = ${num(r.hl_diff, 2)}`
+const statText = (r) => isT(r) ? `df = ${num(r.df, 2)}` : `${r.statistic_name} = ${num(r.statistic, 1)}（${r.p_method}）`
+const methodLabel = (r) => r.method === "welch_t" ? "Welch 两独立样本 t 检验" : r.method === "wilcoxon" ? "Wilcoxon 符号秩检验" : r.method === "mann_whitney" ? "Mann-Whitney U 秩和检验" : "配对 t 检验"
+const briefStat = (r) => isT(r) ? `t=${num(r.t, 2)} · df=${num(r.df, 2)}` : `${r.statistic_name}=${num(r.statistic, 1)} · ${r.p_method}`
 const when = (ts) => new Date(ts).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
 
 async function detail(id) {
@@ -172,7 +185,7 @@ function chart(pairs, r, fig) {
       <text x="${padL - 6}" y="${y(t) + 3}" font-size="9.5" fill="#9C9B90" text-anchor="end" font-family="JetBrains Mono, monospace">${t.toFixed(1)}</text>`).join("")}
     ${line("x", "#2F4B7C")}${line("y", "#5A6E4A")}
     <path d="M${xs[0]} ${y(pairs[0].x)} L${xs[0]} ${y(pairs[0].y)}" stroke="#B3402F" stroke-width="1" stroke-dasharray="2 3"/>
-    <text x="${padL + 10}" y="${padT + 10}" font-size="10.5" fill="#B3402F" font-family="Noto Serif SC, Georgia, serif">Δ̄ = ${num(r.mean_diff, 2)} · ${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`} · n = ${r.n}</text>
+    <text x="${padL + 10}" y="${padT + 10}" font-size="10.5" fill="#B3402F" font-family="Noto Serif SC, Georgia, serif">${shiftText(r)} · ${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`} · n = ${r.n}</text>
     ${pairs.map((_, i) => `<text x="${xs[i]}" y="${h - padB + 14}" font-size="9.5" fill="#9C9B90" text-anchor="middle" font-family="JetBrains Mono, monospace">${i + 1}</text>`).join("")}
     <text x="${(padL + w - padR) / 2}" y="${h - 12}" font-size="11" fill="#6B6A61" text-anchor="middle" font-family="Noto Serif SC, Georgia, serif">配对样本序号</text>
     <text x="14" y="${(padT + h - padB) / 2}" font-size="11" fill="#6B6A61" text-anchor="middle" transform="rotate(-90 14 ${(padT + h - padB) / 2})" font-family="Noto Serif SC, Georgia, serif">观测值</text>
@@ -180,19 +193,84 @@ function chart(pairs, r, fig) {
   </svg><div class="text-[11px] text-ink-faint font-serif italic mt-1">Fig. ${fig} — ${Shell.esc(r.x)} 与 ${Shell.esc(r.y)} 的逐对观测；朱红虚线标出第一对的差值方向。</div>`
 }
 
+// Welch's groups are independent, so linking row i of x to row i of y would invent pairs.
+function groupChart(values, r, fig) {
+  const w = 460, h = 236, padL = 54, padR = 14, padT = 18, padB = 42
+  const flat = [...values.x, ...values.y]
+  const lo = Math.min(...flat), hi = Math.max(...flat)
+  const span = hi - lo || 1
+  // Extra headroom keeps the top dots clear of the Δ̄/p annotation drawn at padT.
+  const y = (v) => h - padB - ((v - (lo - span * 0.08)) / (span * 1.3)) * (h - padB - padT)
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => lo - span * 0.08 + f * span * 1.3)
+  const center = isT(r)
+    ? (list) => list.reduce((sum, v) => sum + v, 0) / list.length
+    : (list) => { const s = [...list].sort((a, b) => a - b); return s.length % 2 === 1 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2 }
+  const column = (cx, list, color, name) => {
+    const centerY = y(center(list))
+    return `<line x1="${cx - 24}" y1="${centerY}" x2="${cx + 24}" y2="${centerY}" stroke="${color}" stroke-width="1.6" stroke-dasharray="4 3"/>
+      ${list.map((v, i) => `<circle cx="${cx + ((i % 3) - 1) * 9}" cy="${y(v)}" r="3.2" fill="${color}"/>`).join("")}
+      <text x="${cx}" y="${h - padB + 14}" font-size="10.5" fill="#6B6A61" text-anchor="middle" font-family="Noto Serif SC, Georgia, serif">${Shell.esc(name)} · n=${list.length}</text>`
+  }
+  const effect = r.effect === null || r.effect === undefined ? "" : ` · ${r.effect_kind} = ${num(r.effect, 2)}`
+  return `<svg viewBox="0 0 ${w} ${h}" class="w-full max-w-lg bg-card">
+    <line x1="${padL}" y1="${h - padB}" x2="${w - padR}" y2="${h - padB}" stroke="#E7E3D8"/>
+    <line x1="${padL}" y1="${h - padB}" x2="${padL}" y2="${padT}" stroke="#E7E3D8"/>
+    ${ticks.map((t) => `<line x1="${padL}" y1="${y(t)}" x2="${w - padR}" y2="${y(t)}" stroke="#F1EDE2"/>
+      <text x="${padL - 6}" y="${y(t) + 3}" font-size="9.5" fill="#9C9B90" text-anchor="end" font-family="JetBrains Mono, monospace">${t.toFixed(1)}</text>`).join("")}
+    ${column(padL + 90, values.x, "#2F4B7C", r.x)}${column(w - 140, values.y, "#5A6E4A", r.y)}
+    <text x="${padL + 10}" y="${padT + 10}" font-size="10.5" fill="#B3402F" font-family="Noto Serif SC, Georgia, serif">${shiftText(r)} · ${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`} · ${statText(r)}${effect}</text>
+    <text x="14" y="${(padT + h - padB) / 2}" font-size="11" fill="#6B6A61" text-anchor="middle" transform="rotate(-90 14 ${(padT + h - padB) / 2})" font-family="Noto Serif SC, Georgia, serif">观测值</text>
+  </svg><div class="text-[11px] text-ink-faint font-serif italic mt-1">Fig. ${fig} — ${Shell.esc(r.x)} 与 ${Shell.esc(r.y)} 的独立观测点，虚线为组${r.method === "welch_t" ? "均值；Welch 检验不假设两列逐行配对" : "中位数；Mann-Whitney 检验比较的是两组的秩分布，HL 为位移估计"}。</div>`
+}
+
+const statRow = (label, value, cls) => `<tr class="border-b hairline"><td class="py-1.5 text-ink-faint font-serif">${label}</td><td class="font-mono ${cls ?? ""}">${value}</td></tr>`
+// Results stored before the CI / effect-size columns landed still render, with — for the gaps.
+const dash = (v, d = 3) => v === null || v === undefined ? "—" : num(v, d)
+const verdict = (r) => `<span class="font-serif">${r.significant ? `在 α=${r.alpha} 下显著，${r.direction === "x_y" ? Shell.esc(r.x) : Shell.esc(r.y)} 更大` : `在 α=${r.alpha} 下不显著`}</span>`
+
+function rankStatTable(r, level) {
+  const two = r.method === "mann_whitney"
+  const stat = r.statistic_name === "V" ? "V（正差值秩和）" : `U（${Shell.esc(r.x)} 优于 ${Shell.esc(r.y)}）`
+  const approx = r.p_method === "exact" ? "精确零分布（枚举）" : "结校正正态近似（含连续性校正）"
+  const rows = [
+    statRow(two ? "样本量 n（x / y）" : "配对数 n（非零差值）", two ? `${r.n_x} / ${r.n_y}` : r.n),
+  ]
+  if (!two && r.n_zero > 0) rows.push(statRow("零差值（不参与）", r.n_zero))
+  if (two) rows.push(statRow(`平均秩（${Shell.esc(r.x)} / ${Shell.esc(r.y)}）`, `${dash(r.mean_rank_x, 2)} / ${dash(r.mean_rank_y, 2)}`))
+  rows.push(
+    statRow(`中位数 ${Shell.esc(r.x)}`, dash(r.median_x)),
+    statRow(`中位数 ${Shell.esc(r.y)}`, dash(r.median_y)),
+    statRow("Hodges-Lehmann 位移", dash(r.hl_diff), r.significant ? "text-seal" : ""),
+    statRow(`${stat}`, `${dash(r.statistic, 1)} · H0 期望 ${dash(r.null_mean, 1)}`, r.significant ? "text-seal" : ""),
+    statRow("结（ties）", r.ties ? "有 · 用中位秩" : "无"),
+    statRow("p 口径", `${approx}`),
+    statRow("p（双侧）", pText(r.p), r.significant ? "text-seal font-semibold" : ""),
+    statRow(`${level} CI（HL 位移）`, r.ci_low === null || r.ci_low === undefined ? "—" : `(${dash(r.ci_low)}, ${dash(r.ci_high)})`),
+    statRow("效应量 rank-biserial r", `${dash(r.effect)}（${Shell.esc(r.effect_label ?? "")}）`),
+    statRow("结论", verdict(r)),
+  )
+  return `<table class="w-full text-[12.5px]"><tbody>${rows.join("")}</tbody></table>`
+}
+
 function statisticTable(r) {
-  const row = (label, value, cls) => `<tr class="border-b hairline"><td class="py-1.5 text-ink-faint font-serif">${label}</td><td class="font-mono ${cls ?? ""}">${value}</td></tr>`
+  const level = `${Math.round((1 - r.alpha) * 100)}%`
+  if (!isT(r)) return rankStatTable(r, level)
+  const welch = r.method === "welch_t"
+  const effectName = r.effect_kind === "g" ? "Hedges' g" : "Cohen's d_z"
   return `<table class="w-full text-[12.5px]">
     <tbody>
-      ${row(`均值 ${Shell.esc(r.x)}`, num(r.mean_x, 3))}
-      ${row(`均值 ${Shell.esc(r.y)}`, num(r.mean_y, 3))}
-      ${row("均值差 Δ̄", `${num(r.mean_diff, 3)}`, r.significant ? "text-seal" : "")}
-      ${row("差值 SD", num(r.sd_diff, 3))}
-      ${row("标准误 SE", num(r.se_diff, 4))}
-      ${row("t", num(r.t, 3), r.significant ? "text-seal" : "")}
-      ${row("自由度 df", r.df)}
-      ${row("p（双侧）", pText(r.p), r.significant ? "text-seal font-semibold" : "")}
-      ${row("结论", `<span class="font-serif">${r.significant ? `在 α=${r.alpha} 下显著，${r.direction === "x_y" ? r.x : r.y} 更大` : `在 α=${r.alpha} 下不显著`}</span>`)}
+      ${statRow(welch ? "样本量 n（x / y）" : "配对数 n", welch ? `${r.n_x} / ${r.n_y}` : r.n)}
+      ${statRow(`均值 ${Shell.esc(r.x)}`, welch ? `${num(r.mean_x, 2)} ± ${num(r.sd_x, 2)}` : num(r.mean_x, 3))}
+      ${statRow(`均值 ${Shell.esc(r.y)}`, welch ? `${num(r.mean_y, 2)} ± ${num(r.sd_y, 2)}` : num(r.mean_y, 3))}
+      ${statRow("均值差 Δ̄", dash(r.mean_diff), r.significant ? "text-seal" : "")}
+      ${statRow(welch ? "组内 SD（x / y）" : "差值 SD", welch ? `${dash(r.sd_x)} / ${dash(r.sd_y)}` : dash(r.sd_diff))}
+      ${statRow("标准误 SE", dash(r.se_diff, 4))}
+      ${statRow("t", dash(r.t), r.significant ? "text-seal" : "")}
+      ${statRow("自由度 df", welch ? dash(r.df, 2) : r.df)}
+      ${statRow("p（双侧）", pText(r.p), r.significant ? "text-seal font-semibold" : "")}
+      ${statRow(`${level} CI（Δ̄）`, r.ci_low === undefined || r.ci_low === null ? "—" : `(${dash(r.ci_low)}, ${dash(r.ci_high)})`)}
+      ${statRow(`效应量 ${effectName}`, r.effect === undefined || r.effect === null ? "—" : `${dash(r.effect)}（${Shell.esc(r.effect_label ?? "")}）`)}
+      ${statRow("结论", verdict(r))}
     </tbody></table>`
 }
 
@@ -201,7 +279,7 @@ function resultCard(entry, fig) {
   return `<article class="bg-card border hairline rounded-lg overflow-hidden" id="res-${entry.id}">
     <div class="px-4 py-2 flex items-center gap-2 text-[11px] text-ink-faint border-b hairline">
       <span class="celltag text-accent border !border-accent/40">STAT</span>
-      <span class="font-mono">paired_t</span>
+      <span class="font-mono">${Shell.esc(r.method)}</span>
       <span class="ml-auto font-serif">${Shell.esc(r.x)} vs ${Shell.esc(r.y)} · ${when(entry.created_at)}</span>
     </div>
     <div class="p-4 grid grid-cols-2 gap-5">
@@ -244,6 +322,15 @@ async function renderOutputs() {
     const host = document.querySelector(`.chart[data-id="${entry.id}"]`)
     if (!host) continue
     const data = await detail(entry.dataset_id)
+    const numeric = (name) => data.rows.map((row) => row[name]).filter((v) => typeof v === "number")
+    // Two-sample tests have no row-to-row pairing, so they get the point-column figure instead.
+    if (entry.result.method === "welch_t" || entry.result.method === "mann_whitney") {
+      const gx = numeric(entry.result.x), gy = numeric(entry.result.y)
+      host.innerHTML = gx.length >= 2 && gy.length >= 2
+        ? groupChart({ x: gx, y: gy }, entry.result, results.length - i)
+        : `<div class="text-[11.5px] text-ink-faint">两组需各至少 2 个有效数值，无法绘图。</div>`
+      continue
+    }
     const pairs = data.rows
       .map((row) => ({ x: row[entry.result.x], y: row[entry.result.y] }))
       .filter((p) => typeof p.x === "number" && typeof p.y === "number")
@@ -256,8 +343,8 @@ async function renderOutputs() {
     ? `<div class="text-[11.5px] text-ink-faint italic">产物会出现在这里：检验结果 + LaTeX 片段。</div>`
     : results.map((e, i) => `<div class="rounded-md border hairline p-2.5 hover:border-accent/50 cursor-pointer jump" data-id="${e.id}">
         <div class="font-serif">Fig. ${results.length - i} — ${Shell.esc(e.x)} vs ${Shell.esc(e.y)}</div>
-        <div class="text-ink-faint text-[11px] mt-0.5 font-mono">t=${num(e.result.t, 2)} · p=${pText(e.result.p)} ${e.significant ? '<span class="text-seal">显著</span>' : ""}</div>
-        <div class="text-ink-faint text-[10.5px] mt-0.5">paired_t · n=${e.pair_count} · ${when(e.created_at)}</div></div>`).join("") +
+        <div class="text-ink-faint text-[11px] mt-0.5 font-mono">${briefStat(e.result)} · p=${pText(e.result.p)} ${e.significant ? '<span class="text-seal">显著</span>' : ""}</div>
+        <div class="text-ink-faint text-[10.5px] mt-0.5">${Shell.esc(e.method)} · n=${e.pair_count} · ${when(e.created_at)}</div></div>`).join("") +
       `<div class="rounded-md border hairline p-2.5">
         <div class="font-serif">datasets · 原始 CSV</div>
         <div class="text-ink-faint text-[11px] mt-0.5">${datasets.length} 份已落盘，可随时复算</div></div>`
@@ -343,7 +430,7 @@ $("runTest").onclick = async () => {
   const response = await fetch("/api/notebook/tests", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ dataset: $("tDataset").value, x: $("tX").value, y: $("tY").value, alpha: Number($("tAlpha").value) }),
+    body: JSON.stringify({ dataset: $("tDataset").value, x: $("tX").value, y: $("tY").value, alpha: Number($("tAlpha").value), method: $("tMethod").value }),
   })
   const body = await response.json()
   if (!response.ok) { $("testError").textContent = body.error ?? "检验失败"; $("testError").classList.remove("hidden"); return }
@@ -366,9 +453,13 @@ $("outputs").onclick = async (e) => {
   const r = entry.result
   const statement = card.querySelector(".hypothesis").selectedOptions[0]?.textContent ?? ""
   const source = datasets.find((d) => d.id === entry.dataset_id)?.name ?? entry.dataset_id
+  const two = r.method === "welch_t" || r.method === "mann_whitney"
+  const sample = two ? `n=${r.n_x}/${r.n_y}` : `n=${r.n}`
+  const effect = r.effect === null || r.effect === undefined ? "" : `，${r.effect_kind}=${num(r.effect, 3)}`
+  const shift = isT(r) ? `Δ̄=${num(r.mean_diff, 3)}，t=${num(r.t, 3)}` : `HL=${num(r.hl_diff, 3)}，${r.statistic_name}=${num(r.statistic, 1)}（${r.p_method}）`
   const body = {
     kind: card.querySelector(".kind").value,
-    note: `配对 t 检验 ${r.x} vs ${r.y}：Δ̄=${num(r.mean_diff, 3)}，t=${num(r.t, 3)}，${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`}（n=${r.n}，α=${r.alpha}，数据集 ${source}）${r.significant ? " 显著" : " 不显著"}`,
+    note: `${methodLabel(r)} ${r.x} vs ${r.y}：${shift}，${r.p < 0.001 ? "p < 0.001" : `p = ${r.p.toFixed(4)}`}（${sample}，α=${r.alpha}${effect}，数据集 ${source}）${r.significant ? " 显著" : " 不显著"}`,
   }
   const response = await fetch(`/api/hypotheses/${hypothesisId}/evidence`, {
     method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),

@@ -70,6 +70,7 @@ async function renderPaper(paper) {
   el.innerHTML = `
     <div class="max-w-[640px] mx-auto px-8 py-8">
       <a href="/library.html" class="text-[12px] text-accent hover:underline">← 文献库</a>
+      <a href="/translate.html?paper=${encodeURIComponent(paper.id)}" class="ml-3 text-[12px] text-accent hover:underline">→ 学术翻译</a>
       <div class="mt-3 font-serif text-[19px] leading-snug">${Shell.esc(paper.title)}</div>
       <div class="mt-2 text-[12.5px] text-ink-soft">${Shell.esc(authors)}</div>
       <div class="mt-1.5 flex gap-1.5 flex-wrap text-[10.5px]">

@@ -6,5 +6,8 @@ html, body { height: 100%; }
 .hairline { border-color: #E7E3D8; }
 .cite-ref { color: #2F4B7C; font-size: .72em; vertical-align: super; font-weight: 600; cursor: pointer; }
 .celltag { font-size: 10.5px; padding: 1px 7px; border: 1px solid #E7E3D8; border-radius: 3px; font-family: "Noto Serif SC", Georgia, serif; }
+.term { background: #FBF3DC; border-bottom: 1.5px dashed #A67C2E; border-radius: 2px; padding: 0 2px; }
+.formula { background: #E8EDF5; border-radius: 3px; padding: 0 4px; font-family: Georgia, "Noto Serif SC", serif; font-style: italic; color: #2F4B7C; }
+.badge { font-size: 10.5px; padding: 1px 6px; border: 1px solid #E7E3D8; border-radius: 3px; white-space: nowrap; }
 .node { cursor: pointer; transition: opacity .15s; }
 .node:hover { opacity: .85; }

@@ -178,6 +178,8 @@ export function createMockProvider(name: string): Provider {
         const combined = toolResults.map((message) => message.content ?? "").join("\n---\n")
         if (toolResults.some((message) => message.name === "literature_search")) {
           yield* emitText(`文献库检索完成，命中摘录：\n\n${snippet(combined)}`)
+        } else if (toolResults.some((message) => message.name === "data_analyze")) {
+          yield* emitText(`数据分析完成，结果如下：\n\n${snippet(combined)}`)
         } else {
           yield* emitText(`I read the file. It contains ${combined.length} characters of content. Summary:\n\n${snippet(combined)}`)
         }
@@ -195,6 +197,34 @@ export function createMockProvider(name: string): Provider {
         yield {
           type: "tool_call",
           call: { id: `mock_call_${Math.random().toString(36).slice(2, 10)}`, name: "literature_search", arguments: JSON.stringify({ query }) },
+        }
+        yield { type: "finish", reason: "tool_calls" }
+        return
+      }
+      const pair = content.match(/([\w\u4e00-\u9fa5]+)\s*(?:vs\.?|对比|与|和)\s*([\w\u4e00-\u9fa5]+)/i)
+      if (/数据|数据集|检验|显著|analyze|dataset/i.test(content)) {
+        if (pair?.[1] !== undefined && pair[2] !== undefined) {
+          // Naming a rank test in the message is the analyst's shortcut for skipping the t-test.
+          const method = /非参数|秩|wilcoxon|mann[\s-]?whitney|不满足正态/i.test(content)
+            ? /两组|独立|组间|between/i.test(content)
+              ? "mann_whitney"
+              : "wilcoxon"
+            : undefined
+          yield* emitText(`直接用台账里最新的数据集检验 ${pair[1]} 与 ${pair[2]}${method === undefined ? "。" : `（${method}）。`}`)
+          yield {
+            type: "tool_call",
+            call: {
+              id: `mock_call_${Math.random().toString(36).slice(2, 10)}`,
+              name: "data_analyze",
+              arguments: JSON.stringify({ action: "test", x: pair[1], y: pair[2], ...(method === undefined ? {} : { method }) }),
+            },
+          }
+        } else {
+          yield* emitText("先列出台账里的数据集，确认要用哪一份。")
+          yield {
+            type: "tool_call",
+            call: { id: `mock_call_${Math.random().toString(36).slice(2, 10)}`, name: "data_analyze", arguments: JSON.stringify({ action: "list" }) },
+          }
         }
         yield { type: "finish", reason: "tool_calls" }
         return
