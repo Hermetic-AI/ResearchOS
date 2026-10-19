@@ -308,6 +308,253 @@ export type ConfigModelReasoning =
 
 export type ConfigShellOption = { path: string; name: string; acceptable: boolean }
 
+export type AssetChainEntry = { path: string; exists: boolean }
+
+export type ResearchosApiDescriptor = {
+  name: string
+  description: string
+  baseUrl: string
+  auth: "none" | "api_key" | "bearer" | "mailto"
+  rps: number
+  burst: number
+  cacheTtlS: number
+  enabled: boolean
+}
+
+export type ResearchosApiStatus = {
+  name: string
+  healthy: boolean
+  state: "idle" | "healthy" | "failed" | "disabled"
+  lastError?: string | undefined
+  lastCallAt?: number | undefined
+  callsTotal: number
+  cacheHitRate: number
+  availableTokens: number
+}
+
+export type ResearchosPaper = {
+  id: string
+  doi?: string | undefined
+  arxivId?: string | undefined
+  title: string
+  year?: number | undefined
+  venue?: string | undefined
+  authors: Array<{ name: string }>
+  abstract?: string | undefined
+  citationCount: number
+  source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+  isRead?: boolean | undefined
+  isFavorite?: boolean | undefined
+}
+
+export type ResearchosLiteratureZoteroReport = {
+  imported: number
+  skipped: number
+  pdfsCopied: number
+  warnings: Array<string>
+}
+
+export type ResearchosLiteratureCitationEntry = {
+  id: string
+  title?: string | undefined
+  year?: number | undefined
+  doi?: string | undefined
+  source: "pdf" | "grobid" | "semantic_scholar"
+  inLibrary: boolean
+}
+
+export type ResearchosLiteratureSimilarPaper = {
+  id: string
+  doi?: string | undefined
+  arxivId?: string | undefined
+  title: string
+  year?: number | undefined
+  venue?: string | undefined
+  authors: Array<{ name: string }>
+  abstract?: string | undefined
+  citationCount: number
+  source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+  isRead?: boolean | undefined
+  isFavorite?: boolean | undefined
+  score: number
+}
+
+export type ResearchosLiteratureReadSection = { section?: string | undefined; text: string; score: number }
+
+export type ResearchosGraphStatus = {
+  backend: "sqlite" | "neo4j" | "memgraph" | "tugraph"
+  healthy: boolean
+  detail: string
+}
+
+export type ResearchosGraphNode = {
+  id: string
+  type: "paper" | "note" | "concept" | "repo"
+  label: string
+  refId?: string | undefined
+  sourcePath?: string | undefined
+  attrs?: { [x: string]: any } | undefined
+  x?: number | undefined
+  y?: number | undefined
+}
+
+export type ResearchosGraphEdge = {
+  from: string
+  to: string
+  relation: "cites" | "mentions" | "implements" | "evolves"
+  context?: string | undefined
+  sourcePath?: string | undefined
+}
+
+export type ResearchosGraphPaperMeta = {
+  id: string
+  title: string
+  year?: number | undefined
+  doi?: string | undefined
+  authors: Array<string>
+  citationCount: number
+}
+
+export type ResearchosGraphSource = {
+  id: string
+  type: "paper" | "note" | "concept" | "repo"
+  label: string
+  refId?: string | undefined
+}
+
+export type ResearchosGraphReindexResult = { files: Array<string>; nodes: number; edges: number }
+
+export type ResearchosLatexOutlineItem = { level: number; title: string; line: number }
+
+export type ResearchosLatexBibtexEntry = { type: string; key: string; fields: { [x: string]: string } }
+
+export type ResearchosLatexBuildRecord = {
+  id: string
+  mainFile: string
+  status: "success" | "failed" | "unavailable"
+  pdfPath?: string | undefined
+  log: string
+  durationMs?: number | undefined
+  createdAt: number
+}
+
+export type ResearchosLatexError = { file: string; line: number; message: string; severity: "error" | "warning" }
+
+export type ResearchosLatexCompileUnavailable = { available: false; message: string; installHint: string }
+
+export type ResearchosLatexSynctexResult = {
+  found: boolean
+  reason?: string | undefined
+  file?: string | undefined
+  line?: number | undefined
+  page?: number | undefined
+  x?: number | undefined
+  y?: number | undefined
+}
+
+export type ResearchosLatexFormatIssue = {
+  file: string
+  line: number
+  rule: string
+  severity: "error" | "warning" | "info"
+  message: string
+}
+
+export type ResearchosDataNotebook = { id: string; title: string; createdAt: number }
+
+export type ResearchosDataCell = {
+  id: string
+  notebookId: string
+  position: number
+  source: string
+  status: "idle" | "running" | "success" | "error"
+  stdout?: string | undefined
+  stderr?: string | undefined
+  durationMs?: number | undefined
+  executedAt?: number | undefined
+}
+
+export type ResearchosDataRunError = { type: string; message: string; traceback: string }
+
+export type ResearchosDataDataset = {
+  id: string
+  name: string
+  path: string
+  format: string
+  sizeBytes: number
+  profileJson?: string | undefined
+  createdAt: number
+}
+
+export type ResearchosDataArtifact = {
+  id: string
+  kind: string
+  path: string
+  previewPath?: string | undefined
+  format: string
+  dpi?: number | undefined
+  latexSnippet?: string | undefined
+  specJson?: string | undefined
+  createdAt: number
+}
+
+export type ResearchosDataArtifactLink = {
+  artifactId: string
+  gitCommit?: string | undefined
+  texFile?: string | undefined
+  texSection?: string | undefined
+  linkedAt: number
+}
+
+export type ResearchosDataArtifactFile = { format: string; content: string; encoding: "utf8" | "base64" }
+
+export type ResearchosDataStatTest = {
+  id: string
+  test: string
+  columnsJson: string
+  statistic?: number | undefined
+  pValue?: number | undefined
+  conclusion: string
+  createdAt: number
+}
+
+export type ResearchosDataLinkResult = { ok: true; warning?: string | undefined }
+
+export type ResearchosPlotChartResult = { chartId: string; artifactPath: string; previewSvg: string }
+
+export type ResearchosPlotTuneResult = {
+  chartId: string
+  artifactPath: string
+  previewSvg: string
+  code: string
+  codePriority: boolean
+}
+
+export type ResearchosPlotSignificanceResult = {
+  chartId: string
+  artifactPath: string
+  previewSvg: string
+  pValues: Array<{ groups: [string, string]; pValue: number; stars: "*" | "**" | "***" | "ns" }>
+}
+
+export type ResearchosPlotDiagramArtifact = {
+  artifactId: string
+  artifactPath: string
+  code?: string | undefined
+  svg?: string | undefined
+}
+
+export type ResearchosPlotArtifact = {
+  id: string
+  kind: string
+  chartId?: string | undefined
+  path: string
+  previewSvg?: string | undefined
+  texFile?: string | undefined
+  texLabel?: string | undefined
+  createdAt: number
+}
+
 export type LocationPublicRef = { directory: AbsolutePath }
 
 export type FileSystemWrite = { path: AbsolutePath }
@@ -860,6 +1107,33 @@ export type ConfigModelCapabilities = {
   output?: Array<string>
   temperature?: boolean
   reasoning?: ConfigModelReasoning
+}
+
+export type ResearchosLiteratureImportResult = {
+  paper?: ResearchosPaper | undefined
+  metadataSource?: "crossref" | "semantic_scholar" | "pdf" | undefined
+  references?: number | undefined
+  zotero?: ResearchosLiteratureZoteroReport | undefined
+}
+
+export type ResearchosLiteratureSimilarResult = { results: Array<ResearchosLiteratureSimilarPaper>; degraded: boolean }
+
+export type ResearchosLiteratureReadResult = { sections: Array<ResearchosLiteratureReadSection>; degraded: boolean }
+
+export type ResearchosSubgraph = { nodes: Array<ResearchosGraphNode>; edges: Array<ResearchosGraphEdge> }
+
+export type ResearchosLatexCompileResult = {
+  available: true
+  ok: boolean
+  pdfPath?: string | undefined
+  log: string
+  errors: Array<ResearchosLatexError>
+  durationMs: number
+}
+
+export type ResearchosDataArtifactDetail = {
+  artifact: ResearchosDataArtifact
+  links: Array<ResearchosDataArtifactLink>
 }
 
 export type SessionMessageLocationSwitched = {
@@ -2001,6 +2275,23 @@ export type FormReplied = {
   location?: LocationRef
   data: { id: FormID; sessionID: string; answer: FormAnswer2 }
 }
+
+export type ResearchosGraphNodeDetail = {
+  node: ResearchosGraphNode
+  neighbors: ResearchosSubgraph
+  paper?: ResearchosGraphPaperMeta | undefined
+}
+
+export type ResearchosGraphAskResult = {
+  subgraph: ResearchosSubgraph
+  contextPack: string
+  seeds: Array<ResearchosGraphNode>
+  sources: Array<ResearchosGraphSource>
+  degraded: boolean
+  answer: string
+}
+
+export type ResearchosLatexCompileResponse = ResearchosLatexCompileResult | ResearchosLatexCompileUnavailable
 
 export type SessionInboxMove = {
   id: SessionMessageID
@@ -6872,3 +7163,1222 @@ export type ConfigShellsOutput = Array<ConfigShellOption>
 export type ConfigUpdateInput = { readonly shell: { readonly shell: string | null }["shell"] }
 
 export type ConfigUpdateOutput = void
+
+export type ServerResearchosAssetsAssetFileReadInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly kind: { readonly kind: "rules"; readonly scope: "project" | "global" }["kind"]
+  readonly scope: { readonly kind: "rules"; readonly scope: "project" | "global" }["scope"]
+}
+
+export type ServerResearchosAssetsAssetFileReadOutput = {
+  location: LocationPublicRef
+  data: { path: string; content: string; chain: Array<AssetChainEntry> }
+}
+
+export type ServerResearchosAssetsAssetApiListInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosAssetsAssetApiListOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosApiDescriptor>
+}
+
+export type ServerResearchosAssetsAssetApiStatsInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosAssetsAssetApiStatsOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosApiStatus>
+}
+
+export type ServerResearchosAssetsAssetApiTestInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly name: { readonly name: string }["name"]
+}
+
+export type ServerResearchosAssetsAssetApiTestOutput = {
+  location: LocationPublicRef
+  data: { ok: boolean; latencyMs: number; error?: string | undefined }
+}
+
+export type ServerResearchosAssetsAssetFileWriteInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly kind: {
+    readonly kind: "skill" | "agent" | "command" | "rules"
+    readonly name: string
+    readonly content: string
+    readonly scope: "project" | "global"
+  }["kind"]
+  readonly name: {
+    readonly kind: "skill" | "agent" | "command" | "rules"
+    readonly name: string
+    readonly content: string
+    readonly scope: "project" | "global"
+  }["name"]
+  readonly content: {
+    readonly kind: "skill" | "agent" | "command" | "rules"
+    readonly name: string
+    readonly content: string
+    readonly scope: "project" | "global"
+  }["content"]
+  readonly scope: {
+    readonly kind: "skill" | "agent" | "command" | "rules"
+    readonly name: string
+    readonly content: string
+    readonly scope: "project" | "global"
+  }["scope"]
+}
+
+export type ServerResearchosAssetsAssetFileWriteOutput = {
+  location: LocationPublicRef
+  data: { path: string; reloaded: boolean }
+}
+
+export type ServerResearchosAssetsAssetNoteWriteInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly path: { readonly path: string; readonly content: string }["path"]
+  readonly content: { readonly path: string; readonly content: string }["content"]
+}
+
+export type ServerResearchosAssetsAssetNoteWriteOutput = { location: LocationPublicRef; data: { path: string } }
+
+export type ServerResearchosAssetsAssetPresetInstallInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly pack: {
+    readonly pack: "researchos-skills" | "researchos-agents" | "researchos-mcp"
+    readonly target: "project" | "global"
+  }["pack"]
+  readonly target: {
+    readonly pack: "researchos-skills" | "researchos-agents" | "researchos-mcp"
+    readonly target: "project" | "global"
+  }["target"]
+}
+
+export type ServerResearchosAssetsAssetPresetInstallOutput = {
+  location: LocationPublicRef
+  data: { installed: Array<string>; configPatched: Array<string> }
+}
+
+export type ServerResearchosLiteratureLiteratureSearchInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly query: {
+    readonly query: string
+    readonly sources?: ReadonlyArray<"arxiv" | "semantic_scholar" | "crossref" | "pubmed"> | undefined
+    readonly limit?: number | undefined
+    readonly start?: number | undefined
+  }["query"]
+  readonly sources?: {
+    readonly query: string
+    readonly sources?: ReadonlyArray<"arxiv" | "semantic_scholar" | "crossref" | "pubmed"> | undefined
+    readonly limit?: number | undefined
+    readonly start?: number | undefined
+  }["sources"]
+  readonly limit?: {
+    readonly query: string
+    readonly sources?: ReadonlyArray<"arxiv" | "semantic_scholar" | "crossref" | "pubmed"> | undefined
+    readonly limit?: number | undefined
+    readonly start?: number | undefined
+  }["limit"]
+  readonly start?: {
+    readonly query: string
+    readonly sources?: ReadonlyArray<"arxiv" | "semantic_scholar" | "crossref" | "pubmed"> | undefined
+    readonly limit?: number | undefined
+    readonly start?: number | undefined
+  }["start"]
+}
+
+export type ServerResearchosLiteratureLiteratureSearchOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosPaper>
+}
+
+export type ServerResearchosLiteratureLiteratureListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+    readonly offset?: number | undefined
+  }["location"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+    readonly offset?: number | undefined
+  }["limit"]
+  readonly offset?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+    readonly offset?: number | undefined
+  }["offset"]
+}
+
+export type ServerResearchosLiteratureLiteratureListOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosPaper>
+}
+
+export type ServerResearchosLiteratureLiteratureGetInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosLiteratureLiteratureGetOutput = { location: LocationPublicRef; data: ResearchosPaper }
+
+export type ServerResearchosLiteratureLiteratureExportInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly paperIds: string
+    readonly format: "bibtex" | "ris" | "endnote" | "json" | "markdown"
+    readonly style?: "ieee" | "acm" | "apa" | "nature" | "springer" | undefined
+  }["location"]
+  readonly paperIds: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly paperIds: string
+    readonly format: "bibtex" | "ris" | "endnote" | "json" | "markdown"
+    readonly style?: "ieee" | "acm" | "apa" | "nature" | "springer" | undefined
+  }["paperIds"]
+  readonly format: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly paperIds: string
+    readonly format: "bibtex" | "ris" | "endnote" | "json" | "markdown"
+    readonly style?: "ieee" | "acm" | "apa" | "nature" | "springer" | undefined
+  }["format"]
+  readonly style?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly paperIds: string
+    readonly format: "bibtex" | "ris" | "endnote" | "json" | "markdown"
+    readonly style?: "ieee" | "acm" | "apa" | "nature" | "springer" | undefined
+  }["style"]
+}
+
+export type ServerResearchosLiteratureLiteratureExportOutput = {
+  location: LocationPublicRef
+  data: { content: string }
+}
+
+export type ServerResearchosLiteratureLiteratureImportInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly path?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["path"]
+  readonly url?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["url"]
+  readonly zoteroPath?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["zoteroPath"]
+  readonly fileName?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["fileName"]
+  readonly contentBase64?: {
+    readonly path?: string | undefined
+    readonly url?: string | undefined
+    readonly zoteroPath?: string | undefined
+    readonly fileName?: string | undefined
+    readonly contentBase64?: string | undefined
+  }["contentBase64"]
+}
+
+export type ServerResearchosLiteratureLiteratureImportOutput = {
+  location: LocationPublicRef
+  data: ResearchosLiteratureImportResult
+}
+
+export type ServerResearchosLiteratureLiteratureCitationsInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly direction: "references" | "cited_by"
+  }["location"]
+  readonly direction: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly direction: "references" | "cited_by"
+  }["direction"]
+}
+
+export type ServerResearchosLiteratureLiteratureCitationsOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosLiteratureCitationEntry>
+}
+
+export type ServerResearchosLiteratureLiteratureSimilarInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+  }["location"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+  }["limit"]
+}
+
+export type ServerResearchosLiteratureLiteratureSimilarOutput = {
+  location: LocationPublicRef
+  data: ResearchosLiteratureSimilarResult
+}
+
+export type ServerResearchosLiteratureLiteratureReadInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly query: { readonly query: string; readonly k?: number | undefined }["query"]
+  readonly k?: { readonly query: string; readonly k?: number | undefined }["k"]
+}
+
+export type ServerResearchosLiteratureLiteratureReadOutput = {
+  location: LocationPublicRef
+  data: ResearchosLiteratureReadResult
+}
+
+export type ServerResearchosLiteratureLiteratureUpdateInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly isRead?: { readonly isRead?: boolean | undefined; readonly isFavorite?: boolean | undefined }["isRead"]
+  readonly isFavorite?: {
+    readonly isRead?: boolean | undefined
+    readonly isFavorite?: boolean | undefined
+  }["isFavorite"]
+}
+
+export type ServerResearchosLiteratureLiteratureUpdateOutput = { location: LocationPublicRef; data: ResearchosPaper }
+
+export type ServerResearchosLiteratureLiteratureSelectInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly paperId?: { readonly paperId?: string | undefined; readonly title?: string | undefined }["paperId"]
+  readonly title?: { readonly paperId?: string | undefined; readonly title?: string | undefined }["title"]
+}
+
+export type ServerResearchosLiteratureLiteratureSelectOutput = { location: LocationPublicRef; data: { ok: boolean } }
+
+export type ServerResearchosGraphGraphStatusInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosGraphGraphStatusOutput = { location: LocationPublicRef; data: ResearchosGraphStatus }
+
+export type ServerResearchosGraphGraphGetInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly type?: "paper" | "note" | "concept" | "repo" | undefined
+  }["location"]
+  readonly type?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly type?: "paper" | "note" | "concept" | "repo" | undefined
+  }["type"]
+}
+
+export type ServerResearchosGraphGraphGetOutput = { location: LocationPublicRef; data: ResearchosSubgraph }
+
+export type ServerResearchosGraphGraphNodeInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly id: string
+  }["location"]
+  readonly id: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly id: string
+  }["id"]
+}
+
+export type ServerResearchosGraphGraphNodeOutput = { location: LocationPublicRef; data: ResearchosGraphNodeDetail }
+
+export type ServerResearchosGraphGraphAskInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly question: {
+    readonly question: string
+    readonly center_node?: string | undefined
+    readonly depth?: number | undefined
+  }["question"]
+  readonly center_node?: {
+    readonly question: string
+    readonly center_node?: string | undefined
+    readonly depth?: number | undefined
+  }["center_node"]
+  readonly depth?: {
+    readonly question: string
+    readonly center_node?: string | undefined
+    readonly depth?: number | undefined
+  }["depth"]
+}
+
+export type ServerResearchosGraphGraphAskOutput = { location: LocationPublicRef; data: ResearchosGraphAskResult }
+
+export type ServerResearchosGraphGraphReindexInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosGraphGraphReindexOutput = {
+  location: LocationPublicRef
+  data: ResearchosGraphReindexResult
+}
+
+export type ServerResearchosGraphGraphSaveLayoutInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly positions: {
+    readonly positions: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>
+  }["positions"]
+}
+
+export type ServerResearchosGraphGraphSaveLayoutOutput = { location: LocationPublicRef; data: { ok: boolean } }
+
+export type ServerResearchosLatexLatexFilesInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosLatexLatexFilesOutput = { location: LocationPublicRef; data: { files: Array<string> } }
+
+export type ServerResearchosLatexLatexSourceInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly file: string
+  }["location"]
+  readonly file: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly file: string
+  }["file"]
+}
+
+export type ServerResearchosLatexLatexSourceOutput = {
+  location: LocationPublicRef
+  data: {
+    file: string
+    content: string
+    outline: Array<ResearchosLatexOutlineItem>
+    bibliography: Array<ResearchosLatexBibtexEntry>
+  }
+}
+
+export type ServerResearchosLatexLatexSourceWriteInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly file: { readonly file: string; readonly content: string }["file"]
+  readonly content: { readonly file: string; readonly content: string }["content"]
+}
+
+export type ServerResearchosLatexLatexSourceWriteOutput = {
+  location: LocationPublicRef
+  data: { file: string; bytes: number }
+}
+
+export type ServerResearchosLatexLatexPdfInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile: string
+  }["location"]
+  readonly mainFile: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile: string
+  }["mainFile"]
+}
+
+export type ServerResearchosLatexLatexPdfOutput = { location: LocationPublicRef; data: { file: string; data: string } }
+
+export type ServerResearchosLatexLatexBuildsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+  }["location"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly limit?: number | undefined
+  }["limit"]
+}
+
+export type ServerResearchosLatexLatexBuildsOutput = {
+  location: LocationPublicRef
+  data: { builds: Array<ResearchosLatexBuildRecord> }
+}
+
+export type ServerResearchosLatexLatexCompileInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly mainFile: { readonly mainFile: string }["mainFile"]
+}
+
+export type ServerResearchosLatexLatexCompileOutput = {
+  location: LocationPublicRef
+  data: ResearchosLatexCompileResponse
+}
+
+export type ServerResearchosLatexLatexSynctexInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["location"]
+  readonly mainFile?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["mainFile"]
+  readonly file?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["file"]
+  readonly line?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["line"]
+  readonly pdfPath?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["pdfPath"]
+  readonly page?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["page"]
+  readonly x?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["x"]
+  readonly y?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly mainFile?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly pdfPath?: string | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }["y"]
+}
+
+export type ServerResearchosLatexLatexSynctexOutput = {
+  location: LocationPublicRef
+  data: ResearchosLatexSynctexResult
+}
+
+export type ServerResearchosLatexLatexFormatCheckInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly mainFile: { readonly mainFile: string; readonly template?: "ieee" | "acm" | undefined }["mainFile"]
+  readonly template?: { readonly mainFile: string; readonly template?: "ieee" | "acm" | undefined }["template"]
+}
+
+export type ServerResearchosLatexLatexFormatCheckOutput = {
+  location: LocationPublicRef
+  data: { issues: Array<ResearchosLatexFormatIssue> }
+}
+
+export type ServerResearchosWritingWritingTableInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly csv: {
+    readonly csv: string
+    readonly caption?: string | undefined
+    readonly label?: string | undefined
+  }["csv"]
+  readonly caption?: {
+    readonly csv: string
+    readonly caption?: string | undefined
+    readonly label?: string | undefined
+  }["caption"]
+  readonly label?: {
+    readonly csv: string
+    readonly caption?: string | undefined
+    readonly label?: string | undefined
+  }["label"]
+}
+
+export type ServerResearchosWritingWritingTableOutput = { location: LocationPublicRef; data: { text: string } }
+
+export type ServerResearchosWritingWritingMd2latexInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly markdown: { readonly markdown: string }["markdown"]
+}
+
+export type ServerResearchosWritingWritingMd2latexOutput = { location: LocationPublicRef; data: { text: string } }
+
+export type ServerResearchosWritingWritingDiffInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly original: { readonly original: string; readonly revised: string }["original"]
+  readonly revised: { readonly original: string; readonly revised: string }["revised"]
+}
+
+export type ServerResearchosWritingWritingDiffOutput = {
+  location: LocationPublicRef
+  data: {
+    parts: Array<{ value: string; added?: boolean | undefined; removed?: boolean | undefined }>
+    hunks: Array<{ index: number; original: string; revised: string }>
+  }
+}
+
+export type ServerResearchosWritingWritingDiffApplyInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly original: {
+    readonly original: string
+    readonly revised: string
+    readonly accepted: ReadonlyArray<number>
+  }["original"]
+  readonly revised: {
+    readonly original: string
+    readonly revised: string
+    readonly accepted: ReadonlyArray<number>
+  }["revised"]
+  readonly accepted: {
+    readonly original: string
+    readonly revised: string
+    readonly accepted: ReadonlyArray<number>
+  }["accepted"]
+}
+
+export type ServerResearchosWritingWritingDiffApplyOutput = { location: LocationPublicRef; data: { text: string } }
+
+export type ServerResearchosWritingWritingBibtexLibraryInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly paperIds: { readonly paperIds: ReadonlyArray<string> }["paperIds"]
+}
+
+export type ServerResearchosWritingWritingBibtexLibraryOutput = {
+  location: LocationPublicRef
+  data: { entries: Array<{ key: string; bibtex: string }>; missing: Array<string> }
+}
+
+export type ServerResearchosWritingWritingBibtexUpsertInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly bibFile: {
+    readonly bibFile: string
+    readonly entries: ReadonlyArray<{ readonly key: string; readonly bibtex: string }>
+  }["bibFile"]
+  readonly entries: {
+    readonly bibFile: string
+    readonly entries: ReadonlyArray<{ readonly key: string; readonly bibtex: string }>
+  }["entries"]
+}
+
+export type ServerResearchosWritingWritingBibtexUpsertOutput = {
+  location: LocationPublicRef
+  data: { inserted: Array<string>; skipped: Array<string> }
+}
+
+export type ServerResearchosWritingWritingSuggestionRecordInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly kind: {
+    readonly kind: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite"
+    readonly targetFile?: string | undefined
+    readonly inputExcerpt: string
+    readonly output: string
+    readonly status: "pending" | "accepted" | "rejected" | "partial"
+  }["kind"]
+  readonly targetFile?: {
+    readonly kind: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite"
+    readonly targetFile?: string | undefined
+    readonly inputExcerpt: string
+    readonly output: string
+    readonly status: "pending" | "accepted" | "rejected" | "partial"
+  }["targetFile"]
+  readonly inputExcerpt: {
+    readonly kind: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite"
+    readonly targetFile?: string | undefined
+    readonly inputExcerpt: string
+    readonly output: string
+    readonly status: "pending" | "accepted" | "rejected" | "partial"
+  }["inputExcerpt"]
+  readonly output: {
+    readonly kind: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite"
+    readonly targetFile?: string | undefined
+    readonly inputExcerpt: string
+    readonly output: string
+    readonly status: "pending" | "accepted" | "rejected" | "partial"
+  }["output"]
+  readonly status: {
+    readonly kind: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite"
+    readonly targetFile?: string | undefined
+    readonly inputExcerpt: string
+    readonly output: string
+    readonly status: "pending" | "accepted" | "rejected" | "partial"
+  }["status"]
+}
+
+export type ServerResearchosWritingWritingSuggestionRecordOutput = { location: LocationPublicRef; data: { id: string } }
+
+export type ServerResearchosWritingWritingSuggestionsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly kind?: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite" | undefined
+    readonly limit?: number | undefined
+  }["location"]
+  readonly kind?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly kind?: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite" | undefined
+    readonly limit?: number | undefined
+  }["kind"]
+  readonly limit?: {
+    readonly location?: { readonly directory?: string | undefined } | undefined
+    readonly kind?: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite" | undefined
+    readonly limit?: number | undefined
+  }["limit"]
+}
+
+export type ServerResearchosWritingWritingSuggestionsOutput = {
+  location: LocationPublicRef
+  data: { suggestions: Array<{ [x: string]: any }> }
+}
+
+export type ServerResearchosDataDataNotebooksInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataNotebooksOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosDataNotebook>
+}
+
+export type ServerResearchosDataDataCellsInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataCellsOutput = { location: LocationPublicRef; data: Array<ResearchosDataCell> }
+
+export type ServerResearchosDataDataCellCreateInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly source?: { readonly source?: string | undefined }["source"]
+}
+
+export type ServerResearchosDataDataCellCreateOutput = { location: LocationPublicRef; data: ResearchosDataCell }
+
+export type ServerResearchosDataDataCellSaveInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly source: { readonly source: string }["source"]
+}
+
+export type ServerResearchosDataDataCellSaveOutput = { location: LocationPublicRef; data: ResearchosDataCell }
+
+export type ServerResearchosDataDataCellRunInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly source: {
+    readonly source: string
+    readonly workdir?: string | undefined
+    readonly timeoutS?: number | undefined
+  }["source"]
+  readonly workdir?: {
+    readonly source: string
+    readonly workdir?: string | undefined
+    readonly timeoutS?: number | undefined
+  }["workdir"]
+  readonly timeoutS?: {
+    readonly source: string
+    readonly workdir?: string | undefined
+    readonly timeoutS?: number | undefined
+  }["timeoutS"]
+}
+
+export type ServerResearchosDataDataCellRunOutput = {
+  location: LocationPublicRef
+  data: { cell: ResearchosDataCell; artifacts: Array<string>; error?: ResearchosDataRunError | undefined }
+}
+
+export type ServerResearchosDataDataDatasetsInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataDatasetsOutput = { location: LocationPublicRef; data: Array<ResearchosDataDataset> }
+
+export type ServerResearchosDataDataArtifactsInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataArtifactsOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosDataArtifact>
+}
+
+export type ServerResearchosDataDataArtifactInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataArtifactOutput = { location: LocationPublicRef; data: ResearchosDataArtifactDetail }
+
+export type ServerResearchosDataDataArtifactFileInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataArtifactFileOutput = {
+  location: LocationPublicRef
+  data: ResearchosDataArtifactFile
+}
+
+export type ServerResearchosDataDataStatTestsInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosDataDataStatTestsOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosDataStatTest>
+}
+
+export type ServerResearchosDataDataLinkInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly commit?: {
+    readonly commit?: string | undefined
+    readonly texFile?: string | undefined
+    readonly texSection?: string | undefined
+  }["commit"]
+  readonly texFile?: {
+    readonly commit?: string | undefined
+    readonly texFile?: string | undefined
+    readonly texSection?: string | undefined
+  }["texFile"]
+  readonly texSection?: {
+    readonly commit?: string | undefined
+    readonly texFile?: string | undefined
+    readonly texSection?: string | undefined
+  }["texSection"]
+}
+
+export type ServerResearchosDataDataLinkOutput = { location: LocationPublicRef; data: ResearchosDataLinkResult }
+
+export type ServerResearchosDataDataDatasetRegisterInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly path: { readonly path: string; readonly name?: string | undefined }["path"]
+  readonly name?: { readonly path: string; readonly name?: string | undefined }["name"]
+}
+
+export type ServerResearchosDataDataDatasetRegisterOutput = { location: LocationPublicRef; data: ResearchosDataDataset }
+
+export type ServerResearchosPlotPlotCreateInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly template: {
+    readonly template: "grouped_bar" | "scatter_regression" | "boxplot" | "violin" | "survival" | "heatmap"
+    readonly data: { readonly file: string } | { readonly inline: ReadonlyArray<{ readonly [x: string]: unknown }> }
+    readonly theme?: "nature" | "science" | "ieee" | "prism" | undefined
+    readonly spec?: { readonly [x: string]: unknown } | undefined
+  }["template"]
+  readonly data: {
+    readonly template: "grouped_bar" | "scatter_regression" | "boxplot" | "violin" | "survival" | "heatmap"
+    readonly data: { readonly file: string } | { readonly inline: ReadonlyArray<{ readonly [x: string]: unknown }> }
+    readonly theme?: "nature" | "science" | "ieee" | "prism" | undefined
+    readonly spec?: { readonly [x: string]: unknown } | undefined
+  }["data"]
+  readonly theme?: {
+    readonly template: "grouped_bar" | "scatter_regression" | "boxplot" | "violin" | "survival" | "heatmap"
+    readonly data: { readonly file: string } | { readonly inline: ReadonlyArray<{ readonly [x: string]: unknown }> }
+    readonly theme?: "nature" | "science" | "ieee" | "prism" | undefined
+    readonly spec?: { readonly [x: string]: unknown } | undefined
+  }["theme"]
+  readonly spec?: {
+    readonly template: "grouped_bar" | "scatter_regression" | "boxplot" | "violin" | "survival" | "heatmap"
+    readonly data: { readonly file: string } | { readonly inline: ReadonlyArray<{ readonly [x: string]: unknown }> }
+    readonly theme?: "nature" | "science" | "ieee" | "prism" | undefined
+    readonly spec?: { readonly [x: string]: unknown } | undefined
+  }["spec"]
+}
+
+export type ServerResearchosPlotPlotCreateOutput = { location: LocationPublicRef; data: ResearchosPlotChartResult }
+
+export type ServerResearchosPlotPlotTuneInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly patch: { readonly patch: { readonly [x: string]: unknown } }["patch"]
+}
+
+export type ServerResearchosPlotPlotTuneOutput = { location: LocationPublicRef; data: ResearchosPlotTuneResult }
+
+export type ServerResearchosPlotPlotAnnotateSignificanceInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly test: {
+    readonly test: "ttest" | "anova" | "mannwhitneyu"
+    readonly groups: ReadonlyArray<readonly [string, string]>
+  }["test"]
+  readonly groups: {
+    readonly test: "ttest" | "anova" | "mannwhitneyu"
+    readonly groups: ReadonlyArray<readonly [string, string]>
+  }["groups"]
+}
+
+export type ServerResearchosPlotPlotAnnotateSignificanceOutput = {
+  location: LocationPublicRef
+  data: ResearchosPlotSignificanceResult
+}
+
+export type ServerResearchosPlotPlotMermaidInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly code: {
+    readonly code: string
+    readonly name?: string | undefined
+    readonly theme?: string | undefined
+  }["code"]
+  readonly name?: {
+    readonly code: string
+    readonly name?: string | undefined
+    readonly theme?: string | undefined
+  }["name"]
+  readonly theme?: {
+    readonly code: string
+    readonly name?: string | undefined
+    readonly theme?: string | undefined
+  }["theme"]
+}
+
+export type ServerResearchosPlotPlotMermaidOutput = { location: LocationPublicRef; data: ResearchosPlotDiagramArtifact }
+
+export type ServerResearchosPlotPlotGraphvizInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly dot: {
+    readonly dot: string
+    readonly engine?: "dot" | "neato" | "fdp" | undefined
+    readonly name?: string | undefined
+  }["dot"]
+  readonly engine?: {
+    readonly dot: string
+    readonly engine?: "dot" | "neato" | "fdp" | undefined
+    readonly name?: string | undefined
+  }["engine"]
+  readonly name?: {
+    readonly dot: string
+    readonly engine?: "dot" | "neato" | "fdp" | undefined
+    readonly name?: string | undefined
+  }["name"]
+}
+
+export type ServerResearchosPlotPlotGraphvizOutput = {
+  location: LocationPublicRef
+  data: ResearchosPlotDiagramArtifact
+}
+
+export type ServerResearchosPlotPlotDiagramInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly action: {
+    readonly action: "create" | "open"
+    readonly file?: string | undefined
+    readonly stencilPack?: "nn_layers" | "agent" | "flow" | undefined
+  }["action"]
+  readonly file?: {
+    readonly action: "create" | "open"
+    readonly file?: string | undefined
+    readonly stencilPack?: "nn_layers" | "agent" | "flow" | undefined
+  }["file"]
+  readonly stencilPack?: {
+    readonly action: "create" | "open"
+    readonly file?: string | undefined
+    readonly stencilPack?: "nn_layers" | "agent" | "flow" | undefined
+  }["stencilPack"]
+}
+
+export type ServerResearchosPlotPlotDiagramOutput = { location: LocationPublicRef; data: { file: string } }
+
+export type ServerResearchosPlotPlotDiagramSaveInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly file: { readonly file: string; readonly xml: string }["file"]
+  readonly xml: { readonly file: string; readonly xml: string }["xml"]
+}
+
+export type ServerResearchosPlotPlotDiagramSaveOutput = { location: LocationPublicRef; data: { file: string } }
+
+export type ServerResearchosPlotPlotInsertInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly artifactPath: {
+    readonly artifactPath: string
+    readonly texFile: string
+    readonly section?: string | undefined
+    readonly caption: string
+    readonly label?: string | undefined
+  }["artifactPath"]
+  readonly texFile: {
+    readonly artifactPath: string
+    readonly texFile: string
+    readonly section?: string | undefined
+    readonly caption: string
+    readonly label?: string | undefined
+  }["texFile"]
+  readonly section?: {
+    readonly artifactPath: string
+    readonly texFile: string
+    readonly section?: string | undefined
+    readonly caption: string
+    readonly label?: string | undefined
+  }["section"]
+  readonly caption: {
+    readonly artifactPath: string
+    readonly texFile: string
+    readonly section?: string | undefined
+    readonly caption: string
+    readonly label?: string | undefined
+  }["caption"]
+  readonly label?: {
+    readonly artifactPath: string
+    readonly texFile: string
+    readonly section?: string | undefined
+    readonly caption: string
+    readonly label?: string | undefined
+  }["label"]
+}
+
+export type ServerResearchosPlotPlotInsertOutput = {
+  location: LocationPublicRef
+  data: { ok: true; latexSnippet: string }
+}
+
+export type ServerResearchosPlotPlotArtifactsInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosPlotPlotArtifactsOutput = {
+  location: LocationPublicRef
+  data: Array<ResearchosPlotArtifact>
+}
+
+export type ServerResearchosPlotPlotArtifactFileInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosPlotPlotArtifactFileOutput = {
+  location: LocationPublicRef
+  data: { format: string; content: string; encoding: "utf8" | "base64" }
+}
+
+export type ServerResearchosReproduceReproduceListInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosReproduceReproduceListOutput = {
+  location: LocationPublicRef
+  data: Array<{
+    id: string
+    paperUrl: string
+    repoUrl: string
+    status: string
+    currentStep: number
+    envStrategy: string
+    error?: string | undefined
+    createdAt: number
+    updatedAt: number
+  }>
+}
+
+export type ServerResearchosReproduceReproduceCreateInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly paperUrl: {
+    readonly paperUrl: string
+    readonly repoUrl: string
+    readonly envStrategy?: "auto" | "docker" | "venv" | undefined
+  }["paperUrl"]
+  readonly repoUrl: {
+    readonly paperUrl: string
+    readonly repoUrl: string
+    readonly envStrategy?: "auto" | "docker" | "venv" | undefined
+  }["repoUrl"]
+  readonly envStrategy?: {
+    readonly paperUrl: string
+    readonly repoUrl: string
+    readonly envStrategy?: "auto" | "docker" | "venv" | undefined
+  }["envStrategy"]
+}
+
+export type ServerResearchosReproduceReproduceCreateOutput = { location: LocationPublicRef; data: { runId: string } }
+
+export type ServerResearchosReproduceReproduceGetInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosReproduceReproduceGetOutput = {
+  location: LocationPublicRef
+  data: {
+    run: {
+      id: string
+      paperUrl: string
+      repoUrl: string
+      status: string
+      currentStep: number
+      envStrategy: string
+      error?: string | undefined
+      createdAt: number
+      updatedAt: number
+    }
+    steps: Array<{
+      id: string
+      runId: string
+      seq: number
+      name: string
+      status: string
+      log: string
+      outputJson?: string | undefined
+      startedAt?: number | undefined
+      finishedAt?: number | undefined
+    }>
+  }
+}
+
+export type ServerResearchosReproduceReproduceAdvanceInput = {
+  readonly id: {
+    readonly id: string
+    readonly step: "clone" | "analyze" | "env_detect" | "env_generate" | "run" | "compare"
+  }["id"]
+  readonly step: {
+    readonly id: string
+    readonly step: "clone" | "analyze" | "env_detect" | "env_generate" | "run" | "compare"
+  }["step"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosReproduceReproduceAdvanceOutput = {
+  location: LocationPublicRef
+  data: { status: string; output: any; logTail: string }
+}
+
+export type ServerResearchosReproduceReproduceMetricsSubmitInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly metrics: {
+    readonly metrics: ReadonlyArray<{
+      readonly model: string
+      readonly dataset: string
+      readonly metric: string
+      readonly value: number
+      readonly tolerance?: number | undefined
+    }>
+  }["metrics"]
+}
+
+export type ServerResearchosReproduceReproduceMetricsSubmitOutput = { location: LocationPublicRef; data: { ok: true } }
+
+export type ServerResearchosReproduceReproduceComparisonInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosReproduceReproduceComparisonOutput = {
+  location: LocationPublicRef
+  data: Array<{
+    id: string
+    runId: string
+    model: string
+    dataset: string
+    metric: string
+    paperValue?: number | undefined
+    reproValue?: number | undefined
+    tolerance: number
+    verdict: string
+    source: string
+  }>
+}
+
+export type ServerResearchosReproduceReproduceIssuesInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosReproduceReproduceIssuesOutput = {
+  location: LocationPublicRef
+  data: Array<{
+    id: string
+    runId: string
+    category: string
+    severity: string
+    title: string
+    detail: string
+    evidence?: string | undefined
+    createdAt: number
+  }>
+}
+
+export type ServerResearchosReproduceReproduceCancelInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosReproduceReproduceCancelOutput = { location: LocationPublicRef; data: { ok: true } }
+
+export type ServerResearchosTranslateTranslateRunInput = {
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+  readonly paperId: {
+    readonly paperId: string
+    readonly sections?: ReadonlyArray<string> | undefined
+    readonly engine?: "auto" | "api" | "llm" | undefined
+  }["paperId"]
+  readonly sections?: {
+    readonly paperId: string
+    readonly sections?: ReadonlyArray<string> | undefined
+    readonly engine?: "auto" | "api" | "llm" | undefined
+  }["sections"]
+  readonly engine?: {
+    readonly paperId: string
+    readonly sections?: ReadonlyArray<string> | undefined
+    readonly engine?: "auto" | "api" | "llm" | undefined
+  }["engine"]
+}
+
+export type ServerResearchosTranslateTranslateRunOutput = {
+  location: LocationPublicRef
+  data: {
+    paperId: string
+    sections: Array<{ type: string; title: string; original: Array<string>; translated: Array<string> }>
+    glossary: Array<{ en: string; zh: string; domain?: string | undefined }>
+  }
+}
+
+export type ServerResearchosTranslateTranslateGetInput = {
+  readonly paperId: { readonly paperId: string }["paperId"]
+  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
+}
+
+export type ServerResearchosTranslateTranslateGetOutput = {
+  location: LocationPublicRef
+  data: {
+    paperId: string
+    sections: Array<{ type: string; title: string; original: Array<string>; translated: Array<string> }>
+    glossary: Array<{ en: string; zh: string; domain?: string | undefined }>
+  }
+}

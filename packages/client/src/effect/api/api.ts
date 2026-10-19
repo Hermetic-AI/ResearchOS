@@ -2281,6 +2281,1541 @@ export interface ConfigApi<E = never> {
   readonly update: ConfigUpdateOperation<E>
 }
 
+export type ServerResearchosAssetsAssetFileReadInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly kind: "rules"
+  readonly scope: "project" | "global"
+}
+export type ServerResearchosAssetsAssetFileReadOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly path: string
+    readonly content: string
+    readonly chain: ReadonlyArray<{ readonly path: string; readonly exists: boolean }>
+  }
+}
+export type ServerResearchosAssetsAssetFileReadOperation<E = never> = (
+  input: ServerResearchosAssetsAssetFileReadInput,
+) => Effect.Effect<ServerResearchosAssetsAssetFileReadOutput, E>
+
+export type ServerResearchosAssetsAssetApiListInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosAssetsAssetApiListOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly name: string
+    readonly description: string
+    readonly baseUrl: string
+    readonly auth: "none" | "api_key" | "bearer" | "mailto"
+    readonly rps: number
+    readonly burst: number
+    readonly cacheTtlS: number
+    readonly enabled: boolean
+  }>
+}
+export type ServerResearchosAssetsAssetApiListOperation<E = never> = (
+  input?: ServerResearchosAssetsAssetApiListInput,
+) => Effect.Effect<ServerResearchosAssetsAssetApiListOutput, E>
+
+export type ServerResearchosAssetsAssetApiStatsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosAssetsAssetApiStatsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly name: string
+    readonly healthy: boolean
+    readonly state: "idle" | "healthy" | "failed" | "disabled"
+    readonly lastError?: string | undefined
+    readonly lastCallAt?: number | undefined
+    readonly callsTotal: number
+    readonly cacheHitRate: number
+    readonly availableTokens: number
+  }>
+}
+export type ServerResearchosAssetsAssetApiStatsOperation<E = never> = (
+  input?: ServerResearchosAssetsAssetApiStatsInput,
+) => Effect.Effect<ServerResearchosAssetsAssetApiStatsOutput, E>
+
+export type ServerResearchosAssetsAssetApiTestInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly name: string
+}
+export type ServerResearchosAssetsAssetApiTestOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: boolean; readonly latencyMs: number; readonly error?: string | undefined }
+}
+export type ServerResearchosAssetsAssetApiTestOperation<E = never> = (
+  input: ServerResearchosAssetsAssetApiTestInput,
+) => Effect.Effect<ServerResearchosAssetsAssetApiTestOutput, E>
+
+export type ServerResearchosAssetsAssetFileWriteInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly kind: "skill" | "agent" | "command" | "rules"
+  readonly name: string
+  readonly content: string
+  readonly scope: "project" | "global"
+}
+export type ServerResearchosAssetsAssetFileWriteOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly path: string; readonly reloaded: boolean }
+}
+export type ServerResearchosAssetsAssetFileWriteOperation<E = never> = (
+  input: ServerResearchosAssetsAssetFileWriteInput,
+) => Effect.Effect<ServerResearchosAssetsAssetFileWriteOutput, E>
+
+export type ServerResearchosAssetsAssetNoteWriteInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly path: string
+  readonly content: string
+}
+export type ServerResearchosAssetsAssetNoteWriteOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly path: string }
+}
+export type ServerResearchosAssetsAssetNoteWriteOperation<E = never> = (
+  input: ServerResearchosAssetsAssetNoteWriteInput,
+) => Effect.Effect<ServerResearchosAssetsAssetNoteWriteOutput, E>
+
+export type ServerResearchosAssetsAssetPresetInstallInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly pack: "researchos-skills" | "researchos-agents" | "researchos-mcp"
+  readonly target: "project" | "global"
+}
+export type ServerResearchosAssetsAssetPresetInstallOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly installed: ReadonlyArray<string>; readonly configPatched: ReadonlyArray<string> }
+}
+export type ServerResearchosAssetsAssetPresetInstallOperation<E = never> = (
+  input: ServerResearchosAssetsAssetPresetInstallInput,
+) => Effect.Effect<ServerResearchosAssetsAssetPresetInstallOutput, E>
+
+export interface ServerResearchosAssetsApi<E = never> {
+  readonly asset: {
+    readonly fileRead: ServerResearchosAssetsAssetFileReadOperation<E>
+    readonly api: {
+      readonly list: ServerResearchosAssetsAssetApiListOperation<E>
+      readonly stats: ServerResearchosAssetsAssetApiStatsOperation<E>
+      readonly test: ServerResearchosAssetsAssetApiTestOperation<E>
+    }
+    readonly fileWrite: ServerResearchosAssetsAssetFileWriteOperation<E>
+    readonly noteWrite: ServerResearchosAssetsAssetNoteWriteOperation<E>
+    readonly presetInstall: ServerResearchosAssetsAssetPresetInstallOperation<E>
+  }
+}
+
+export type ServerResearchosLiteratureLiteratureSearchInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly query: string
+  readonly sources?: ReadonlyArray<"arxiv" | "semantic_scholar" | "crossref" | "pubmed"> | undefined
+  readonly limit?: number | undefined
+  readonly start?: number | undefined
+}
+export type ServerResearchosLiteratureLiteratureSearchOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly doi?: string | undefined
+    readonly arxivId?: string | undefined
+    readonly title: string
+    readonly year?: number | undefined
+    readonly venue?: string | undefined
+    readonly authors: ReadonlyArray<{ readonly name: string }>
+    readonly abstract?: string | undefined
+    readonly citationCount: number
+    readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+    readonly isRead?: boolean | undefined
+    readonly isFavorite?: boolean | undefined
+  }>
+}
+export type ServerResearchosLiteratureLiteratureSearchOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureSearchInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureSearchOutput, E>
+
+export type ServerResearchosLiteratureLiteratureListInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly limit?: number | undefined
+  readonly offset?: number | undefined
+}
+export type ServerResearchosLiteratureLiteratureListOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly doi?: string | undefined
+    readonly arxivId?: string | undefined
+    readonly title: string
+    readonly year?: number | undefined
+    readonly venue?: string | undefined
+    readonly authors: ReadonlyArray<{ readonly name: string }>
+    readonly abstract?: string | undefined
+    readonly citationCount: number
+    readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+    readonly isRead?: boolean | undefined
+    readonly isFavorite?: boolean | undefined
+  }>
+}
+export type ServerResearchosLiteratureLiteratureListOperation<E = never> = (
+  input?: ServerResearchosLiteratureLiteratureListInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureListOutput, E>
+
+export type ServerResearchosLiteratureLiteratureGetInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosLiteratureLiteratureGetOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly id: string
+    readonly doi?: string | undefined
+    readonly arxivId?: string | undefined
+    readonly title: string
+    readonly year?: number | undefined
+    readonly venue?: string | undefined
+    readonly authors: ReadonlyArray<{ readonly name: string }>
+    readonly abstract?: string | undefined
+    readonly citationCount: number
+    readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+    readonly isRead?: boolean | undefined
+    readonly isFavorite?: boolean | undefined
+  }
+}
+export type ServerResearchosLiteratureLiteratureGetOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureGetInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureGetOutput, E>
+
+export type ServerResearchosLiteratureLiteratureExportInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly paperIds: string
+  readonly format: "bibtex" | "ris" | "endnote" | "json" | "markdown"
+  readonly style?: "ieee" | "acm" | "apa" | "nature" | "springer" | undefined
+}
+export type ServerResearchosLiteratureLiteratureExportOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly content: string }
+}
+export type ServerResearchosLiteratureLiteratureExportOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureExportInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureExportOutput, E>
+
+export type ServerResearchosLiteratureLiteratureImportInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly path?: string | undefined
+  readonly url?: string | undefined
+  readonly zoteroPath?: string | undefined
+  readonly fileName?: string | undefined
+  readonly contentBase64?: string | undefined
+}
+export type ServerResearchosLiteratureLiteratureImportOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly paper?:
+      | {
+          readonly id: string
+          readonly doi?: string | undefined
+          readonly arxivId?: string | undefined
+          readonly title: string
+          readonly year?: number | undefined
+          readonly venue?: string | undefined
+          readonly authors: ReadonlyArray<{ readonly name: string }>
+          readonly abstract?: string | undefined
+          readonly citationCount: number
+          readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+          readonly isRead?: boolean | undefined
+          readonly isFavorite?: boolean | undefined
+        }
+      | undefined
+    readonly metadataSource?: "crossref" | "semantic_scholar" | "pdf" | undefined
+    readonly references?: number | undefined
+    readonly zotero?:
+      | {
+          readonly imported: number
+          readonly skipped: number
+          readonly pdfsCopied: number
+          readonly warnings: ReadonlyArray<string>
+        }
+      | undefined
+  }
+}
+export type ServerResearchosLiteratureLiteratureImportOperation<E = never> = (
+  input?: ServerResearchosLiteratureLiteratureImportInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureImportOutput, E>
+
+export type ServerResearchosLiteratureLiteratureCitationsInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly direction: "references" | "cited_by"
+}
+export type ServerResearchosLiteratureLiteratureCitationsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly title?: string | undefined
+    readonly year?: number | undefined
+    readonly doi?: string | undefined
+    readonly source: "pdf" | "grobid" | "semantic_scholar"
+    readonly inLibrary: boolean
+  }>
+}
+export type ServerResearchosLiteratureLiteratureCitationsOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureCitationsInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureCitationsOutput, E>
+
+export type ServerResearchosLiteratureLiteratureSimilarInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly limit?: number | undefined
+}
+export type ServerResearchosLiteratureLiteratureSimilarOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly results: ReadonlyArray<{
+      readonly id: string
+      readonly doi?: string | undefined
+      readonly arxivId?: string | undefined
+      readonly title: string
+      readonly year?: number | undefined
+      readonly venue?: string | undefined
+      readonly authors: ReadonlyArray<{ readonly name: string }>
+      readonly abstract?: string | undefined
+      readonly citationCount: number
+      readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+      readonly isRead?: boolean | undefined
+      readonly isFavorite?: boolean | undefined
+      readonly score: number
+    }>
+    readonly degraded: boolean
+  }
+}
+export type ServerResearchosLiteratureLiteratureSimilarOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureSimilarInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureSimilarOutput, E>
+
+export type ServerResearchosLiteratureLiteratureReadInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly query: string
+  readonly k?: number | undefined
+}
+export type ServerResearchosLiteratureLiteratureReadOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly sections: ReadonlyArray<{
+      readonly section?: string | undefined
+      readonly text: string
+      readonly score: number
+    }>
+    readonly degraded: boolean
+  }
+}
+export type ServerResearchosLiteratureLiteratureReadOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureReadInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureReadOutput, E>
+
+export type ServerResearchosLiteratureLiteratureUpdateInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly isRead?: boolean | undefined
+  readonly isFavorite?: boolean | undefined
+}
+export type ServerResearchosLiteratureLiteratureUpdateOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly id: string
+    readonly doi?: string | undefined
+    readonly arxivId?: string | undefined
+    readonly title: string
+    readonly year?: number | undefined
+    readonly venue?: string | undefined
+    readonly authors: ReadonlyArray<{ readonly name: string }>
+    readonly abstract?: string | undefined
+    readonly citationCount: number
+    readonly source: "arxiv" | "semantic_scholar" | "crossref" | "pubmed" | "zotero" | "manual"
+    readonly isRead?: boolean | undefined
+    readonly isFavorite?: boolean | undefined
+  }
+}
+export type ServerResearchosLiteratureLiteratureUpdateOperation<E = never> = (
+  input: ServerResearchosLiteratureLiteratureUpdateInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureUpdateOutput, E>
+
+export type ServerResearchosLiteratureLiteratureSelectInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly paperId?: string | undefined
+  readonly title?: string | undefined
+}
+export type ServerResearchosLiteratureLiteratureSelectOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: boolean }
+}
+export type ServerResearchosLiteratureLiteratureSelectOperation<E = never> = (
+  input?: ServerResearchosLiteratureLiteratureSelectInput,
+) => Effect.Effect<ServerResearchosLiteratureLiteratureSelectOutput, E>
+
+export interface ServerResearchosLiteratureApi<E = never> {
+  readonly literature: {
+    readonly search: ServerResearchosLiteratureLiteratureSearchOperation<E>
+    readonly list: ServerResearchosLiteratureLiteratureListOperation<E>
+    readonly get: ServerResearchosLiteratureLiteratureGetOperation<E>
+    readonly export: ServerResearchosLiteratureLiteratureExportOperation<E>
+    readonly import: ServerResearchosLiteratureLiteratureImportOperation<E>
+    readonly citations: ServerResearchosLiteratureLiteratureCitationsOperation<E>
+    readonly similar: ServerResearchosLiteratureLiteratureSimilarOperation<E>
+    readonly read: ServerResearchosLiteratureLiteratureReadOperation<E>
+    readonly update: ServerResearchosLiteratureLiteratureUpdateOperation<E>
+    readonly select: ServerResearchosLiteratureLiteratureSelectOperation<E>
+  }
+}
+
+export type ServerResearchosGraphGraphStatusInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosGraphGraphStatusOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly backend: "sqlite" | "neo4j" | "memgraph" | "tugraph"
+    readonly healthy: boolean
+    readonly detail: string
+  }
+}
+export type ServerResearchosGraphGraphStatusOperation<E = never> = (
+  input?: ServerResearchosGraphGraphStatusInput,
+) => Effect.Effect<ServerResearchosGraphGraphStatusOutput, E>
+
+export type ServerResearchosGraphGraphGetInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly type?: "paper" | "note" | "concept" | "repo" | undefined
+}
+export type ServerResearchosGraphGraphGetOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly nodes: ReadonlyArray<{
+      readonly id: string
+      readonly type: "paper" | "note" | "concept" | "repo"
+      readonly label: string
+      readonly refId?: string | undefined
+      readonly sourcePath?: string | undefined
+      readonly attrs?: { readonly [x: string]: unknown } | undefined
+      readonly x?: number | undefined
+      readonly y?: number | undefined
+    }>
+    readonly edges: ReadonlyArray<{
+      readonly from: string
+      readonly to: string
+      readonly relation: "cites" | "mentions" | "implements" | "evolves"
+      readonly context?: string | undefined
+      readonly sourcePath?: string | undefined
+    }>
+  }
+}
+export type ServerResearchosGraphGraphGetOperation<E = never> = (
+  input?: ServerResearchosGraphGraphGetInput,
+) => Effect.Effect<ServerResearchosGraphGraphGetOutput, E>
+
+export type ServerResearchosGraphGraphNodeInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly id: string
+}
+export type ServerResearchosGraphGraphNodeOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly node: {
+      readonly id: string
+      readonly type: "paper" | "note" | "concept" | "repo"
+      readonly label: string
+      readonly refId?: string | undefined
+      readonly sourcePath?: string | undefined
+      readonly attrs?: { readonly [x: string]: unknown } | undefined
+      readonly x?: number | undefined
+      readonly y?: number | undefined
+    }
+    readonly neighbors: {
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly type: "paper" | "note" | "concept" | "repo"
+        readonly label: string
+        readonly refId?: string | undefined
+        readonly sourcePath?: string | undefined
+        readonly attrs?: { readonly [x: string]: unknown } | undefined
+        readonly x?: number | undefined
+        readonly y?: number | undefined
+      }>
+      readonly edges: ReadonlyArray<{
+        readonly from: string
+        readonly to: string
+        readonly relation: "cites" | "mentions" | "implements" | "evolves"
+        readonly context?: string | undefined
+        readonly sourcePath?: string | undefined
+      }>
+    }
+    readonly paper?:
+      | {
+          readonly id: string
+          readonly title: string
+          readonly year?: number | undefined
+          readonly doi?: string | undefined
+          readonly authors: ReadonlyArray<string>
+          readonly citationCount: number
+        }
+      | undefined
+  }
+}
+export type ServerResearchosGraphGraphNodeOperation<E = never> = (
+  input: ServerResearchosGraphGraphNodeInput,
+) => Effect.Effect<ServerResearchosGraphGraphNodeOutput, E>
+
+export type ServerResearchosGraphGraphAskInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly question: string
+  readonly center_node?: string | undefined
+  readonly depth?: number | undefined
+}
+export type ServerResearchosGraphGraphAskOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly subgraph: {
+      readonly nodes: ReadonlyArray<{
+        readonly id: string
+        readonly type: "paper" | "note" | "concept" | "repo"
+        readonly label: string
+        readonly refId?: string | undefined
+        readonly sourcePath?: string | undefined
+        readonly attrs?: { readonly [x: string]: unknown } | undefined
+        readonly x?: number | undefined
+        readonly y?: number | undefined
+      }>
+      readonly edges: ReadonlyArray<{
+        readonly from: string
+        readonly to: string
+        readonly relation: "cites" | "mentions" | "implements" | "evolves"
+        readonly context?: string | undefined
+        readonly sourcePath?: string | undefined
+      }>
+    }
+    readonly contextPack: string
+    readonly seeds: ReadonlyArray<{
+      readonly id: string
+      readonly type: "paper" | "note" | "concept" | "repo"
+      readonly label: string
+      readonly refId?: string | undefined
+      readonly sourcePath?: string | undefined
+      readonly attrs?: { readonly [x: string]: unknown } | undefined
+      readonly x?: number | undefined
+      readonly y?: number | undefined
+    }>
+    readonly sources: ReadonlyArray<{
+      readonly id: string
+      readonly type: "paper" | "note" | "concept" | "repo"
+      readonly label: string
+      readonly refId?: string | undefined
+    }>
+    readonly degraded: boolean
+    readonly answer: string
+  }
+}
+export type ServerResearchosGraphGraphAskOperation<E = never> = (
+  input: ServerResearchosGraphGraphAskInput,
+) => Effect.Effect<ServerResearchosGraphGraphAskOutput, E>
+
+export type ServerResearchosGraphGraphReindexInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosGraphGraphReindexOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly files: ReadonlyArray<string>; readonly nodes: number; readonly edges: number }
+}
+export type ServerResearchosGraphGraphReindexOperation<E = never> = (
+  input?: ServerResearchosGraphGraphReindexInput,
+) => Effect.Effect<ServerResearchosGraphGraphReindexOutput, E>
+
+export type ServerResearchosGraphGraphSaveLayoutInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly positions: ReadonlyArray<{ readonly id: string; readonly x: number; readonly y: number }>
+}
+export type ServerResearchosGraphGraphSaveLayoutOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: boolean }
+}
+export type ServerResearchosGraphGraphSaveLayoutOperation<E = never> = (
+  input: ServerResearchosGraphGraphSaveLayoutInput,
+) => Effect.Effect<ServerResearchosGraphGraphSaveLayoutOutput, E>
+
+export interface ServerResearchosGraphApi<E = never> {
+  readonly graph: {
+    readonly status: ServerResearchosGraphGraphStatusOperation<E>
+    readonly get: ServerResearchosGraphGraphGetOperation<E>
+    readonly node: ServerResearchosGraphGraphNodeOperation<E>
+    readonly ask: ServerResearchosGraphGraphAskOperation<E>
+    readonly reindex: ServerResearchosGraphGraphReindexOperation<E>
+    readonly save_layout: ServerResearchosGraphGraphSaveLayoutOperation<E>
+  }
+}
+
+export type ServerResearchosLatexLatexFilesInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosLatexLatexFilesOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly files: ReadonlyArray<string> }
+}
+export type ServerResearchosLatexLatexFilesOperation<E = never> = (
+  input?: ServerResearchosLatexLatexFilesInput,
+) => Effect.Effect<ServerResearchosLatexLatexFilesOutput, E>
+
+export type ServerResearchosLatexLatexSourceInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly file: string
+}
+export type ServerResearchosLatexLatexSourceOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly file: string
+    readonly content: string
+    readonly outline: ReadonlyArray<{ readonly level: number; readonly title: string; readonly line: number }>
+    readonly bibliography: ReadonlyArray<{
+      readonly type: string
+      readonly key: string
+      readonly fields: { readonly [x: string]: string }
+    }>
+  }
+}
+export type ServerResearchosLatexLatexSourceOperation<E = never> = (
+  input: ServerResearchosLatexLatexSourceInput,
+) => Effect.Effect<ServerResearchosLatexLatexSourceOutput, E>
+
+export type ServerResearchosLatexLatexSourceWriteInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly file: string
+  readonly content: string
+}
+export type ServerResearchosLatexLatexSourceWriteOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly file: string; readonly bytes: number }
+}
+export type ServerResearchosLatexLatexSourceWriteOperation<E = never> = (
+  input: ServerResearchosLatexLatexSourceWriteInput,
+) => Effect.Effect<ServerResearchosLatexLatexSourceWriteOutput, E>
+
+export type ServerResearchosLatexLatexPdfInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly mainFile: string
+}
+export type ServerResearchosLatexLatexPdfOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly file: string; readonly data: string }
+}
+export type ServerResearchosLatexLatexPdfOperation<E = never> = (
+  input: ServerResearchosLatexLatexPdfInput,
+) => Effect.Effect<ServerResearchosLatexLatexPdfOutput, E>
+
+export type ServerResearchosLatexLatexBuildsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly limit?: number | undefined
+}
+export type ServerResearchosLatexLatexBuildsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly builds: ReadonlyArray<{
+      readonly id: string
+      readonly mainFile: string
+      readonly status: "success" | "failed" | "unavailable"
+      readonly pdfPath?: string | undefined
+      readonly log: string
+      readonly durationMs?: number | undefined
+      readonly createdAt: number
+    }>
+  }
+}
+export type ServerResearchosLatexLatexBuildsOperation<E = never> = (
+  input?: ServerResearchosLatexLatexBuildsInput,
+) => Effect.Effect<ServerResearchosLatexLatexBuildsOutput, E>
+
+export type ServerResearchosLatexLatexCompileInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly mainFile: string
+}
+export type ServerResearchosLatexLatexCompileOutput = {
+  readonly location: Location.PublicRef
+  readonly data:
+    | {
+        readonly available: true
+        readonly ok: boolean
+        readonly pdfPath?: string | undefined
+        readonly log: string
+        readonly errors: ReadonlyArray<{
+          readonly file: string
+          readonly line: number
+          readonly message: string
+          readonly severity: "error" | "warning"
+        }>
+        readonly durationMs: number
+      }
+    | { readonly available: false; readonly message: string; readonly installHint: string }
+}
+export type ServerResearchosLatexLatexCompileOperation<E = never> = (
+  input: ServerResearchosLatexLatexCompileInput,
+) => Effect.Effect<ServerResearchosLatexLatexCompileOutput, E>
+
+export type ServerResearchosLatexLatexSynctexInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly mainFile?: string | undefined
+  readonly file?: string | undefined
+  readonly line?: number | undefined
+  readonly pdfPath?: string | undefined
+  readonly page?: number | undefined
+  readonly x?: number | undefined
+  readonly y?: number | undefined
+}
+export type ServerResearchosLatexLatexSynctexOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly found: boolean
+    readonly reason?: string | undefined
+    readonly file?: string | undefined
+    readonly line?: number | undefined
+    readonly page?: number | undefined
+    readonly x?: number | undefined
+    readonly y?: number | undefined
+  }
+}
+export type ServerResearchosLatexLatexSynctexOperation<E = never> = (
+  input?: ServerResearchosLatexLatexSynctexInput,
+) => Effect.Effect<ServerResearchosLatexLatexSynctexOutput, E>
+
+export type ServerResearchosLatexLatexFormatCheckInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly mainFile: string
+  readonly template?: "ieee" | "acm" | undefined
+}
+export type ServerResearchosLatexLatexFormatCheckOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly issues: ReadonlyArray<{
+      readonly file: string
+      readonly line: number
+      readonly rule: string
+      readonly severity: "error" | "warning" | "info"
+      readonly message: string
+    }>
+  }
+}
+export type ServerResearchosLatexLatexFormatCheckOperation<E = never> = (
+  input: ServerResearchosLatexLatexFormatCheckInput,
+) => Effect.Effect<ServerResearchosLatexLatexFormatCheckOutput, E>
+
+export interface ServerResearchosLatexApi<E = never> {
+  readonly latex: {
+    readonly files: ServerResearchosLatexLatexFilesOperation<E>
+    readonly source: ServerResearchosLatexLatexSourceOperation<E>
+    readonly source_write: ServerResearchosLatexLatexSourceWriteOperation<E>
+    readonly pdf: ServerResearchosLatexLatexPdfOperation<E>
+    readonly builds: ServerResearchosLatexLatexBuildsOperation<E>
+    readonly compile: ServerResearchosLatexLatexCompileOperation<E>
+    readonly synctex: ServerResearchosLatexLatexSynctexOperation<E>
+    readonly format_check: ServerResearchosLatexLatexFormatCheckOperation<E>
+  }
+}
+
+export type ServerResearchosWritingWritingTableInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly csv: string
+  readonly caption?: string | undefined
+  readonly label?: string | undefined
+}
+export type ServerResearchosWritingWritingTableOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly text: string }
+}
+export type ServerResearchosWritingWritingTableOperation<E = never> = (
+  input: ServerResearchosWritingWritingTableInput,
+) => Effect.Effect<ServerResearchosWritingWritingTableOutput, E>
+
+export type ServerResearchosWritingWritingMd2latexInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly markdown: string
+}
+export type ServerResearchosWritingWritingMd2latexOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly text: string }
+}
+export type ServerResearchosWritingWritingMd2latexOperation<E = never> = (
+  input: ServerResearchosWritingWritingMd2latexInput,
+) => Effect.Effect<ServerResearchosWritingWritingMd2latexOutput, E>
+
+export type ServerResearchosWritingWritingDiffInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly original: string
+  readonly revised: string
+}
+export type ServerResearchosWritingWritingDiffOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly parts: ReadonlyArray<{
+      readonly value: string
+      readonly added?: boolean | undefined
+      readonly removed?: boolean | undefined
+    }>
+    readonly hunks: ReadonlyArray<{ readonly index: number; readonly original: string; readonly revised: string }>
+  }
+}
+export type ServerResearchosWritingWritingDiffOperation<E = never> = (
+  input: ServerResearchosWritingWritingDiffInput,
+) => Effect.Effect<ServerResearchosWritingWritingDiffOutput, E>
+
+export type ServerResearchosWritingWritingDiffApplyInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly original: string
+  readonly revised: string
+  readonly accepted: ReadonlyArray<number>
+}
+export type ServerResearchosWritingWritingDiffApplyOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly text: string }
+}
+export type ServerResearchosWritingWritingDiffApplyOperation<E = never> = (
+  input: ServerResearchosWritingWritingDiffApplyInput,
+) => Effect.Effect<ServerResearchosWritingWritingDiffApplyOutput, E>
+
+export type ServerResearchosWritingWritingBibtexLibraryInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly paperIds: ReadonlyArray<string>
+}
+export type ServerResearchosWritingWritingBibtexLibraryOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly entries: ReadonlyArray<{ readonly key: string; readonly bibtex: string }>
+    readonly missing: ReadonlyArray<string>
+  }
+}
+export type ServerResearchosWritingWritingBibtexLibraryOperation<E = never> = (
+  input: ServerResearchosWritingWritingBibtexLibraryInput,
+) => Effect.Effect<ServerResearchosWritingWritingBibtexLibraryOutput, E>
+
+export type ServerResearchosWritingWritingBibtexUpsertInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly bibFile: string
+  readonly entries: ReadonlyArray<{ readonly key: string; readonly bibtex: string }>
+}
+export type ServerResearchosWritingWritingBibtexUpsertOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly inserted: ReadonlyArray<string>; readonly skipped: ReadonlyArray<string> }
+}
+export type ServerResearchosWritingWritingBibtexUpsertOperation<E = never> = (
+  input: ServerResearchosWritingWritingBibtexUpsertInput,
+) => Effect.Effect<ServerResearchosWritingWritingBibtexUpsertOutput, E>
+
+export type ServerResearchosWritingWritingSuggestionRecordInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly kind: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite"
+  readonly targetFile?: string | undefined
+  readonly inputExcerpt: string
+  readonly output: string
+  readonly status: "pending" | "accepted" | "rejected" | "partial"
+}
+export type ServerResearchosWritingWritingSuggestionRecordOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly id: string }
+}
+export type ServerResearchosWritingWritingSuggestionRecordOperation<E = never> = (
+  input: ServerResearchosWritingWritingSuggestionRecordInput,
+) => Effect.Effect<ServerResearchosWritingWritingSuggestionRecordOutput, E>
+
+export type ServerResearchosWritingWritingSuggestionsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly kind?: "title" | "structure" | "rewrite" | "algorithm" | "table" | "md" | "cite" | undefined
+  readonly limit?: number | undefined
+}
+export type ServerResearchosWritingWritingSuggestionsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly suggestions: ReadonlyArray<{ readonly [x: string]: unknown }> }
+}
+export type ServerResearchosWritingWritingSuggestionsOperation<E = never> = (
+  input?: ServerResearchosWritingWritingSuggestionsInput,
+) => Effect.Effect<ServerResearchosWritingWritingSuggestionsOutput, E>
+
+export interface ServerResearchosWritingApi<E = never> {
+  readonly writing: {
+    readonly table: ServerResearchosWritingWritingTableOperation<E>
+    readonly md2latex: ServerResearchosWritingWritingMd2latexOperation<E>
+    readonly diff: ServerResearchosWritingWritingDiffOperation<E>
+    readonly diff_apply: ServerResearchosWritingWritingDiffApplyOperation<E>
+    readonly bibtex_library: ServerResearchosWritingWritingBibtexLibraryOperation<E>
+    readonly bibtex_upsert: ServerResearchosWritingWritingBibtexUpsertOperation<E>
+    readonly suggestion_record: ServerResearchosWritingWritingSuggestionRecordOperation<E>
+    readonly suggestions: ServerResearchosWritingWritingSuggestionsOperation<E>
+  }
+}
+
+export type ServerResearchosDataDataNotebooksInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataNotebooksOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{ readonly id: string; readonly title: string; readonly createdAt: number }>
+}
+export type ServerResearchosDataDataNotebooksOperation<E = never> = (
+  input?: ServerResearchosDataDataNotebooksInput,
+) => Effect.Effect<ServerResearchosDataDataNotebooksOutput, E>
+
+export type ServerResearchosDataDataCellsInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataCellsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly notebookId: string
+    readonly position: number
+    readonly source: string
+    readonly status: "idle" | "running" | "success" | "error"
+    readonly stdout?: string | undefined
+    readonly stderr?: string | undefined
+    readonly durationMs?: number | undefined
+    readonly executedAt?: number | undefined
+  }>
+}
+export type ServerResearchosDataDataCellsOperation<E = never> = (
+  input: ServerResearchosDataDataCellsInput,
+) => Effect.Effect<ServerResearchosDataDataCellsOutput, E>
+
+export type ServerResearchosDataDataCellCreateInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly source?: string | undefined
+}
+export type ServerResearchosDataDataCellCreateOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly id: string
+    readonly notebookId: string
+    readonly position: number
+    readonly source: string
+    readonly status: "idle" | "running" | "success" | "error"
+    readonly stdout?: string | undefined
+    readonly stderr?: string | undefined
+    readonly durationMs?: number | undefined
+    readonly executedAt?: number | undefined
+  }
+}
+export type ServerResearchosDataDataCellCreateOperation<E = never> = (
+  input: ServerResearchosDataDataCellCreateInput,
+) => Effect.Effect<ServerResearchosDataDataCellCreateOutput, E>
+
+export type ServerResearchosDataDataCellSaveInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly source: string
+}
+export type ServerResearchosDataDataCellSaveOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly id: string
+    readonly notebookId: string
+    readonly position: number
+    readonly source: string
+    readonly status: "idle" | "running" | "success" | "error"
+    readonly stdout?: string | undefined
+    readonly stderr?: string | undefined
+    readonly durationMs?: number | undefined
+    readonly executedAt?: number | undefined
+  }
+}
+export type ServerResearchosDataDataCellSaveOperation<E = never> = (
+  input: ServerResearchosDataDataCellSaveInput,
+) => Effect.Effect<ServerResearchosDataDataCellSaveOutput, E>
+
+export type ServerResearchosDataDataCellRunInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly source: string
+  readonly workdir?: string | undefined
+  readonly timeoutS?: number | undefined
+}
+export type ServerResearchosDataDataCellRunOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly cell: {
+      readonly id: string
+      readonly notebookId: string
+      readonly position: number
+      readonly source: string
+      readonly status: "idle" | "running" | "success" | "error"
+      readonly stdout?: string | undefined
+      readonly stderr?: string | undefined
+      readonly durationMs?: number | undefined
+      readonly executedAt?: number | undefined
+    }
+    readonly artifacts: ReadonlyArray<string>
+    readonly error?: { readonly type: string; readonly message: string; readonly traceback: string } | undefined
+  }
+}
+export type ServerResearchosDataDataCellRunOperation<E = never> = (
+  input: ServerResearchosDataDataCellRunInput,
+) => Effect.Effect<ServerResearchosDataDataCellRunOutput, E>
+
+export type ServerResearchosDataDataDatasetsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataDatasetsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly path: string
+    readonly format: string
+    readonly sizeBytes: number
+    readonly profileJson?: string | undefined
+    readonly createdAt: number
+  }>
+}
+export type ServerResearchosDataDataDatasetsOperation<E = never> = (
+  input?: ServerResearchosDataDataDatasetsInput,
+) => Effect.Effect<ServerResearchosDataDataDatasetsOutput, E>
+
+export type ServerResearchosDataDataArtifactsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataArtifactsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly kind: string
+    readonly path: string
+    readonly previewPath?: string | undefined
+    readonly format: string
+    readonly dpi?: number | undefined
+    readonly latexSnippet?: string | undefined
+    readonly specJson?: string | undefined
+    readonly createdAt: number
+  }>
+}
+export type ServerResearchosDataDataArtifactsOperation<E = never> = (
+  input?: ServerResearchosDataDataArtifactsInput,
+) => Effect.Effect<ServerResearchosDataDataArtifactsOutput, E>
+
+export type ServerResearchosDataDataArtifactInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataArtifactOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly artifact: {
+      readonly id: string
+      readonly kind: string
+      readonly path: string
+      readonly previewPath?: string | undefined
+      readonly format: string
+      readonly dpi?: number | undefined
+      readonly latexSnippet?: string | undefined
+      readonly specJson?: string | undefined
+      readonly createdAt: number
+    }
+    readonly links: ReadonlyArray<{
+      readonly artifactId: string
+      readonly gitCommit?: string | undefined
+      readonly texFile?: string | undefined
+      readonly texSection?: string | undefined
+      readonly linkedAt: number
+    }>
+  }
+}
+export type ServerResearchosDataDataArtifactOperation<E = never> = (
+  input: ServerResearchosDataDataArtifactInput,
+) => Effect.Effect<ServerResearchosDataDataArtifactOutput, E>
+
+export type ServerResearchosDataDataArtifactFileInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataArtifactFileOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly format: string; readonly content: string; readonly encoding: "utf8" | "base64" }
+}
+export type ServerResearchosDataDataArtifactFileOperation<E = never> = (
+  input: ServerResearchosDataDataArtifactFileInput,
+) => Effect.Effect<ServerResearchosDataDataArtifactFileOutput, E>
+
+export type ServerResearchosDataDataStatTestsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosDataDataStatTestsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly test: string
+    readonly columnsJson: string
+    readonly statistic?: number | undefined
+    readonly pValue?: number | undefined
+    readonly conclusion: string
+    readonly createdAt: number
+  }>
+}
+export type ServerResearchosDataDataStatTestsOperation<E = never> = (
+  input?: ServerResearchosDataDataStatTestsInput,
+) => Effect.Effect<ServerResearchosDataDataStatTestsOutput, E>
+
+export type ServerResearchosDataDataLinkInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly commit?: string | undefined
+  readonly texFile?: string | undefined
+  readonly texSection?: string | undefined
+}
+export type ServerResearchosDataDataLinkOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: true; readonly warning?: string | undefined }
+}
+export type ServerResearchosDataDataLinkOperation<E = never> = (
+  input: ServerResearchosDataDataLinkInput,
+) => Effect.Effect<ServerResearchosDataDataLinkOutput, E>
+
+export type ServerResearchosDataDataDatasetRegisterInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly path: string
+  readonly name?: string | undefined
+}
+export type ServerResearchosDataDataDatasetRegisterOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly id: string
+    readonly name: string
+    readonly path: string
+    readonly format: string
+    readonly sizeBytes: number
+    readonly profileJson?: string | undefined
+    readonly createdAt: number
+  }
+}
+export type ServerResearchosDataDataDatasetRegisterOperation<E = never> = (
+  input: ServerResearchosDataDataDatasetRegisterInput,
+) => Effect.Effect<ServerResearchosDataDataDatasetRegisterOutput, E>
+
+export interface ServerResearchosDataApi<E = never> {
+  readonly data: {
+    readonly notebooks: ServerResearchosDataDataNotebooksOperation<E>
+    readonly cells: ServerResearchosDataDataCellsOperation<E>
+    readonly cell_create: ServerResearchosDataDataCellCreateOperation<E>
+    readonly cell_save: ServerResearchosDataDataCellSaveOperation<E>
+    readonly cell_run: ServerResearchosDataDataCellRunOperation<E>
+    readonly datasets: ServerResearchosDataDataDatasetsOperation<E>
+    readonly artifacts: ServerResearchosDataDataArtifactsOperation<E>
+    readonly artifact: ServerResearchosDataDataArtifactOperation<E>
+    readonly artifactFile: ServerResearchosDataDataArtifactFileOperation<E>
+    readonly statTests: ServerResearchosDataDataStatTestsOperation<E>
+    readonly link: ServerResearchosDataDataLinkOperation<E>
+    readonly dataset_register: ServerResearchosDataDataDatasetRegisterOperation<E>
+  }
+}
+
+export type ServerResearchosPlotPlotCreateInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly template: "grouped_bar" | "scatter_regression" | "boxplot" | "violin" | "survival" | "heatmap"
+  readonly data: { readonly file: string } | { readonly inline: ReadonlyArray<{ readonly [x: string]: unknown }> }
+  readonly theme?: "nature" | "science" | "ieee" | "prism" | undefined
+  readonly spec?: { readonly [x: string]: unknown } | undefined
+}
+export type ServerResearchosPlotPlotCreateOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly chartId: string; readonly artifactPath: string; readonly previewSvg: string }
+}
+export type ServerResearchosPlotPlotCreateOperation<E = never> = (
+  input: ServerResearchosPlotPlotCreateInput,
+) => Effect.Effect<ServerResearchosPlotPlotCreateOutput, E>
+
+export type ServerResearchosPlotPlotTuneInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly patch: { readonly [x: string]: unknown }
+}
+export type ServerResearchosPlotPlotTuneOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly chartId: string
+    readonly artifactPath: string
+    readonly previewSvg: string
+    readonly code: string
+    readonly codePriority: boolean
+  }
+}
+export type ServerResearchosPlotPlotTuneOperation<E = never> = (
+  input: ServerResearchosPlotPlotTuneInput,
+) => Effect.Effect<ServerResearchosPlotPlotTuneOutput, E>
+
+export type ServerResearchosPlotPlotAnnotateSignificanceInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly test: "ttest" | "anova" | "mannwhitneyu"
+  readonly groups: ReadonlyArray<readonly [string, string]>
+}
+export type ServerResearchosPlotPlotAnnotateSignificanceOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly chartId: string
+    readonly artifactPath: string
+    readonly previewSvg: string
+    readonly pValues: ReadonlyArray<{
+      readonly groups: readonly [string, string]
+      readonly pValue: number
+      readonly stars: "*" | "**" | "***" | "ns"
+    }>
+  }
+}
+export type ServerResearchosPlotPlotAnnotateSignificanceOperation<E = never> = (
+  input: ServerResearchosPlotPlotAnnotateSignificanceInput,
+) => Effect.Effect<ServerResearchosPlotPlotAnnotateSignificanceOutput, E>
+
+export type ServerResearchosPlotPlotMermaidInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly code: string
+  readonly name?: string | undefined
+  readonly theme?: string | undefined
+}
+export type ServerResearchosPlotPlotMermaidOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly artifactId: string
+    readonly artifactPath: string
+    readonly code?: string | undefined
+    readonly svg?: string | undefined
+  }
+}
+export type ServerResearchosPlotPlotMermaidOperation<E = never> = (
+  input: ServerResearchosPlotPlotMermaidInput,
+) => Effect.Effect<ServerResearchosPlotPlotMermaidOutput, E>
+
+export type ServerResearchosPlotPlotGraphvizInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly dot: string
+  readonly engine?: "dot" | "neato" | "fdp" | undefined
+  readonly name?: string | undefined
+}
+export type ServerResearchosPlotPlotGraphvizOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly artifactId: string
+    readonly artifactPath: string
+    readonly code?: string | undefined
+    readonly svg?: string | undefined
+  }
+}
+export type ServerResearchosPlotPlotGraphvizOperation<E = never> = (
+  input: ServerResearchosPlotPlotGraphvizInput,
+) => Effect.Effect<ServerResearchosPlotPlotGraphvizOutput, E>
+
+export type ServerResearchosPlotPlotDiagramInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly action: "create" | "open"
+  readonly file?: string | undefined
+  readonly stencilPack?: "nn_layers" | "agent" | "flow" | undefined
+}
+export type ServerResearchosPlotPlotDiagramOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly file: string }
+}
+export type ServerResearchosPlotPlotDiagramOperation<E = never> = (
+  input: ServerResearchosPlotPlotDiagramInput,
+) => Effect.Effect<ServerResearchosPlotPlotDiagramOutput, E>
+
+export type ServerResearchosPlotPlotDiagramSaveInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly file: string
+  readonly xml: string
+}
+export type ServerResearchosPlotPlotDiagramSaveOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly file: string }
+}
+export type ServerResearchosPlotPlotDiagramSaveOperation<E = never> = (
+  input: ServerResearchosPlotPlotDiagramSaveInput,
+) => Effect.Effect<ServerResearchosPlotPlotDiagramSaveOutput, E>
+
+export type ServerResearchosPlotPlotInsertInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly artifactPath: string
+  readonly texFile: string
+  readonly section?: string | undefined
+  readonly caption: string
+  readonly label?: string | undefined
+}
+export type ServerResearchosPlotPlotInsertOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: true; readonly latexSnippet: string }
+}
+export type ServerResearchosPlotPlotInsertOperation<E = never> = (
+  input: ServerResearchosPlotPlotInsertInput,
+) => Effect.Effect<ServerResearchosPlotPlotInsertOutput, E>
+
+export type ServerResearchosPlotPlotArtifactsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosPlotPlotArtifactsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly kind: string
+    readonly chartId?: string | undefined
+    readonly path: string
+    readonly previewSvg?: string | undefined
+    readonly texFile?: string | undefined
+    readonly texLabel?: string | undefined
+    readonly createdAt: number
+  }>
+}
+export type ServerResearchosPlotPlotArtifactsOperation<E = never> = (
+  input?: ServerResearchosPlotPlotArtifactsInput,
+) => Effect.Effect<ServerResearchosPlotPlotArtifactsOutput, E>
+
+export type ServerResearchosPlotPlotArtifactFileInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosPlotPlotArtifactFileOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly format: string; readonly content: string; readonly encoding: "utf8" | "base64" }
+}
+export type ServerResearchosPlotPlotArtifactFileOperation<E = never> = (
+  input: ServerResearchosPlotPlotArtifactFileInput,
+) => Effect.Effect<ServerResearchosPlotPlotArtifactFileOutput, E>
+
+export interface ServerResearchosPlotApi<E = never> {
+  readonly plot: {
+    readonly create: ServerResearchosPlotPlotCreateOperation<E>
+    readonly tune: ServerResearchosPlotPlotTuneOperation<E>
+    readonly annotateSignificance: ServerResearchosPlotPlotAnnotateSignificanceOperation<E>
+    readonly mermaid: ServerResearchosPlotPlotMermaidOperation<E>
+    readonly graphviz: ServerResearchosPlotPlotGraphvizOperation<E>
+    readonly diagram: ServerResearchosPlotPlotDiagramOperation<E>
+    readonly diagramSave: ServerResearchosPlotPlotDiagramSaveOperation<E>
+    readonly insert: ServerResearchosPlotPlotInsertOperation<E>
+    readonly artifacts: ServerResearchosPlotPlotArtifactsOperation<E>
+    readonly artifactFile: ServerResearchosPlotPlotArtifactFileOperation<E>
+  }
+}
+
+export type ServerResearchosReproduceReproduceListInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosReproduceReproduceListOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly paperUrl: string
+    readonly repoUrl: string
+    readonly status: string
+    readonly currentStep: number
+    readonly envStrategy: string
+    readonly error?: string | undefined
+    readonly createdAt: number
+    readonly updatedAt: number
+  }>
+}
+export type ServerResearchosReproduceReproduceListOperation<E = never> = (
+  input?: ServerResearchosReproduceReproduceListInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceListOutput, E>
+
+export type ServerResearchosReproduceReproduceCreateInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly paperUrl: string
+  readonly repoUrl: string
+  readonly envStrategy?: "auto" | "docker" | "venv" | undefined
+}
+export type ServerResearchosReproduceReproduceCreateOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly runId: string }
+}
+export type ServerResearchosReproduceReproduceCreateOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceCreateInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceCreateOutput, E>
+
+export type ServerResearchosReproduceReproduceGetInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosReproduceReproduceGetOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly run: {
+      readonly id: string
+      readonly paperUrl: string
+      readonly repoUrl: string
+      readonly status: string
+      readonly currentStep: number
+      readonly envStrategy: string
+      readonly error?: string | undefined
+      readonly createdAt: number
+      readonly updatedAt: number
+    }
+    readonly steps: ReadonlyArray<{
+      readonly id: string
+      readonly runId: string
+      readonly seq: number
+      readonly name: string
+      readonly status: string
+      readonly log: string
+      readonly outputJson?: string | undefined
+      readonly startedAt?: number | undefined
+      readonly finishedAt?: number | undefined
+    }>
+  }
+}
+export type ServerResearchosReproduceReproduceGetOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceGetInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceGetOutput, E>
+
+export type ServerResearchosReproduceReproduceAdvanceInput = {
+  readonly id: string
+  readonly step: "clone" | "analyze" | "env_detect" | "env_generate" | "run" | "compare"
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosReproduceReproduceAdvanceOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly status: string; readonly output: unknown; readonly logTail: string }
+}
+export type ServerResearchosReproduceReproduceAdvanceOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceAdvanceInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceAdvanceOutput, E>
+
+export type ServerResearchosReproduceReproduceMetricsSubmitInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly metrics: ReadonlyArray<{
+    readonly model: string
+    readonly dataset: string
+    readonly metric: string
+    readonly value: number
+    readonly tolerance?: number | undefined
+  }>
+}
+export type ServerResearchosReproduceReproduceMetricsSubmitOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: true }
+}
+export type ServerResearchosReproduceReproduceMetricsSubmitOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceMetricsSubmitInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceMetricsSubmitOutput, E>
+
+export type ServerResearchosReproduceReproduceComparisonInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosReproduceReproduceComparisonOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly runId: string
+    readonly model: string
+    readonly dataset: string
+    readonly metric: string
+    readonly paperValue?: number | undefined
+    readonly reproValue?: number | undefined
+    readonly tolerance: number
+    readonly verdict: string
+    readonly source: string
+  }>
+}
+export type ServerResearchosReproduceReproduceComparisonOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceComparisonInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceComparisonOutput, E>
+
+export type ServerResearchosReproduceReproduceIssuesInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosReproduceReproduceIssuesOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly runId: string
+    readonly category: string
+    readonly severity: string
+    readonly title: string
+    readonly detail: string
+    readonly evidence?: string | undefined
+    readonly createdAt: number
+  }>
+}
+export type ServerResearchosReproduceReproduceIssuesOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceIssuesInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceIssuesOutput, E>
+
+export type ServerResearchosReproduceReproduceCancelInput = {
+  readonly id: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosReproduceReproduceCancelOutput = {
+  readonly location: Location.PublicRef
+  readonly data: { readonly ok: true }
+}
+export type ServerResearchosReproduceReproduceCancelOperation<E = never> = (
+  input: ServerResearchosReproduceReproduceCancelInput,
+) => Effect.Effect<ServerResearchosReproduceReproduceCancelOutput, E>
+
+export interface ServerResearchosReproduceApi<E = never> {
+  readonly reproduce: {
+    readonly list: ServerResearchosReproduceReproduceListOperation<E>
+    readonly create: ServerResearchosReproduceReproduceCreateOperation<E>
+    readonly get: ServerResearchosReproduceReproduceGetOperation<E>
+    readonly advance: ServerResearchosReproduceReproduceAdvanceOperation<E>
+    readonly metricsSubmit: ServerResearchosReproduceReproduceMetricsSubmitOperation<E>
+    readonly comparison: ServerResearchosReproduceReproduceComparisonOperation<E>
+    readonly issues: ServerResearchosReproduceReproduceIssuesOperation<E>
+    readonly cancel: ServerResearchosReproduceReproduceCancelOperation<E>
+  }
+}
+
+export type ServerResearchosTranslateTranslateRunInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+  readonly paperId: string
+  readonly sections?: ReadonlyArray<string> | undefined
+  readonly engine?: "auto" | "api" | "llm" | undefined
+}
+export type ServerResearchosTranslateTranslateRunOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly paperId: string
+    readonly sections: ReadonlyArray<{
+      readonly type: string
+      readonly title: string
+      readonly original: ReadonlyArray<string>
+      readonly translated: ReadonlyArray<string>
+    }>
+    readonly glossary: ReadonlyArray<{ readonly en: string; readonly zh: string; readonly domain?: string | undefined }>
+  }
+}
+export type ServerResearchosTranslateTranslateRunOperation<E = never> = (
+  input: ServerResearchosTranslateTranslateRunInput,
+) => Effect.Effect<ServerResearchosTranslateTranslateRunOutput, E>
+
+export type ServerResearchosTranslateTranslateGetInput = {
+  readonly paperId: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ServerResearchosTranslateTranslateGetOutput = {
+  readonly location: Location.PublicRef
+  readonly data: {
+    readonly paperId: string
+    readonly sections: ReadonlyArray<{
+      readonly type: string
+      readonly title: string
+      readonly original: ReadonlyArray<string>
+      readonly translated: ReadonlyArray<string>
+    }>
+    readonly glossary: ReadonlyArray<{ readonly en: string; readonly zh: string; readonly domain?: string | undefined }>
+  }
+}
+export type ServerResearchosTranslateTranslateGetOperation<E = never> = (
+  input: ServerResearchosTranslateTranslateGetInput,
+) => Effect.Effect<ServerResearchosTranslateTranslateGetOutput, E>
+
+export interface ServerResearchosTranslateApi<E = never> {
+  readonly translate: {
+    readonly run: ServerResearchosTranslateTranslateRunOperation<E>
+    readonly get: ServerResearchosTranslateTranslateGetOperation<E>
+  }
+}
+
 export interface AppApi<E = never> {
   readonly server: ServerApi<E>
   readonly location: LocationApi<E>
@@ -2313,4 +3848,13 @@ export interface AppApi<E = never> {
   readonly migration: MigrationApi<E>
   readonly websearch: WebsearchApi<E>
   readonly config: ConfigApi<E>
+  readonly "server.researchos-assets": ServerResearchosAssetsApi<E>
+  readonly "server.researchos-literature": ServerResearchosLiteratureApi<E>
+  readonly "server.researchos-graph": ServerResearchosGraphApi<E>
+  readonly "server.researchos-latex": ServerResearchosLatexApi<E>
+  readonly "server.researchos-writing": ServerResearchosWritingApi<E>
+  readonly "server.researchos-data": ServerResearchosDataApi<E>
+  readonly "server.researchos-plot": ServerResearchosPlotApi<E>
+  readonly "server.researchos-reproduce": ServerResearchosReproduceApi<E>
+  readonly "server.researchos-translate": ServerResearchosTranslateApi<E>
 }

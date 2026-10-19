@@ -272,6 +272,148 @@ import type {
   ConfigShellsOutput,
   ConfigUpdateInput,
   ConfigUpdateOutput,
+  ServerResearchosAssetsAssetFileReadInput,
+  ServerResearchosAssetsAssetFileReadOutput,
+  ServerResearchosAssetsAssetApiListInput,
+  ServerResearchosAssetsAssetApiListOutput,
+  ServerResearchosAssetsAssetApiStatsInput,
+  ServerResearchosAssetsAssetApiStatsOutput,
+  ServerResearchosAssetsAssetApiTestInput,
+  ServerResearchosAssetsAssetApiTestOutput,
+  ServerResearchosAssetsAssetFileWriteInput,
+  ServerResearchosAssetsAssetFileWriteOutput,
+  ServerResearchosAssetsAssetNoteWriteInput,
+  ServerResearchosAssetsAssetNoteWriteOutput,
+  ServerResearchosAssetsAssetPresetInstallInput,
+  ServerResearchosAssetsAssetPresetInstallOutput,
+  ServerResearchosLiteratureLiteratureSearchInput,
+  ServerResearchosLiteratureLiteratureSearchOutput,
+  ServerResearchosLiteratureLiteratureListInput,
+  ServerResearchosLiteratureLiteratureListOutput,
+  ServerResearchosLiteratureLiteratureGetInput,
+  ServerResearchosLiteratureLiteratureGetOutput,
+  ServerResearchosLiteratureLiteratureExportInput,
+  ServerResearchosLiteratureLiteratureExportOutput,
+  ServerResearchosLiteratureLiteratureImportInput,
+  ServerResearchosLiteratureLiteratureImportOutput,
+  ServerResearchosLiteratureLiteratureCitationsInput,
+  ServerResearchosLiteratureLiteratureCitationsOutput,
+  ServerResearchosLiteratureLiteratureSimilarInput,
+  ServerResearchosLiteratureLiteratureSimilarOutput,
+  ServerResearchosLiteratureLiteratureReadInput,
+  ServerResearchosLiteratureLiteratureReadOutput,
+  ServerResearchosLiteratureLiteratureUpdateInput,
+  ServerResearchosLiteratureLiteratureUpdateOutput,
+  ServerResearchosLiteratureLiteratureSelectInput,
+  ServerResearchosLiteratureLiteratureSelectOutput,
+  ServerResearchosGraphGraphStatusInput,
+  ServerResearchosGraphGraphStatusOutput,
+  ServerResearchosGraphGraphGetInput,
+  ServerResearchosGraphGraphGetOutput,
+  ServerResearchosGraphGraphNodeInput,
+  ServerResearchosGraphGraphNodeOutput,
+  ServerResearchosGraphGraphAskInput,
+  ServerResearchosGraphGraphAskOutput,
+  ServerResearchosGraphGraphReindexInput,
+  ServerResearchosGraphGraphReindexOutput,
+  ServerResearchosGraphGraphSaveLayoutInput,
+  ServerResearchosGraphGraphSaveLayoutOutput,
+  ServerResearchosLatexLatexFilesInput,
+  ServerResearchosLatexLatexFilesOutput,
+  ServerResearchosLatexLatexSourceInput,
+  ServerResearchosLatexLatexSourceOutput,
+  ServerResearchosLatexLatexSourceWriteInput,
+  ServerResearchosLatexLatexSourceWriteOutput,
+  ServerResearchosLatexLatexPdfInput,
+  ServerResearchosLatexLatexPdfOutput,
+  ServerResearchosLatexLatexBuildsInput,
+  ServerResearchosLatexLatexBuildsOutput,
+  ServerResearchosLatexLatexCompileInput,
+  ServerResearchosLatexLatexCompileOutput,
+  ServerResearchosLatexLatexSynctexInput,
+  ServerResearchosLatexLatexSynctexOutput,
+  ServerResearchosLatexLatexFormatCheckInput,
+  ServerResearchosLatexLatexFormatCheckOutput,
+  ServerResearchosWritingWritingTableInput,
+  ServerResearchosWritingWritingTableOutput,
+  ServerResearchosWritingWritingMd2latexInput,
+  ServerResearchosWritingWritingMd2latexOutput,
+  ServerResearchosWritingWritingDiffInput,
+  ServerResearchosWritingWritingDiffOutput,
+  ServerResearchosWritingWritingDiffApplyInput,
+  ServerResearchosWritingWritingDiffApplyOutput,
+  ServerResearchosWritingWritingBibtexLibraryInput,
+  ServerResearchosWritingWritingBibtexLibraryOutput,
+  ServerResearchosWritingWritingBibtexUpsertInput,
+  ServerResearchosWritingWritingBibtexUpsertOutput,
+  ServerResearchosWritingWritingSuggestionRecordInput,
+  ServerResearchosWritingWritingSuggestionRecordOutput,
+  ServerResearchosWritingWritingSuggestionsInput,
+  ServerResearchosWritingWritingSuggestionsOutput,
+  ServerResearchosDataDataNotebooksInput,
+  ServerResearchosDataDataNotebooksOutput,
+  ServerResearchosDataDataCellsInput,
+  ServerResearchosDataDataCellsOutput,
+  ServerResearchosDataDataCellCreateInput,
+  ServerResearchosDataDataCellCreateOutput,
+  ServerResearchosDataDataCellSaveInput,
+  ServerResearchosDataDataCellSaveOutput,
+  ServerResearchosDataDataCellRunInput,
+  ServerResearchosDataDataCellRunOutput,
+  ServerResearchosDataDataDatasetsInput,
+  ServerResearchosDataDataDatasetsOutput,
+  ServerResearchosDataDataArtifactsInput,
+  ServerResearchosDataDataArtifactsOutput,
+  ServerResearchosDataDataArtifactInput,
+  ServerResearchosDataDataArtifactOutput,
+  ServerResearchosDataDataArtifactFileInput,
+  ServerResearchosDataDataArtifactFileOutput,
+  ServerResearchosDataDataStatTestsInput,
+  ServerResearchosDataDataStatTestsOutput,
+  ServerResearchosDataDataLinkInput,
+  ServerResearchosDataDataLinkOutput,
+  ServerResearchosDataDataDatasetRegisterInput,
+  ServerResearchosDataDataDatasetRegisterOutput,
+  ServerResearchosPlotPlotCreateInput,
+  ServerResearchosPlotPlotCreateOutput,
+  ServerResearchosPlotPlotTuneInput,
+  ServerResearchosPlotPlotTuneOutput,
+  ServerResearchosPlotPlotAnnotateSignificanceInput,
+  ServerResearchosPlotPlotAnnotateSignificanceOutput,
+  ServerResearchosPlotPlotMermaidInput,
+  ServerResearchosPlotPlotMermaidOutput,
+  ServerResearchosPlotPlotGraphvizInput,
+  ServerResearchosPlotPlotGraphvizOutput,
+  ServerResearchosPlotPlotDiagramInput,
+  ServerResearchosPlotPlotDiagramOutput,
+  ServerResearchosPlotPlotDiagramSaveInput,
+  ServerResearchosPlotPlotDiagramSaveOutput,
+  ServerResearchosPlotPlotInsertInput,
+  ServerResearchosPlotPlotInsertOutput,
+  ServerResearchosPlotPlotArtifactsInput,
+  ServerResearchosPlotPlotArtifactsOutput,
+  ServerResearchosPlotPlotArtifactFileInput,
+  ServerResearchosPlotPlotArtifactFileOutput,
+  ServerResearchosReproduceReproduceListInput,
+  ServerResearchosReproduceReproduceListOutput,
+  ServerResearchosReproduceReproduceCreateInput,
+  ServerResearchosReproduceReproduceCreateOutput,
+  ServerResearchosReproduceReproduceGetInput,
+  ServerResearchosReproduceReproduceGetOutput,
+  ServerResearchosReproduceReproduceAdvanceInput,
+  ServerResearchosReproduceReproduceAdvanceOutput,
+  ServerResearchosReproduceReproduceMetricsSubmitInput,
+  ServerResearchosReproduceReproduceMetricsSubmitOutput,
+  ServerResearchosReproduceReproduceComparisonInput,
+  ServerResearchosReproduceReproduceComparisonOutput,
+  ServerResearchosReproduceReproduceIssuesInput,
+  ServerResearchosReproduceReproduceIssuesOutput,
+  ServerResearchosReproduceReproduceCancelInput,
+  ServerResearchosReproduceReproduceCancelOutput,
+  ServerResearchosTranslateTranslateRunInput,
+  ServerResearchosTranslateTranslateRunOutput,
+  ServerResearchosTranslateTranslateGetInput,
+  ServerResearchosTranslateTranslateGetOutput,
 } from "../api/api.js"
 import { ClientError } from "./client-error.js"
 
@@ -1621,6 +1763,750 @@ const adaptGroupConfig = (raw: RawClient["server.config"]) => ({
   update: EndpointConfigUpdate(raw),
 })
 
+const EndpointServerResearchosAssetsAssetFileRead =
+  (raw: RawClient["server.researchos-assets"]) => (input: ServerResearchosAssetsAssetFileReadInput) =>
+    preserveEffect<ServerResearchosAssetsAssetFileReadOutput>()(
+      raw["asset.fileRead"]({
+        query: { location: input["location"] },
+        payload: { kind: input["kind"], scope: input["scope"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosAssetsAssetApiList =
+  (raw: RawClient["server.researchos-assets"]) => (input?: ServerResearchosAssetsAssetApiListInput) =>
+    preserveEffect<ServerResearchosAssetsAssetApiListOutput>()(
+      raw["api.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosAssetsAssetApiStats =
+  (raw: RawClient["server.researchos-assets"]) => (input?: ServerResearchosAssetsAssetApiStatsInput) =>
+    preserveEffect<ServerResearchosAssetsAssetApiStatsOutput>()(
+      raw["api.stats"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosAssetsAssetApiTest =
+  (raw: RawClient["server.researchos-assets"]) => (input: ServerResearchosAssetsAssetApiTestInput) =>
+    preserveEffect<ServerResearchosAssetsAssetApiTestOutput>()(
+      raw["api.test"]({ query: { location: input["location"] }, payload: { name: input["name"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosAssetsAssetFileWrite =
+  (raw: RawClient["server.researchos-assets"]) => (input: ServerResearchosAssetsAssetFileWriteInput) =>
+    preserveEffect<ServerResearchosAssetsAssetFileWriteOutput>()(
+      raw["asset.fileWrite"]({
+        query: { location: input["location"] },
+        payload: { kind: input["kind"], name: input["name"], content: input["content"], scope: input["scope"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosAssetsAssetNoteWrite =
+  (raw: RawClient["server.researchos-assets"]) => (input: ServerResearchosAssetsAssetNoteWriteInput) =>
+    preserveEffect<ServerResearchosAssetsAssetNoteWriteOutput>()(
+      raw["asset.noteWrite"]({
+        query: { location: input["location"] },
+        payload: { path: input["path"], content: input["content"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosAssetsAssetPresetInstall =
+  (raw: RawClient["server.researchos-assets"]) => (input: ServerResearchosAssetsAssetPresetInstallInput) =>
+    preserveEffect<ServerResearchosAssetsAssetPresetInstallOutput>()(
+      raw["asset.presetInstall"]({
+        query: { location: input["location"] },
+        payload: { pack: input["pack"], target: input["target"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const adaptGroupServerResearchosAssets = (raw: RawClient["server.researchos-assets"]) => ({
+  asset: {
+    fileRead: EndpointServerResearchosAssetsAssetFileRead(raw),
+    api: {
+      list: EndpointServerResearchosAssetsAssetApiList(raw),
+      stats: EndpointServerResearchosAssetsAssetApiStats(raw),
+      test: EndpointServerResearchosAssetsAssetApiTest(raw),
+    },
+    fileWrite: EndpointServerResearchosAssetsAssetFileWrite(raw),
+    noteWrite: EndpointServerResearchosAssetsAssetNoteWrite(raw),
+    presetInstall: EndpointServerResearchosAssetsAssetPresetInstall(raw),
+  },
+})
+
+const EndpointServerResearchosLiteratureLiteratureSearch =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureSearchInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureSearchOutput>()(
+      raw["literature.search"]({
+        query: { location: input["location"] },
+        payload: { query: input["query"], sources: input["sources"], limit: input["limit"], start: input["start"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureList =
+  (raw: RawClient["server.researchos-literature"]) => (input?: ServerResearchosLiteratureLiteratureListInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureListOutput>()(
+      raw["literature.list"]({
+        query: { location: input?.["location"], limit: input?.["limit"], offset: input?.["offset"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureGet =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureGetInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureGetOutput>()(
+      raw["literature.get"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureExport =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureExportInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureExportOutput>()(
+      raw["literature.export"]({
+        query: {
+          location: input["location"],
+          paperIds: input["paperIds"],
+          format: input["format"],
+          style: input["style"],
+        },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureImport =
+  (raw: RawClient["server.researchos-literature"]) => (input?: ServerResearchosLiteratureLiteratureImportInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureImportOutput>()(
+      raw["literature.import"]({
+        query: { location: input?.["location"] },
+        payload: {
+          path: input?.["path"],
+          url: input?.["url"],
+          zoteroPath: input?.["zoteroPath"],
+          fileName: input?.["fileName"],
+          contentBase64: input?.["contentBase64"],
+        },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureCitations =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureCitationsInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureCitationsOutput>()(
+      raw["literature.citations"]({
+        params: { id: input["id"] },
+        query: { location: input["location"], direction: input["direction"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureSimilar =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureSimilarInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureSimilarOutput>()(
+      raw["literature.similar"]({
+        params: { id: input["id"] },
+        query: { location: input["location"], limit: input["limit"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureRead =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureReadInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureReadOutput>()(
+      raw["literature.read"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { query: input["query"], k: input["k"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureUpdate =
+  (raw: RawClient["server.researchos-literature"]) => (input: ServerResearchosLiteratureLiteratureUpdateInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureUpdateOutput>()(
+      raw["literature.update"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { isRead: input["isRead"], isFavorite: input["isFavorite"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLiteratureLiteratureSelect =
+  (raw: RawClient["server.researchos-literature"]) => (input?: ServerResearchosLiteratureLiteratureSelectInput) =>
+    preserveEffect<ServerResearchosLiteratureLiteratureSelectOutput>()(
+      raw["literature.select"]({
+        query: { location: input?.["location"] },
+        payload: { paperId: input?.["paperId"], title: input?.["title"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const adaptGroupServerResearchosLiterature = (raw: RawClient["server.researchos-literature"]) => ({
+  literature: {
+    search: EndpointServerResearchosLiteratureLiteratureSearch(raw),
+    list: EndpointServerResearchosLiteratureLiteratureList(raw),
+    get: EndpointServerResearchosLiteratureLiteratureGet(raw),
+    export: EndpointServerResearchosLiteratureLiteratureExport(raw),
+    import: EndpointServerResearchosLiteratureLiteratureImport(raw),
+    citations: EndpointServerResearchosLiteratureLiteratureCitations(raw),
+    similar: EndpointServerResearchosLiteratureLiteratureSimilar(raw),
+    read: EndpointServerResearchosLiteratureLiteratureRead(raw),
+    update: EndpointServerResearchosLiteratureLiteratureUpdate(raw),
+    select: EndpointServerResearchosLiteratureLiteratureSelect(raw),
+  },
+})
+
+const EndpointServerResearchosGraphGraphStatus =
+  (raw: RawClient["server.researchos-graph"]) => (input?: ServerResearchosGraphGraphStatusInput) =>
+    preserveEffect<ServerResearchosGraphGraphStatusOutput>()(
+      raw["graph.status"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosGraphGraphGet =
+  (raw: RawClient["server.researchos-graph"]) => (input?: ServerResearchosGraphGraphGetInput) =>
+    preserveEffect<ServerResearchosGraphGraphGetOutput>()(
+      raw["graph.get"]({ query: { location: input?.["location"], type: input?.["type"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosGraphGraphNode =
+  (raw: RawClient["server.researchos-graph"]) => (input: ServerResearchosGraphGraphNodeInput) =>
+    preserveEffect<ServerResearchosGraphGraphNodeOutput>()(
+      raw["graph.node"]({ query: { location: input["location"], id: input["id"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosGraphGraphAsk =
+  (raw: RawClient["server.researchos-graph"]) => (input: ServerResearchosGraphGraphAskInput) =>
+    preserveEffect<ServerResearchosGraphGraphAskOutput>()(
+      raw["graph.ask"]({
+        query: { location: input["location"] },
+        payload: { question: input["question"], center_node: input["center_node"], depth: input["depth"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosGraphGraphReindex =
+  (raw: RawClient["server.researchos-graph"]) => (input?: ServerResearchosGraphGraphReindexInput) =>
+    preserveEffect<ServerResearchosGraphGraphReindexOutput>()(
+      raw["graph.reindex"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosGraphGraphSaveLayout =
+  (raw: RawClient["server.researchos-graph"]) => (input: ServerResearchosGraphGraphSaveLayoutInput) =>
+    preserveEffect<ServerResearchosGraphGraphSaveLayoutOutput>()(
+      raw["graph.save_layout"]({
+        query: { location: input["location"] },
+        payload: { positions: input["positions"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const adaptGroupServerResearchosGraph = (raw: RawClient["server.researchos-graph"]) => ({
+  graph: {
+    status: EndpointServerResearchosGraphGraphStatus(raw),
+    get: EndpointServerResearchosGraphGraphGet(raw),
+    node: EndpointServerResearchosGraphGraphNode(raw),
+    ask: EndpointServerResearchosGraphGraphAsk(raw),
+    reindex: EndpointServerResearchosGraphGraphReindex(raw),
+    save_layout: EndpointServerResearchosGraphGraphSaveLayout(raw),
+  },
+})
+
+const EndpointServerResearchosLatexLatexFiles =
+  (raw: RawClient["server.researchos-latex"]) => (input?: ServerResearchosLatexLatexFilesInput) =>
+    preserveEffect<ServerResearchosLatexLatexFilesOutput>()(
+      raw["latex.files"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLatexLatexSource =
+  (raw: RawClient["server.researchos-latex"]) => (input: ServerResearchosLatexLatexSourceInput) =>
+    preserveEffect<ServerResearchosLatexLatexSourceOutput>()(
+      raw["latex.source"]({ query: { location: input["location"], file: input["file"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosLatexLatexSourceWrite =
+  (raw: RawClient["server.researchos-latex"]) => (input: ServerResearchosLatexLatexSourceWriteInput) =>
+    preserveEffect<ServerResearchosLatexLatexSourceWriteOutput>()(
+      raw["latex.sourceWrite"]({
+        query: { location: input["location"] },
+        payload: { file: input["file"], content: input["content"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLatexLatexPdf =
+  (raw: RawClient["server.researchos-latex"]) => (input: ServerResearchosLatexLatexPdfInput) =>
+    preserveEffect<ServerResearchosLatexLatexPdfOutput>()(
+      raw["latex.pdf"]({ query: { location: input["location"], mainFile: input["mainFile"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosLatexLatexBuilds =
+  (raw: RawClient["server.researchos-latex"]) => (input?: ServerResearchosLatexLatexBuildsInput) =>
+    preserveEffect<ServerResearchosLatexLatexBuildsOutput>()(
+      raw["latex.builds"]({ query: { location: input?.["location"], limit: input?.["limit"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosLatexLatexCompile =
+  (raw: RawClient["server.researchos-latex"]) => (input: ServerResearchosLatexLatexCompileInput) =>
+    preserveEffect<ServerResearchosLatexLatexCompileOutput>()(
+      raw["latex.compile"]({ query: { location: input["location"] }, payload: { mainFile: input["mainFile"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosLatexLatexSynctex =
+  (raw: RawClient["server.researchos-latex"]) => (input?: ServerResearchosLatexLatexSynctexInput) =>
+    preserveEffect<ServerResearchosLatexLatexSynctexOutput>()(
+      raw["latex.synctex"]({
+        query: {
+          location: input?.["location"],
+          mainFile: input?.["mainFile"],
+          file: input?.["file"],
+          line: input?.["line"],
+          pdfPath: input?.["pdfPath"],
+          page: input?.["page"],
+          x: input?.["x"],
+          y: input?.["y"],
+        },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosLatexLatexFormatCheck =
+  (raw: RawClient["server.researchos-latex"]) => (input: ServerResearchosLatexLatexFormatCheckInput) =>
+    preserveEffect<ServerResearchosLatexLatexFormatCheckOutput>()(
+      raw["latex.format_check"]({
+        query: { location: input["location"] },
+        payload: { mainFile: input["mainFile"], template: input["template"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const adaptGroupServerResearchosLatex = (raw: RawClient["server.researchos-latex"]) => ({
+  latex: {
+    files: EndpointServerResearchosLatexLatexFiles(raw),
+    source: EndpointServerResearchosLatexLatexSource(raw),
+    source_write: EndpointServerResearchosLatexLatexSourceWrite(raw),
+    pdf: EndpointServerResearchosLatexLatexPdf(raw),
+    builds: EndpointServerResearchosLatexLatexBuilds(raw),
+    compile: EndpointServerResearchosLatexLatexCompile(raw),
+    synctex: EndpointServerResearchosLatexLatexSynctex(raw),
+    format_check: EndpointServerResearchosLatexLatexFormatCheck(raw),
+  },
+})
+
+const EndpointServerResearchosWritingWritingTable =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingTableInput) =>
+    preserveEffect<ServerResearchosWritingWritingTableOutput>()(
+      raw["writing.tableToLatex"]({
+        query: { location: input["location"] },
+        payload: { csv: input["csv"], caption: input["caption"], label: input["label"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingMd2latex =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingMd2latexInput) =>
+    preserveEffect<ServerResearchosWritingWritingMd2latexOutput>()(
+      raw["writing.mdToLatex"]({
+        query: { location: input["location"] },
+        payload: { markdown: input["markdown"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingDiff =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingDiffInput) =>
+    preserveEffect<ServerResearchosWritingWritingDiffOutput>()(
+      raw["writing.diff"]({
+        query: { location: input["location"] },
+        payload: { original: input["original"], revised: input["revised"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingDiffApply =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingDiffApplyInput) =>
+    preserveEffect<ServerResearchosWritingWritingDiffApplyOutput>()(
+      raw["writing.applyDiff"]({
+        query: { location: input["location"] },
+        payload: { original: input["original"], revised: input["revised"], accepted: input["accepted"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingBibtexLibrary =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingBibtexLibraryInput) =>
+    preserveEffect<ServerResearchosWritingWritingBibtexLibraryOutput>()(
+      raw["writing.bibtexFromLibrary"]({
+        query: { location: input["location"] },
+        payload: { paperIds: input["paperIds"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingBibtexUpsert =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingBibtexUpsertInput) =>
+    preserveEffect<ServerResearchosWritingWritingBibtexUpsertOutput>()(
+      raw["writing.bibtexUpsert"]({
+        query: { location: input["location"] },
+        payload: { bibFile: input["bibFile"], entries: input["entries"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingSuggestionRecord =
+  (raw: RawClient["server.researchos-writing"]) => (input: ServerResearchosWritingWritingSuggestionRecordInput) =>
+    preserveEffect<ServerResearchosWritingWritingSuggestionRecordOutput>()(
+      raw["writing.suggestionRecord"]({
+        query: { location: input["location"] },
+        payload: {
+          kind: input["kind"],
+          targetFile: input["targetFile"],
+          inputExcerpt: input["inputExcerpt"],
+          output: input["output"],
+          status: input["status"],
+        },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosWritingWritingSuggestions =
+  (raw: RawClient["server.researchos-writing"]) => (input?: ServerResearchosWritingWritingSuggestionsInput) =>
+    preserveEffect<ServerResearchosWritingWritingSuggestionsOutput>()(
+      raw["writing.suggestions"]({
+        query: { location: input?.["location"], kind: input?.["kind"], limit: input?.["limit"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const adaptGroupServerResearchosWriting = (raw: RawClient["server.researchos-writing"]) => ({
+  writing: {
+    table: EndpointServerResearchosWritingWritingTable(raw),
+    md2latex: EndpointServerResearchosWritingWritingMd2latex(raw),
+    diff: EndpointServerResearchosWritingWritingDiff(raw),
+    diff_apply: EndpointServerResearchosWritingWritingDiffApply(raw),
+    bibtex_library: EndpointServerResearchosWritingWritingBibtexLibrary(raw),
+    bibtex_upsert: EndpointServerResearchosWritingWritingBibtexUpsert(raw),
+    suggestion_record: EndpointServerResearchosWritingWritingSuggestionRecord(raw),
+    suggestions: EndpointServerResearchosWritingWritingSuggestions(raw),
+  },
+})
+
+const EndpointServerResearchosDataDataNotebooks =
+  (raw: RawClient["server.researchos-data"]) => (input?: ServerResearchosDataDataNotebooksInput) =>
+    preserveEffect<ServerResearchosDataDataNotebooksOutput>()(
+      raw["data.notebooks"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataCells =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataCellsInput) =>
+    preserveEffect<ServerResearchosDataDataCellsOutput>()(
+      raw["data.cells"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosDataDataCellCreate =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataCellCreateInput) =>
+    preserveEffect<ServerResearchosDataDataCellCreateOutput>()(
+      raw["data.cellCreate"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { source: input["source"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataCellSave =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataCellSaveInput) =>
+    preserveEffect<ServerResearchosDataDataCellSaveOutput>()(
+      raw["data.cellSave"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { source: input["source"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataCellRun =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataCellRunInput) =>
+    preserveEffect<ServerResearchosDataDataCellRunOutput>()(
+      raw["data.cellRun"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { source: input["source"], workdir: input["workdir"], timeoutS: input["timeoutS"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataDatasets =
+  (raw: RawClient["server.researchos-data"]) => (input?: ServerResearchosDataDataDatasetsInput) =>
+    preserveEffect<ServerResearchosDataDataDatasetsOutput>()(
+      raw["data.datasets"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataArtifacts =
+  (raw: RawClient["server.researchos-data"]) => (input?: ServerResearchosDataDataArtifactsInput) =>
+    preserveEffect<ServerResearchosDataDataArtifactsOutput>()(
+      raw["data.artifacts"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataArtifact =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataArtifactInput) =>
+    preserveEffect<ServerResearchosDataDataArtifactOutput>()(
+      raw["data.artifact"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosDataDataArtifactFile =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataArtifactFileInput) =>
+    preserveEffect<ServerResearchosDataDataArtifactFileOutput>()(
+      raw["data.artifactFile"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosDataDataStatTests =
+  (raw: RawClient["server.researchos-data"]) => (input?: ServerResearchosDataDataStatTestsInput) =>
+    preserveEffect<ServerResearchosDataDataStatTestsOutput>()(
+      raw["data.statTests"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataLink =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataLinkInput) =>
+    preserveEffect<ServerResearchosDataDataLinkOutput>()(
+      raw["data.link"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { commit: input["commit"], texFile: input["texFile"], texSection: input["texSection"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosDataDataDatasetRegister =
+  (raw: RawClient["server.researchos-data"]) => (input: ServerResearchosDataDataDatasetRegisterInput) =>
+    preserveEffect<ServerResearchosDataDataDatasetRegisterOutput>()(
+      raw["data.datasetRegister"]({
+        query: { location: input["location"] },
+        payload: { path: input["path"], name: input["name"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const adaptGroupServerResearchosData = (raw: RawClient["server.researchos-data"]) => ({
+  data: {
+    notebooks: EndpointServerResearchosDataDataNotebooks(raw),
+    cells: EndpointServerResearchosDataDataCells(raw),
+    cell_create: EndpointServerResearchosDataDataCellCreate(raw),
+    cell_save: EndpointServerResearchosDataDataCellSave(raw),
+    cell_run: EndpointServerResearchosDataDataCellRun(raw),
+    datasets: EndpointServerResearchosDataDataDatasets(raw),
+    artifacts: EndpointServerResearchosDataDataArtifacts(raw),
+    artifact: EndpointServerResearchosDataDataArtifact(raw),
+    artifactFile: EndpointServerResearchosDataDataArtifactFile(raw),
+    statTests: EndpointServerResearchosDataDataStatTests(raw),
+    link: EndpointServerResearchosDataDataLink(raw),
+    dataset_register: EndpointServerResearchosDataDataDatasetRegister(raw),
+  },
+})
+
+const EndpointServerResearchosPlotPlotCreate =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotCreateInput) =>
+    preserveEffect<ServerResearchosPlotPlotCreateOutput>()(
+      raw["plot.create"]({
+        query: { location: input["location"] },
+        payload: { template: input["template"], data: input["data"], theme: input["theme"], spec: input["spec"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotTune =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotTuneInput) =>
+    preserveEffect<ServerResearchosPlotPlotTuneOutput>()(
+      raw["plot.tune"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { patch: input["patch"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotAnnotateSignificance =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotAnnotateSignificanceInput) =>
+    preserveEffect<ServerResearchosPlotPlotAnnotateSignificanceOutput>()(
+      raw["plot.annotateSignificance"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { test: input["test"], groups: input["groups"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotMermaid =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotMermaidInput) =>
+    preserveEffect<ServerResearchosPlotPlotMermaidOutput>()(
+      raw["plot.mermaid"]({
+        query: { location: input["location"] },
+        payload: { code: input["code"], name: input["name"], theme: input["theme"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotGraphviz =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotGraphvizInput) =>
+    preserveEffect<ServerResearchosPlotPlotGraphvizOutput>()(
+      raw["plot.graphviz"]({
+        query: { location: input["location"] },
+        payload: { dot: input["dot"], engine: input["engine"], name: input["name"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotDiagram =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotDiagramInput) =>
+    preserveEffect<ServerResearchosPlotPlotDiagramOutput>()(
+      raw["plot.diagram"]({
+        query: { location: input["location"] },
+        payload: { action: input["action"], file: input["file"], stencilPack: input["stencilPack"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotDiagramSave =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotDiagramSaveInput) =>
+    preserveEffect<ServerResearchosPlotPlotDiagramSaveOutput>()(
+      raw["plot.diagramSave"]({
+        query: { location: input["location"] },
+        payload: { file: input["file"], xml: input["xml"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotInsert =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotInsertInput) =>
+    preserveEffect<ServerResearchosPlotPlotInsertOutput>()(
+      raw["plot.insertToPaper"]({
+        query: { location: input["location"] },
+        payload: {
+          artifactPath: input["artifactPath"],
+          texFile: input["texFile"],
+          section: input["section"],
+          caption: input["caption"],
+          label: input["label"],
+        },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotArtifacts =
+  (raw: RawClient["server.researchos-plot"]) => (input?: ServerResearchosPlotPlotArtifactsInput) =>
+    preserveEffect<ServerResearchosPlotPlotArtifactsOutput>()(
+      raw["plot.artifacts"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosPlotPlotArtifactFile =
+  (raw: RawClient["server.researchos-plot"]) => (input: ServerResearchosPlotPlotArtifactFileInput) =>
+    preserveEffect<ServerResearchosPlotPlotArtifactFileOutput>()(
+      raw["plot.artifactFile"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const adaptGroupServerResearchosPlot = (raw: RawClient["server.researchos-plot"]) => ({
+  plot: {
+    create: EndpointServerResearchosPlotPlotCreate(raw),
+    tune: EndpointServerResearchosPlotPlotTune(raw),
+    annotateSignificance: EndpointServerResearchosPlotPlotAnnotateSignificance(raw),
+    mermaid: EndpointServerResearchosPlotPlotMermaid(raw),
+    graphviz: EndpointServerResearchosPlotPlotGraphviz(raw),
+    diagram: EndpointServerResearchosPlotPlotDiagram(raw),
+    diagramSave: EndpointServerResearchosPlotPlotDiagramSave(raw),
+    insert: EndpointServerResearchosPlotPlotInsert(raw),
+    artifacts: EndpointServerResearchosPlotPlotArtifacts(raw),
+    artifactFile: EndpointServerResearchosPlotPlotArtifactFile(raw),
+  },
+})
+
+const EndpointServerResearchosReproduceReproduceList =
+  (raw: RawClient["server.researchos-reproduce"]) => (input?: ServerResearchosReproduceReproduceListInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceListOutput>()(
+      raw["reproduce.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosReproduceReproduceCreate =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceCreateInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceCreateOutput>()(
+      raw["reproduce.create"]({
+        query: { location: input["location"] },
+        payload: { paperUrl: input["paperUrl"], repoUrl: input["repoUrl"], envStrategy: input["envStrategy"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosReproduceReproduceGet =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceGetInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceGetOutput>()(
+      raw["reproduce.get"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosReproduceReproduceAdvance =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceAdvanceInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceAdvanceOutput>()(
+      raw["reproduce.advance"]({
+        params: { id: input["id"], step: input["step"] },
+        query: { location: input["location"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosReproduceReproduceMetricsSubmit =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceMetricsSubmitInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceMetricsSubmitOutput>()(
+      raw["reproduce.metricsSubmit"]({
+        params: { id: input["id"] },
+        query: { location: input["location"] },
+        payload: { metrics: input["metrics"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosReproduceReproduceComparison =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceComparisonInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceComparisonOutput>()(
+      raw["reproduce.comparison"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosReproduceReproduceIssues =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceIssuesInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceIssuesOutput>()(
+      raw["reproduce.issues"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const EndpointServerResearchosReproduceReproduceCancel =
+  (raw: RawClient["server.researchos-reproduce"]) => (input: ServerResearchosReproduceReproduceCancelInput) =>
+    preserveEffect<ServerResearchosReproduceReproduceCancelOutput>()(
+      raw["reproduce.cancel"]({ params: { id: input["id"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const adaptGroupServerResearchosReproduce = (raw: RawClient["server.researchos-reproduce"]) => ({
+  reproduce: {
+    list: EndpointServerResearchosReproduceReproduceList(raw),
+    create: EndpointServerResearchosReproduceReproduceCreate(raw),
+    get: EndpointServerResearchosReproduceReproduceGet(raw),
+    advance: EndpointServerResearchosReproduceReproduceAdvance(raw),
+    metricsSubmit: EndpointServerResearchosReproduceReproduceMetricsSubmit(raw),
+    comparison: EndpointServerResearchosReproduceReproduceComparison(raw),
+    issues: EndpointServerResearchosReproduceReproduceIssues(raw),
+    cancel: EndpointServerResearchosReproduceReproduceCancel(raw),
+  },
+})
+
+const EndpointServerResearchosTranslateTranslateRun =
+  (raw: RawClient["server.researchos-translate"]) => (input: ServerResearchosTranslateTranslateRunInput) =>
+    preserveEffect<ServerResearchosTranslateTranslateRunOutput>()(
+      raw["translate.run"]({
+        query: { location: input["location"] },
+        payload: { paperId: input["paperId"], sections: input["sections"], engine: input["engine"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointServerResearchosTranslateTranslateGet =
+  (raw: RawClient["server.researchos-translate"]) => (input: ServerResearchosTranslateTranslateGetInput) =>
+    preserveEffect<ServerResearchosTranslateTranslateGetOutput>()(
+      raw["translate.get"]({ params: { paperId: input["paperId"] }, query: { location: input["location"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
+    )
+
+const adaptGroupServerResearchosTranslate = (raw: RawClient["server.researchos-translate"]) => ({
+  translate: {
+    run: EndpointServerResearchosTranslateTranslateRun(raw),
+    get: EndpointServerResearchosTranslateTranslateGet(raw),
+  },
+})
+
 const adaptClient = (raw: RawClient) => ({
   server: adaptGroupServer(raw["server.server"]),
   location: adaptGroupLocation(raw["server.location"]),
@@ -1653,6 +2539,15 @@ const adaptClient = (raw: RawClient) => ({
   migration: adaptGroupMigration(raw["server.migration"]),
   websearch: adaptGroupWebsearch(raw["server.websearch"]),
   config: adaptGroupConfig(raw["server.config"]),
+  "server.researchos-assets": adaptGroupServerResearchosAssets(raw["server.researchos-assets"]),
+  "server.researchos-literature": adaptGroupServerResearchosLiterature(raw["server.researchos-literature"]),
+  "server.researchos-graph": adaptGroupServerResearchosGraph(raw["server.researchos-graph"]),
+  "server.researchos-latex": adaptGroupServerResearchosLatex(raw["server.researchos-latex"]),
+  "server.researchos-writing": adaptGroupServerResearchosWriting(raw["server.researchos-writing"]),
+  "server.researchos-data": adaptGroupServerResearchosData(raw["server.researchos-data"]),
+  "server.researchos-plot": adaptGroupServerResearchosPlot(raw["server.researchos-plot"]),
+  "server.researchos-reproduce": adaptGroupServerResearchosReproduce(raw["server.researchos-reproduce"]),
+  "server.researchos-translate": adaptGroupServerResearchosTranslate(raw["server.researchos-translate"]),
 })
 
 export const make = (options?: { readonly baseUrl?: URL | string }) =>
