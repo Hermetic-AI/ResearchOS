@@ -1,16 +1,16 @@
-import { Global } from "@opencode-ai/core/global"
-import { Location } from "@opencode-ai/core/location"
-import { AgentV2 } from "@opencode-ai/core/agent"
-import { CommandV2 } from "@opencode-ai/core/command"
-import { SkillV2 } from "@opencode-ai/core/skill"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Global } from "@opencode/util/global"
+import { Location } from "@opencode/core/location"
+import { Agent } from "@opencode/core/agent"
+import { Command } from "@opencode/core/command"
+import { Skill } from "@opencode/core/skill"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import {
   HubImpl,
   createAcademicHub,
 } from "@researchos/api-hub"
-import { Effect, FileSystem } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
-import { mkdir, rename, rm } from "fs/promises"
+import { Effect } from "effect"
+import { HttpApiBuilder } from "effect/http-api"
+import { mkdir, readFile, rename, rm } from "fs/promises"
 import { applyEdits, modify, parse, type ParseError } from "jsonc-parser"
 import path from "path"
 import { Api } from "../api"
@@ -120,15 +120,15 @@ function writeAsset(input: {
     const target = yield* resolveAssetPath(input, location.directory, Global.make().config)
     yield* writeAtomically(target, input.content)
     if (input.kind === "agent") {
-      const agent = yield* AgentV2.Service
+      const agent = yield* Agent.Service
       yield* agent.reload()
     }
     if (input.kind === "command") {
-      const command = yield* CommandV2.Service
+      const command = yield* Command.Service
       yield* command.reload()
     }
     if (input.kind === "skill") {
-      const skill = yield* SkillV2.Service
+      const skill = yield* Skill.Service
       yield* skill.reload()
     }
 
@@ -154,10 +154,9 @@ function installPreset(input: {
   readonly target: "project" | "global"
 }) {
   return Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem
     const location = yield* Location.Service
     const root = input.target === "project" ? location.directory : Global.make().config
-    if (input.pack === "researchos-mcp") return yield* installMcpPreset(fs, root)
+    if (input.pack === "researchos-mcp") return yield* installMcpPreset(root)
 
     const preset = path.resolve(import.meta.dir, "../../../researchos-preset")
     const directories = input.pack === "researchos-skills" ? ["skill"] : ["agent", "command"]
@@ -175,15 +174,15 @@ function installPreset(input: {
       catch: fileError,
     })
     const destination = input.target === "project" ? path.join(root, ".opencode") : root
-    const changes = yield* Effect.forEach(files, (file) => snapshot(fs, path.join(destination, file)))
+    const changes = yield* Effect.forEach(files, (file) => snapshot(path.join(destination, file)))
 
     yield* Effect.forEach(files, (file) =>
-      fs.readFile(path.join(preset, file)).pipe(
+      readBytes(path.join(preset, file)).pipe(
         Effect.flatMap((content) => writeAtomically(path.join(destination, file), content)),
       ),
     ).pipe(
       Effect.catch((error) =>
-        restore(fs, changes).pipe(
+        restore(changes).pipe(
           Effect.andThen(Effect.fail(error)),
         ),
       ),
@@ -193,17 +192,17 @@ function installPreset(input: {
   }).pipe(Effect.mapError((error) => error instanceof InvalidRequestError || error instanceof UnknownError ? error : fileError(error)))
 }
 
-function installMcpPreset(fs: FileSystem.FileSystem, root: string) {
+function installMcpPreset(root: string) {
   return Effect.gen(function* () {
     const source = path.resolve(import.meta.dir, "../../../researchos-preset/opencode.researchos.json")
-    const template = yield* fs.readFileString(source).pipe(
+    const template = yield* readText(source).pipe(
       Effect.flatMap((content) => decodeJson(content, source)),
     )
     const mcp = isRecord(template.mcp) ? template.mcp : {}
     const candidates = [path.join(root, "opencode.jsonc"), path.join(root, "opencode.json")]
-    const exists = yield* Effect.all(candidates.map((file) => fs.exists(file)))
-    const target = candidates[exists[0] ? 0 : 1]
-    const original = exists.some(Boolean) ? yield* fs.readFileString(target) : "{}\n"
+    const present = yield* Effect.all(candidates.map((file) => exists(file)))
+    const target = candidates[present[0] ? 0 : 1]
+    const original = present.some(Boolean) ? yield* readText(target) : "{}\n"
     yield* decodeJson(original, target)
     const content = Object.entries(mcp).reduce(
       (current, [name, value]) => applyEdits(current, modify(current, ["mcp", name], value, {
@@ -233,22 +232,32 @@ function decodeJson(content: string, file: string) {
   })
 }
 
-function snapshot(fs: FileSystem.FileSystem, target: string) {
+function snapshot(target: string) {
   return Effect.gen(function* () {
-    const exists = yield* fs.exists(target)
-    return { target, content: exists ? yield* fs.readFile(target) : undefined }
+    return { target, content: (yield* exists(target)) ? yield* readBytes(target) : undefined }
   })
 }
 
 function restore(
-  fs: FileSystem.FileSystem,
   changes: readonly { readonly target: string; readonly content: Uint8Array | undefined }[],
 ) {
   return Effect.forEach(changes, (change) =>
     change.content
       ? writeAtomically(change.target, change.content)
-      : fs.remove(change.target, { force: true }).pipe(Effect.mapError(fileError)),
+      : Effect.tryPromise({ try: () => rm(change.target, { force: true }), catch: fileError }),
   ).pipe(Effect.ignore)
+}
+
+function exists(target: string) {
+  return Effect.promise(async () => Bun.file(target).exists())
+}
+
+function readBytes(target: string) {
+  return Effect.tryPromise({ try: () => readFile(target), catch: fileError })
+}
+
+function readText(target: string) {
+  return Effect.tryPromise({ try: () => readFile(target, "utf8"), catch: fileError })
 }
 
 function writeAtomically(target: string, content: string | Uint8Array) {

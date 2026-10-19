@@ -1,62 +1,69 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs"
 import { basename, dirname, extname, relative, resolve } from "path"
-import { tool, type Plugin, type PluginModule } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { Schema } from "effect"
 import { includeGraphicsSnippet } from "./latex"
 import { PlotStore, resolveInside } from "./store"
 
-export const PlotPlugin: Plugin = async () => ({
-  tool: {
-    mermaid_render: tool({
-      description: "Validate Mermaid source and persist it as a reproducible diagram artifact",
-      args: {
-        code: tool.schema.string(),
-        theme: tool.schema.string().optional(),
-        name: tool.schema.string().optional(),
-      },
-      execute: async (args, context) => {
-        try {
-          const result = await persistMermaid(context.directory, args)
-          return { title: "mermaid_render", output: JSON.stringify(result) }
-        } catch (error) {
-          return { title: "mermaid_render", output: JSON.stringify({ errors: [message(error)] }) }
-        }
-      },
-    }),
-    graphviz_render: tool({
-      description: "Render Graphviz DOT source to SVG using the bundled WASM renderer",
-      args: {
-        dot: tool.schema.string(),
-        engine: tool.schema.enum(["dot", "neato", "fdp"]).default("dot"),
-        name: tool.schema.string().optional(),
-      },
-      execute: async (args, context) => {
-        return { title: "graphviz_render", output: JSON.stringify(await persistGraphviz(context.directory, args)) }
-      },
-    }),
-    diagram_edit: tool({
-      description: "Create or open a draw.io diagram inside the project artifact directory",
-      args: {
-        action: tool.schema.enum(["create", "open"]),
-        file: tool.schema.string().optional(),
-        stencil_pack: tool.schema.enum(["nn_layers", "agent", "flow"]).optional(),
-      },
-      execute: async (args, context) => {
-        return { title: "diagram_edit", output: JSON.stringify(editDiagram(context.directory, args)) }
-      },
-    }),
-    insert_to_paper: tool({
-      description: "Insert a LaTeX figure block for an artifact into a project .tex file",
-      args: {
-        artifact_path: tool.schema.string(),
-        tex_file: tool.schema.string(),
-        section: tool.schema.string().optional(),
-        caption: tool.schema.string(),
-        label: tool.schema.string().optional(),
-      },
-      execute: async (args, context) => {
-        return { title: "insert_to_paper", output: JSON.stringify(insertArtifactToPaper(context.directory, args)) }
-      },
-    }),
+export default Plugin.define({
+  id: "researchos.plot",
+  async setup(ctx) {
+    const root = ctx.location.directory
+    await ctx.tool.transform((editor) => {
+      editor.add({
+        name: "mermaid_render",
+        description: "Validate Mermaid source and persist it as a reproducible diagram artifact",
+        input: Schema.Struct({
+          code: Schema.String,
+          theme: Schema.optionalKey(Schema.String),
+          name: Schema.optionalKey(Schema.String),
+        }),
+        execute: async (args) => {
+          try {
+            return { content: JSON.stringify(await persistMermaid(root, args)) }
+          } catch (error) {
+            return { content: JSON.stringify({ errors: [message(error)] }) }
+          }
+        },
+      })
+
+      editor.add({
+        name: "graphviz_render",
+        description: "Render Graphviz DOT source to SVG using the bundled WASM renderer",
+        input: Schema.Struct({
+          dot: Schema.String,
+          engine: Schema.optionalKey(Schema.Literals(["dot", "neato", "fdp"])).annotate({
+            description: "Layout engine, defaults to dot",
+          }),
+          name: Schema.optionalKey(Schema.String),
+        }),
+        execute: async (args) => ({ content: JSON.stringify(await persistGraphviz(root, args)) }),
+      })
+
+      editor.add({
+        name: "diagram_edit",
+        description: "Create or open a draw.io diagram inside the project artifact directory",
+        input: Schema.Struct({
+          action: Schema.Literals(["create", "open"]),
+          file: Schema.optionalKey(Schema.String),
+          stencil_pack: Schema.optionalKey(Schema.Literals(["nn_layers", "agent", "flow"])),
+        }),
+        execute: async (args) => ({ content: JSON.stringify(editDiagram(root, args)) }),
+      })
+
+      editor.add({
+        name: "insert_to_paper",
+        description: "Insert a LaTeX figure block for an artifact into a project .tex file",
+        input: Schema.Struct({
+          artifact_path: Schema.String,
+          tex_file: Schema.String,
+          section: Schema.optionalKey(Schema.String),
+          caption: Schema.String,
+          label: Schema.optionalKey(Schema.String),
+        }),
+        execute: async (args) => ({ content: JSON.stringify(insertArtifactToPaper(root, args)) }),
+      })
+    })
   },
 })
 
@@ -186,8 +193,6 @@ export function insertArtifactToPaper(root: string, input: {
   store.close()
   return { ok: true as const, latexSnippet: snippet }
 }
-
-export default { id: "researchos-plot", server: PlotPlugin } satisfies PluginModule
 
 export { includeGraphicsSnippet } from "./latex"
 export { ChartSpec, CHART_TEMPLATES, JOURNAL_THEMES, SignificanceStars, mergeChartSpec, pValueToStars } from "./spec"

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "fs"
-import { dirname, join, resolve, sep } from "path"
+import { dirname, resolve, sep } from "path"
 import { extractCiteKeys, parseBibtex } from "./bibtex"
 import type { BibtexEntry, FormatIssue } from "./types"
 

@@ -1,4 +1,4 @@
-import { Button } from "@opencode-ai/ui/button"
+import { Button } from "@opencode/ui/button"
 import { Show } from "solid-js"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 
@@ -22,7 +22,7 @@ export function TranslatePanel(props: { resource?: string }) {
           Run bilingual translation in the main workspace. The panel lets you hand a translated paper to the agent for polishing.
         </p>
         <div class="flex gap-2">
-          <Button size="small" variant="secondary" onClick={askAgent}>Polish with agent</Button>
+          <Button size="small" variant="neutral" onClick={askAgent}>Polish with agent</Button>
         </div>
         <Show when={props.resource}>
           {(resource) => (

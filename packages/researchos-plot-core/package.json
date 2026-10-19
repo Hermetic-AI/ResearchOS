@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@hpcc-js/wasm": "2.30.0",
-    "@opencode-ai/plugin": "workspace:*",
+    "@opencode/plugin": "workspace:*",
+    "effect": "catalog:",
     "mermaid": "11.12.0",
     "zod": "4.4.3"
   },

@@ -20,7 +20,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Flag            | Descrizione                             | Predefinito      |
 | --------------- | --------------------------------------- | ---------------- |
-| `--port`        | Porta su cui ascoltare                  | `14096`           |
+| `--port`        | Porta su cui ascoltare                  | `4096`           |
 | `--hostname`    | Hostname su cui ascoltare               | `127.0.0.1`      |
 | `--mdns`        | Abilita la scoperta mDNS                | `false`          |
 | `--mdns-domain` | Nome di dominio personalizzato mDNS     | `opencode.local` |
@@ -74,7 +74,7 @@ Il server pubblica una specifica OpenAPI 3.1 visualizzabile su:
 http://<hostname>:<port>/doc
 ```
 
-Per esempio, `http://localhost:14096/doc`. Usa la spec per generare client o ispezionare i tipi di request/response, oppure visualizzala in uno Swagger explorer.
+Per esempio, `http://localhost:4096/doc`. Usa la spec per generare client o ispezionare i tipi di request/response, oppure visualizzala in uno Swagger explorer.
 
 ---
 
@@ -151,12 +151,9 @@ Il server opencode espone le seguenti API.
 | `DELETE` | `/session/:id`                           | Elimina una sessione e i suoi dati    | Returns `boolean`                                                                  |
 | `PATCH`  | `/session/:id`                           | Aggiorna proprieta sessione           | body: `{ title? }`, returns <a href={typesUrl}><code>Session</code></a>            |
 | `GET`    | `/session/:id/children`                  | Sessioni figlie                       | Returns <a href={typesUrl}><code>Session[]</code></a>                              |
-| `GET`    | `/session/:id/todo`                      | Todo list della sessione              | Returns <a href={typesUrl}><code>Todo[]</code></a>                                 |
 | `POST`   | `/session/:id/init`                      | Analizza app e crea `AGENTS.md`       | body: `{ messageID, providerID, modelID }`, returns `boolean`                      |
 | `POST`   | `/session/:id/fork`                      | Fork di sessione su un messaggio      | body: `{ messageID? }`, returns <a href={typesUrl}><code>Session</code></a>        |
 | `POST`   | `/session/:id/abort`                     | Interrompe una sessione in esecuzione | Returns `boolean`                                                                  |
-| `POST`   | `/session/:id/share`                     | Condivide una sessione                | Returns <a href={typesUrl}><code>Session</code></a>                                |
-| `DELETE` | `/session/:id/share`                     | Annulla condivisione                  | Returns <a href={typesUrl}><code>Session</code></a>                                |
 | `GET`    | `/session/:id/diff`                      | Diff della sessione                   | query: `messageID?`, returns <a href={typesUrl}><code>FileDiff[]</code></a>        |
 | `POST`   | `/session/:id/summarize`                 | Riassume la sessione                  | body: `{ providerID, modelID }`, returns `boolean`                                 |
 | `POST`   | `/session/:id/revert`                    | Ripristina un messaggio               | body: `{ messageID, partID? }`, returns `boolean`                                  |

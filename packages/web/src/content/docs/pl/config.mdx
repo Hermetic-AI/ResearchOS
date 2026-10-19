@@ -183,7 +183,7 @@ Możesz skonfigurować serwer dla `opencode serve` i `opencode web` za pomocą o
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -350,27 +350,6 @@ Domyślnego agenta można ustawić za pomocą opcji `default_agent`. Określa to
 Agent domyślny musi być agentem typu `primary` (nie `subagent`). Może to być agent wbudowany, taki jak `"build"` lub `"plan"`, albo zdefiniowany przez Ciebie [agent niestandardowy](/docs/agents). Jeśli agent nie istnieje lub jest subagentem, OpenCode powróci do `"build"` z ostrzeżeniem.
 
 Dotyczy to wszystkich interfejsów: TUI, CLI (`opencode run`), aplikacji desktopowej i GitHub Actions.
-
----
-
-### Share (Udostępnianie)
-
-Możesz skonfigurować [udostępnianie](/docs/share) za pomocą opcji `share`.
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-Opcje:
-
-- `"manual"` – Zezwalaj na ręczne udostępnianie (domyślnie)
-- `"auto"` - Automatycznie udostępniaj nowe rozmowy
-- `"disabled"` - Całkowicie wyłącz udostępnianie
-
-Domyślnie ustawiony jest tryb ręczny, w którym należy jawnie udostępniać rozmowy za pomocą polecenia `/share`.
 
 ---
 

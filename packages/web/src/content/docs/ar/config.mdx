@@ -186,7 +186,7 @@ opencode run "Hello world"
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -353,27 +353,6 @@ opencode run "Hello world"
 يجب أن يكون الوكيل الافتراضي وكيلًا أساسيًا (وليس وكيلًا فرعيًا). يمكن أن يكون وكيلًا مدمجًا مثل `"build"` أو `"plan"`، أو [وكيلًا مخصصًا](/docs/agents) قمت بتعريفه. إذا لم يكن الوكيل المحدد موجودًا أو كان وكيلًا فرعيًا، فسيعود OpenCode إلى `"build"` مع تحذير.
 
 ينطبق هذا الإعداد على جميع الواجهات: TUI وCLI (`opencode run`) وتطبيق سطح المكتب وGitHub Action.
-
----
-
-### المشاركة
-
-يمكنك ضبط ميزة [share](/docs/share) عبر الخيار `share`.
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-يقبل هذا الإعداد القيم التالية:
-
-- `"manual"` - السماح بالمشاركة اليدوية عبر الأوامر (الافتراضي)
-- `"auto"` - مشاركة المحادثات الجديدة تلقائيًا
-- `"disabled"` - تعطيل المشاركة بالكامل
-
-افتراضيًا تكون المشاركة في الوضع اليدوي، حيث تحتاج إلى مشاركة المحادثات صراحةً باستخدام الأمر `/share`.
 
 ---
 

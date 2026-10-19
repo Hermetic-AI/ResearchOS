@@ -9,7 +9,7 @@ export class LiteratureDB {
   private db: Database
   private vec = false
 
-  constructor(private projectRoot: string) {
+  constructor(projectRoot: string) {
     mkdirSync(literatureDir(projectRoot), { recursive: true })
     const dp = dbPath(projectRoot)
     this.db = new Database(dp, { create: true })

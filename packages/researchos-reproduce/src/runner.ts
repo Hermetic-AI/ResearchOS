@@ -97,9 +97,9 @@ function classify(store: ReproduceStore, id: string, evidence: string) {
   store.addIssue({ runId: id, category: match[0]!, severity: "blocker", title: match[1]!, detail: "The step stopped; inspect the preserved log before retrying.", evidence: evidence.slice(-4_000) })
 }
 async function command(cmd: string[], cwd: string, timeout: number) {
-  const process = Bun.spawn({ cmd, cwd, stdout: "pipe", stderr: "pipe", env: { ...Bun.env, PYTHONUNBUFFERED: "1" } })
-  const timer = setTimeout(() => process.kill(), timeout)
-  const [code, stdout, stderr] = await Promise.all([process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()])
+  const child = Bun.spawn(cmd, { cwd, stdout: "pipe", stderr: "pipe", env: { ...process.env, PYTHONUNBUFFERED: "1" } })
+  const timer = setTimeout(() => child.kill(), timeout)
+  const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()])
   clearTimeout(timer)
   return { code, stdout, stderr, log: `${stdout}${stderr}`.slice(-100_000) }
 }

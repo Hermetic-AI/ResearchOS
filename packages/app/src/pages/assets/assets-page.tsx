@@ -1,20 +1,20 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { Tag } from "@opencode-ai/ui/tag"
+import { Button } from "@opencode/ui/button"
+import { Spinner } from "@opencode/ui/spinner"
+import { Badge } from "@opencode/ui/badge"
 import { useSearchParams } from "@solidjs/router"
 import { createEffect, createMemo, createResource, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { ModuleState, StatusBadge } from "@/components/researchos/module-state"
 import { useResearchosShell } from "@/components/researchos/shell-context"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
-import { formatServerError } from "@/utils/server-errors"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
+import { formatServerError } from "@/runtime/server/errors"
 import { createAssetClient } from "./api"
 import { ApiPanel } from "./api-panel"
 
 type PanelId = "skill" | "mcp" | "model" | "agent" | "command" | "rules" | "plugin" | "api"
 
-type SourceKey = "skills" | "agents" | "commands" | "models" | "providers" | "mcp" | "config" | "rules" | "api" | "apiStats"
+type SourceKey = "skills" | "agents" | "commands" | "models" | "providers" | "mcp" | "plugin" | "rules" | "api" | "apiStats"
 type SourceState = { readonly status: "ready" | "error"; readonly error?: string }
 
 const sourceNames: Record<SourceKey, string> = {
@@ -24,7 +24,7 @@ const sourceNames: Record<SourceKey, string> = {
   models: "GET /api/model",
   providers: "GET /api/provider",
   mcp: "GET /mcp",
-  config: "GET /config",
+  plugin: "GET /api/plugin",
   rules: "AGENTS.md load chain",
   api: "GET /api/researchos-assets/api",
   apiStats: "GET /api/researchos-assets/api/stats",
@@ -37,7 +37,7 @@ const panelSources: Record<PanelId, ReadonlyArray<SourceKey>> = {
   agent: ["agents"],
   command: ["commands"],
   rules: ["rules"],
-  plugin: ["config"],
+  plugin: ["plugin"],
   api: ["api", "apiStats"],
 }
 
@@ -58,37 +58,36 @@ const panels: Array<{ readonly id: PanelId; readonly label: string; readonly sou
 ]
 
 export default function AssetsPage() {
-  const sdk = useSDK()
-  const serverSDK = useServerSDK()
+  const directory = useResearchosDirectory()
+    const serverSDK = useServerSDK()
   const platform = usePlatform()
   const [search, setSearch] = useSearchParams<{ tab?: string }>()
   const active = createMemo<PanelId>(() => panels.some((panel) => panel.id === search.tab) ? search.tab as PanelId : "skill")
   const assetClient = createMemo(() => createAssetClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
+    password: serverSDK.server.http.password,
   }))
   const [snapshot, snapshotActions] = createResource(
-    () => sdk().directory,
+    () => directory(),
     async (directory) => {
-      const client = sdk().client
-      const assetApi = assetClient()["server.researchos-assets"]
-      const [skills, agents, commands, models, providers, mcp, config, rules, api, apiStats] = await Promise.allSettled([
-        client.v2.skill.list(),
-        client.v2.agent.list(),
-        client.v2.command.list(),
-        client.v2.model.list(),
-        client.v2.provider.list(),
-        client.mcp.status(),
-        client.config.get(),
+      const client = serverSDK.api
+      const assetApi = assetClient()["server.researchos-assets"]["asset"]
+      const [skills, agents, commands, models, providers, mcp, plugin, rules, api, apiStats] = await Promise.allSettled([
+        client.skill.list({ location: { directory } }),
+        client.agent.list({ location: { directory } }),
+        client.command.list({ location: { directory } }),
+        client.model.list({ location: { directory } }),
+        client.provider.list({ location: { directory } }),
+        client.mcp.list({ location: { directory } }),
+        client.plugin.list({ location: { directory } }),
         assetApi.fileRead({
           location: { directory },
           kind: "rules",
           scope: "project",
         }),
-        assetApi.list({ location: { directory } }),
-        assetApi.stats({ location: { directory } }),
+        assetApi.api.list({ location: { directory } }),
+        assetApi.api.stats({ location: { directory } }),
       ])
 
       return {
@@ -99,18 +98,18 @@ export default function AssetsPage() {
           models: sourceState(models),
           providers: sourceState(providers),
           mcp: sourceState(mcp),
-          config: sourceState(config),
+          plugin: sourceState(plugin),
           rules: sourceState(rules),
           api: sourceState(api),
           apiStats: sourceState(apiStats),
         },
-        skills: settledValue(skills)?.data?.data ?? [],
-        agents: settledValue(agents)?.data?.data ?? [],
-        commands: settledValue(commands)?.data?.data ?? [],
-        models: settledValue(models)?.data?.data ?? [],
-        providers: settledValue(providers)?.data?.data ?? [],
-        mcp: settledValue(mcp)?.data ?? {},
-        plugins: settledValue(config)?.data?.plugin ?? [],
+        skills: settledValue(skills)?.data ?? [],
+        agents: settledValue(agents)?.data ?? [],
+        commands: settledValue(commands)?.data ?? [],
+        models: settledValue(models)?.data ?? [],
+        providers: settledValue(providers)?.data ?? [],
+        mcp: Object.fromEntries((settledValue(mcp)?.data ?? []).map((server) => [server.name, server.status])),
+        plugins: settledValue(plugin)?.data ?? [],
         rules: settledValue(rules)?.data ?? { path: "AGENTS.md", content: "", chain: [] },
         api: settledValue(api)?.data ?? [],
         apiStats: settledValue(apiStats)?.data ?? [],
@@ -146,8 +145,8 @@ export default function AssetsPage() {
   createEffect(() => shell.setAgentContext({ module: "assets", resource: active() }))
   onCleanup(() => shell.setAgentContext(undefined))
   const testApi = async (name: string) => {
-    const result = await assetClient()["server.researchos-assets"].test({
-      location: { directory: sdk().directory },
+    const result = await assetClient()["server.researchos-assets"]["asset"].api.test({
+      location: { directory: directory() },
       name,
     })
     await snapshotActions.refetch()
@@ -210,30 +209,30 @@ export default function AssetsPage() {
             {(data) => (
               <Switch>
                 <Match when={active() === "skill"}>
-                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("skill", "create")}>+ New skill</Button></div>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="neutral" onClick={() => openEditor("skill", "create")}>+ New skill</Button></div>
                   <SourceErrors keys={failedSources("skill")} sources={data().sources} onRetry={() => void snapshotActions.refetch()} busy={snapshot.loading} />
                   <Show when={failedSources("skill").length === 0}>
-                    <AssetList entries={data().skills.map((item) => ({ title: item.name, detail: item.description ?? "No description", meta: item.location }))} empty="No skills are active for this project." />
+                    <AssetList entries={data().skills.map((item) => ({ title: item.name, detail: item.description ?? "No description", meta: item.path }))} empty="No skills are active for this project." />
                   </Show>
                 </Match>
                 <Match when={active() === "agent"}>
-                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("agent", "create")}>+ New agent</Button></div>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="neutral" onClick={() => openEditor("agent", "create")}>+ New agent</Button></div>
                   <SourceErrors keys={failedSources("agent")} sources={data().sources} onRetry={() => void snapshotActions.refetch()} busy={snapshot.loading} />
                   <Show when={failedSources("agent").length === 0}>
                     <AssetList entries={data().agents.filter((item) => item.mode !== "primary").map((item) => ({ title: item.id, detail: item.description ?? "No description", meta: item.mode }))} empty="No SubAgents are active for this project." />
                   </Show>
                 </Match>
                 <Match when={active() === "command"}>
-                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("command", "create")}>+ New command</Button></div>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="neutral" onClick={() => openEditor("command", "create")}>+ New command</Button></div>
                   <SourceErrors keys={failedSources("command")} sources={data().sources} onRetry={() => void snapshotActions.refetch()} busy={snapshot.loading} />
                   <Show when={failedSources("command").length === 0}>
-                    <AssetList entries={data().commands.map((item) => ({ title: `/${item.name}`, detail: item.description ?? "Custom command", meta: item.subtask ? "subtask" : "command" }))} empty="No custom commands are active for this project." />
+                    <AssetList entries={data().commands.map((item) => ({ title: `/${item.name}`, detail: item.description ?? "Custom command", meta: "command" }))} empty="No custom commands are active for this project." />
                   </Show>
                 </Match>
                 <Match when={active() === "mcp"}>
                   <SourceErrors keys={failedSources("mcp")} sources={data().sources} onRetry={() => void snapshotActions.refetch()} busy={snapshot.loading} />
                   <Show when={failedSources("mcp").length === 0}>
-                    <McpPanel mcp={data().mcp} assetApi={assetClient()["server.researchos-assets"]} onRefresh={() => void snapshotActions.refetch()} />
+                    <McpPanel mcp={data().mcp} assetApi={assetClient()["server.researchos-assets"]["asset"]} onRefresh={() => void snapshotActions.refetch()} />
                   </Show>
                 </Match>
                 <Match when={active() === "model"}>
@@ -245,11 +244,19 @@ export default function AssetsPage() {
                 <Match when={active() === "plugin"}>
                   <SourceErrors keys={failedSources("plugin")} sources={data().sources} onRetry={() => void snapshotActions.refetch()} busy={snapshot.loading} />
                   <Show when={failedSources("plugin").length === 0}>
-                    <AssetList entries={data().plugins.map((item) => ({ title: typeof item === "string" ? item : item[0], detail: "Loaded through the native plugin configuration", meta: "plugin" }))} empty="No plugins are configured." />
+                    <AssetList
+                      entries={data().plugins.map((item) => ({
+                        title: item.id ?? (item.source.type === "package" ? item.source.target : item.source.type === "local" ? item.source.path : item.source.type),
+                        detail: item.state.status === "failed" ? item.state.error : "Loaded through the native plugin configuration",
+                        meta: item.state.status,
+                        danger: item.state.status === "failed",
+                      }))}
+                      empty="No plugins are configured."
+                    />
                   </Show>
                 </Match>
                 <Match when={active() === "rules"}>
-                  <div class="mb-3 flex justify-end"><Button size="small" variant="secondary" onClick={() => openEditor("rules", "edit", "", data().rules.content)}>Edit rules</Button></div>
+                  <div class="mb-3 flex justify-end"><Button size="small" variant="neutral" onClick={() => openEditor("rules", "edit", "", data().rules.content)}>Edit rules</Button></div>
                   <SourceErrors keys={failedSources("rules")} sources={data().sources} onRetry={() => void snapshotActions.refetch()} busy={snapshot.loading} />
                   <Show when={failedSources("rules").length === 0}>
                     <RulesPanel rules={data().rules} />
@@ -282,7 +289,7 @@ function AssetList(props: { readonly entries: Array<{ readonly title: string; re
                 <h2 class="truncate text-13-medium text-text-base">{entry.title}</h2>
                 <p class="mt-1 text-11-regular text-text-weak">{entry.detail}</p>
               </div>
-              <Tag class={entry.danger ? "text-text-on-critical-strong" : undefined}>{entry.meta}</Tag>
+              <Badge class={entry.danger ? "text-text-on-critical-strong" : undefined}>{entry.meta}</Badge>
             </article>
           )}
         </For>
@@ -300,7 +307,7 @@ function RulesPanel(props: { readonly rules: { readonly path: string; readonly c
             <div class="flex items-center gap-3 border-b border-border-weaker-base px-4 py-3 last:border-b-0">
               <span class="size-1.5 rounded-full" classList={{ "bg-surface-success-strong": entry.exists, "bg-border-base": !entry.exists }} />
               <code class="min-w-0 flex-1 truncate text-11-regular text-text-weak">{entry.path}</code>
-              <Tag>{entry.exists ? "loaded" : "missing"}</Tag>
+              <Badge>{entry.exists ? "loaded" : "missing"}</Badge>
             </div>
           )}
         </For>
@@ -354,9 +361,11 @@ const PRESET_MCP_SERVERS = [
   "researchos-translate",
 ] as const
 
-function ResearchToolsPreset(props: { mcp: Record<string, { status: string; error?: string }>; assetApi: ReturnType<typeof createAssetClient>["server.researchos-assets"]; onRefresh: () => void }) {
-  const sdk = useSDK()
-  const client = () => sdk().client
+function ResearchToolsPreset(props: { mcp: Record<string, { status: string; error?: string }>; assetApi: ReturnType<typeof createAssetClient>["server.researchos-assets"]["asset"]; onRefresh: () => void }) {
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
+  const serverSDK = useServerSDK()
+  const client = () => serverSDK.api
   const [installing, setInstalling] = createSignal(false)
   const [installError, setInstallError] = createSignal<string>()
   const [installedServers, setInstalledServers] = createSignal<string[]>()
@@ -369,14 +378,14 @@ function ResearchToolsPreset(props: { mcp: Record<string, { status: string; erro
     return PRESET_MCP_SERVERS.map((name) => ({ name, entry: current[name] }))
   })
   const refreshStatuses = async () => {
-    const status = await client().mcp.status()
-    setStatuses(status.data ?? {})
+    const status = await client().mcp.list({ location: { directory: directory() ?? "" } })
+    setStatuses(Object.fromEntries(status.data.map((server) => [server.name, server.status])))
     props.onRefresh()
   }
   const install = async () => {
     setInstalling(true); setInstallError(undefined); setInstalledServers(undefined); setInstalledAssets(undefined)
     try {
-      const location = { directory: sdk().directory }
+      const location = { directory: directory() }
       const mcp = await props.assetApi.presetInstall({ location, pack: "researchos-mcp", target: "project" })
       // agents/commands/skills 落盘到 .opencode/，会话内立即可用，不止 MCP 配置
       const agents = await props.assetApi.presetInstall({ location, pack: "researchos-agents", target: "project" })
@@ -395,7 +404,7 @@ function ResearchToolsPreset(props: { mcp: Record<string, { status: string; erro
       for (const name of PRESET_MCP_SERVERS) {
         if (!(name in current)) continue
         // Individual failures surface through the refreshed per-server statuses below
-        await client().mcp.connect({ name }).catch(() => {})
+        await client().mcp.connect({ server: name, location: { directory: directory() ?? "" } }).catch(() => {})
       }
       await refreshStatuses()
     } finally { setConnectingAll(false) }
@@ -416,7 +425,7 @@ function ResearchToolsPreset(props: { mcp: Record<string, { status: string; erro
         </div>
         <div class="flex items-center gap-2">
           <Show when={!enabled()}>
-            <Button size="small" variant="primary" disabled={installing()} onClick={() => void install()}>
+            <Button size="small" variant="submit" disabled={installing()} onClick={() => void install()}>
               <Show when={installing()} fallback="Enable research tools in chat">
                 <Spinner class="size-3.5" />
               </Show>
@@ -467,8 +476,10 @@ function ResearchToolsPreset(props: { mcp: Record<string, { status: string; erro
   )
 }
 
-function McpPanel(props: { mcp: Record<string, { status: string; error?: string }>; assetApi: ReturnType<typeof createAssetClient>["server.researchos-assets"]; onRefresh: () => void }) {
-  const sdk = useSDK()
+function McpPanel(props: { mcp: Record<string, { status: string; error?: string }>; assetApi: ReturnType<typeof createAssetClient>["server.researchos-assets"]["asset"]; onRefresh: () => void }) {
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
+  const serverSDK = useServerSDK()
   const [showForm, setShowForm] = createSignal(false)
   const [name, setName] = createSignal("")
   const [serverType, setServerType] = createSignal<"local" | "remote">("local")
@@ -479,15 +490,15 @@ function McpPanel(props: { mcp: Record<string, { status: string; error?: string 
   const [savedServer, setSavedServer] = createSignal<string>()
   const [connecting, setConnecting] = createSignal<string>()
   const [connectResults, setConnectResults] = createSignal<Record<string, { ok: boolean; detail?: string }>>({})
-  const client = () => sdk().client
+  const client = () => serverSDK.api
   const save = async () => {
     if (!name().trim()) return setSaveError("Name is required")
     setSaving(true); setSaveError(undefined); setSavedServer(undefined)
     try {
       const config = serverType() === "local"
-        ? { type: "local" as const, command: command().split(/\s+/).filter(Boolean), enabled: true }
-        : { type: "remote" as const, url: url().trim(), enabled: true }
-      await client().mcp.add({ name: name().trim(), config })
+        ? { type: "local" as const, command: command().split(/\s+/).filter(Boolean) }
+        : { type: "remote" as const, url: url().trim() }
+      await client().mcp.add({ server: name().trim(), location: { directory: directory() ?? "" }, config })
       setSavedServer(name().trim())
       setName(""); setCommand(""); setUrl(""); setShowForm(false); props.onRefresh()
     } catch (err) {
@@ -497,9 +508,9 @@ function McpPanel(props: { mcp: Record<string, { status: string; error?: string 
   const connect = async (serverName: string) => {
     setConnecting(serverName)
     try {
-      await client().mcp.connect({ name: serverName })
-      const status = await client().mcp.status()
-      const entry = status.data?.[serverName]
+      await client().mcp.connect({ server: serverName, location: { directory: directory() ?? "" } })
+      const status = await client().mcp.list({ location: { directory: directory() ?? "" } })
+      const entry = status.data.find((server) => server.name === serverName)?.status
       if (entry?.status === "connected") {
         setConnectResults((current) => ({ ...current, [serverName]: { ok: true } }))
         props.onRefresh()
@@ -525,8 +536,8 @@ function McpPanel(props: { mcp: Record<string, { status: string; error?: string 
           </div>
         )}
       </Show>
-      <Show when={showForm()}><div class="rounded-lg border border-border-weak-base bg-surface-base p-3 space-y-2"><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder="Server name" /><div class="flex gap-2"><button class="rounded px-2 py-1 text-11-medium" classList={{ "bg-background-selected": serverType() === "local" }} onClick={() => setServerType("local")}>Local</button><button class="rounded px-2 py-1 text-11-medium" classList={{ "bg-background-selected": serverType() === "remote" }} onClick={() => setServerType("remote")}>Remote</button></div><Show when={serverType() === "local"}><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={command()} onInput={(e) => setCommand(e.currentTarget.value)} placeholder="bun run path/to/server.ts" /></Show><Show when={serverType() === "remote"}><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={url()} onInput={(e) => setUrl(e.currentTarget.value)} placeholder="https://mcp.example.com/sse" /></Show><Show when={saveError()}><p class="text-11-regular text-text-on-critical-strong">{saveError()}</p></Show><div class="flex gap-2"><Button size="small" variant="primary" disabled={saving()} onClick={() => void save()}>{saving() ? "Saving…" : "Save"}</Button><Button size="small" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button></div></div></Show>
-      <div class="flex justify-end"><Button size="small" variant="secondary" onClick={() => setShowForm(!showForm())}>{showForm() ? "Cancel" : "+ Add MCP server"}</Button></div>
+      <Show when={showForm()}><div class="rounded-lg border border-border-weak-base bg-surface-base p-3 space-y-2"><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder="Server name" /><div class="flex gap-2"><button class="rounded px-2 py-1 text-11-medium" classList={{ "bg-background-selected": serverType() === "local" }} onClick={() => setServerType("local")}>Local</button><button class="rounded px-2 py-1 text-11-medium" classList={{ "bg-background-selected": serverType() === "remote" }} onClick={() => setServerType("remote")}>Remote</button></div><Show when={serverType() === "local"}><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={command()} onInput={(e) => setCommand(e.currentTarget.value)} placeholder="bun run path/to/server.ts" /></Show><Show when={serverType() === "remote"}><input class="h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={url()} onInput={(e) => setUrl(e.currentTarget.value)} placeholder="https://mcp.example.com/sse" /></Show><Show when={saveError()}><p class="text-11-regular text-text-on-critical-strong">{saveError()}</p></Show><div class="flex gap-2"><Button size="small" variant="submit" disabled={saving()} onClick={() => void save()}>{saving() ? "Saving…" : "Save"}</Button><Button size="small" variant="ghost" onClick={() => setShowForm(false)}>Cancel</Button></div></div></Show>
+      <div class="flex justify-end"><Button size="small" variant="neutral" onClick={() => setShowForm(!showForm())}>{showForm() ? "Cancel" : "+ Add MCP server"}</Button></div>
       <Show
         when={Object.keys(props.mcp).length > 0}
         fallback={<EmptyState title="No MCP servers are configured." detail="Add a server, save it to the project config, then connect it to verify it starts." />}
@@ -575,10 +586,10 @@ type EditorKind = "skill" | "agent" | "command" | "rules"
 type EditorState = { open: boolean; kind: EditorKind; name: string; content: string; scope: "project" | "global"; mode: "create" | "edit" }
 
 function AssetEditor(props: { state: EditorState; onClose: () => void; onSaved: () => void }) {
-  const sdk = useSDK()
-  const platform = usePlatform()
+  const directory = useResearchosDirectory()
+    const platform = usePlatform()
   const serverSDK = useServerSDK()
-  const assetClient = createMemo(() => createAssetClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password })["server.researchos-assets"])
+  const assetClient = createMemo(() => createAssetClient({ baseUrl: serverSDK.url, fetch: platform.fetch, password: serverSDK.server.http.password })["server.researchos-assets"]["asset"])
   const [name, setName] = createSignal(props.state.name)
   const [content, setContent] = createSignal(props.state.content)
   const [scope, setScope] = createSignal(props.state.scope)
@@ -590,14 +601,14 @@ function AssetEditor(props: { state: EditorState; onClose: () => void; onSaved: 
     setSaving(true); setError(undefined)
     try {
       if (props.state.kind === "rules") {
-        await assetClient().fileWrite({ location: { directory: sdk().directory }, kind: "rules", name: "_rules", content: content(), scope: scope() })
+        await assetClient().fileWrite({ location: { directory: directory() }, kind: "rules", name: "_rules", content: content(), scope: scope() })
       } else {
-        await assetClient().fileWrite({ location: { directory: sdk().directory }, kind: props.state.kind, name: name().trim(), content: content(), scope: scope() })
+        await assetClient().fileWrite({ location: { directory: directory() }, kind: props.state.kind, name: name().trim(), content: content(), scope: scope() })
       }
       props.onSaved(); props.onClose()
     } catch (err) {
       setError(formatServerError(err))
     } finally { setSaving(false) }
   }
-  return <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={props.onClose}><div class="w-full max-w-2xl rounded-xl border border-border-base bg-background-base p-6 shadow-xl" onClick={(e) => e.stopPropagation()}><div class="mb-4 flex items-center justify-between"><h2 class="text-16-medium">{props.state.mode === "create" ? "New" : "Edit"} {kindLabel()}</h2><Button size="small" variant="ghost" onClick={props.onClose}>Close</Button></div><Show when={props.state.kind !== "rules"}><label class="mb-3 block text-11-regular text-text-weak">Name<input class="mt-1 h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder={props.state.kind === "skill" ? "my-skill" : props.state.kind === "agent" ? "my-agent" : "my-command"} /></label></Show><label class="mb-1 block text-11-regular text-text-weak">{props.state.kind === "rules" ? "AGENTS.md content" : "File content (with frontmatter)"}</label><textarea aria-label={props.state.kind === "rules" ? "AGENTS.md content" : "File content (with frontmatter)"} class="mb-3 h-72 w-full rounded border border-border-weak-base bg-background-stronger p-3 font-mono text-11-regular" value={content()} onInput={(e) => setContent(e.currentTarget.value)} placeholder={props.state.kind === "skill" ? "---\ndescription: What this skill does\n---\n\n# Skill instructions..." : props.state.kind === "rules" ? "# Project Rules\n\nInstructions for the AI agent..." : "---\ndescription: What this agent does\nmode: subagent\n---\n\nYou are a..."} /><Show when={error()}><p class="mb-2 text-11-regular text-text-on-critical-strong">{error()}</p></Show><div class="flex items-center justify-between"><select aria-label="Asset scope" class="h-7 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={scope()} onChange={(e) => setScope(e.currentTarget.value as "project" | "global")}><option value="project">Project</option><option value="global">Global</option></select><Button size="small" variant="primary" disabled={saving()} onClick={() => void save()}>{saving() ? "Saving…" : "Save"}</Button></div></div></div>
+  return <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={props.onClose}><div class="w-full max-w-2xl rounded-xl border border-border-base bg-background-base p-6 shadow-xl" onClick={(e) => e.stopPropagation()}><div class="mb-4 flex items-center justify-between"><h2 class="text-16-medium">{props.state.mode === "create" ? "New" : "Edit"} {kindLabel()}</h2><Button size="small" variant="ghost" onClick={props.onClose}>Close</Button></div><Show when={props.state.kind !== "rules"}><label class="mb-3 block text-11-regular text-text-weak">Name<input class="mt-1 h-8 w-full rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder={props.state.kind === "skill" ? "my-skill" : props.state.kind === "agent" ? "my-agent" : "my-command"} /></label></Show><label class="mb-1 block text-11-regular text-text-weak">{props.state.kind === "rules" ? "AGENTS.md content" : "File content (with frontmatter)"}</label><textarea aria-label={props.state.kind === "rules" ? "AGENTS.md content" : "File content (with frontmatter)"} class="mb-3 h-72 w-full rounded border border-border-weak-base bg-background-stronger p-3 font-mono text-11-regular" value={content()} onInput={(e) => setContent(e.currentTarget.value)} placeholder={props.state.kind === "skill" ? "---\ndescription: What this skill does\n---\n\n# Skill instructions..." : props.state.kind === "rules" ? "# Project Rules\n\nInstructions for the AI agent..." : "---\ndescription: What this agent does\nmode: subagent\n---\n\nYou are a..."} /><Show when={error()}><p class="mb-2 text-11-regular text-text-on-critical-strong">{error()}</p></Show><div class="flex items-center justify-between"><select aria-label="Asset scope" class="h-7 rounded border border-border-weak-base bg-background-stronger px-2 text-11-regular" value={scope()} onChange={(e) => setScope(e.currentTarget.value as "project" | "global")}><option value="project">Project</option><option value="global">Global</option></select><Button size="small" variant="submit" disabled={saving()} onClick={() => void save()}>{saving() ? "Saving…" : "Save"}</Button></div></div></div>
 }

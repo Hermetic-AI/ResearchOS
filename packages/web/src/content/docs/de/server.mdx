@@ -21,7 +21,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Flag            | Description                         | Default          |
 | --------------- | ----------------------------------- | ---------------- |
-| `--port`        | Port to listen on                   | `14096`           |
+| `--port`        | Port to listen on                   | `4096`           |
 | `--hostname`    | Hostname to listen on               | `127.0.0.1`      |
 | `--mdns`        | Enable mDNS discovery               | `false`          |
 | `--mdns-domain` | Custom domain name for mDNS service | `opencode.local` |
@@ -80,7 +80,7 @@ Der Server veroeffentlicht eine OpenAPI-3.1-Spezifikation unter:
 http://<hostname>:<port>/doc
 ```
 
-Zum Beispiel `http://localhost:14096/doc`.
+Zum Beispiel `http://localhost:4096/doc`.
 Nutze die Spec zum Generieren von Clients, zum Pruefen von Request/Response-Typen oder in einem Swagger-Explorer.
 
 ---
@@ -158,12 +158,9 @@ Der opencode-Server stellt folgende APIs bereit.
 | `DELETE` | `/session/:id`                           | Loescht eine Sitzung und alle Daten                 | Gibt `boolean` zurueck                                                             |
 | `PATCH`  | `/session/:id`                           | Aktualisiert Sitzungseigenschaften                  | body: `{ title? }`, returns <a href={typesUrl}><code>Session</code></a>            |
 | `GET`    | `/session/:id/children`                  | Ruft Kind-Sitzungen einer Sitzung ab                | Gibt <a href={typesUrl}><code>Session[]</code></a> zurueck                         |
-| `GET`    | `/session/:id/todo`                      | Ruft die Todo-Liste einer Sitzung ab                | Gibt <a href={typesUrl}><code>Todo[]</code></a> zurueck                            |
 | `POST`   | `/session/:id/init`                      | Analysiert App und erstellt `AGENTS.md`             | body: `{ messageID, providerID, modelID }`, returns `boolean`                      |
 | `POST`   | `/session/:id/fork`                      | Forkt eine bestehende Sitzung an einer Nachricht    | body: `{ messageID? }`, returns <a href={typesUrl}><code>Session</code></a>        |
 | `POST`   | `/session/:id/abort`                     | Bricht eine laufende Sitzung ab                     | Gibt `boolean` zurueck                                                             |
-| `POST`   | `/session/:id/share`                     | Teilt eine Sitzung                                  | Gibt <a href={typesUrl}><code>Session</code></a> zurueck                           |
-| `DELETE` | `/session/:id/share`                     | Hebt Teilen einer Sitzung auf                       | Gibt <a href={typesUrl}><code>Session</code></a> zurueck                           |
 | `GET`    | `/session/:id/diff`                      | Ruft den Diff fuer diese Sitzung ab                 | query: `messageID?`, returns <a href={typesUrl}><code>FileDiff[]</code></a>        |
 | `POST`   | `/session/:id/summarize`                 | Fasst die Sitzung zusammen                          | body: `{ providerID, modelID }`, returns `boolean`                                 |
 | `POST`   | `/session/:id/revert`                    | Setzt eine Nachricht zurueck                        | body: `{ messageID, partID? }`, returns `boolean`                                  |

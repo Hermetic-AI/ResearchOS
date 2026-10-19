@@ -1,4 +1,5 @@
-const serverUrl = "http://127.0.0.1:14096/global/health"
+const password = process.env.OPENCODE_PASSWORD ?? "researchos-dev"
+const serverUrl = "http://127.0.0.1:14096/api/info"
 const appUrl = "http://127.0.0.1:3000"
 
 const serverRunning = await responds(serverUrl)
@@ -17,9 +18,10 @@ if (!serverRunning) {
   await requireAvailablePort(14096)
   processes.push(
     Bun.spawn({
-      cmd: [process.execPath, "run", "--cwd", "packages/opencode", "src/index.ts", "serve", "--port", "14096"],
+      cmd: [process.execPath, "run", "--cwd", "packages/cli", "src/index.ts", "serve", "--port", "14096"],
       stdout: "inherit",
       stderr: "inherit",
+      env: { ...process.env, OPENCODE_PASSWORD: password },
     }),
   )
   await waitFor(serverUrl, "OpenCode server")
@@ -29,9 +31,26 @@ if (!appRunning) {
   await requireAvailablePort(3000)
   processes.push(
     Bun.spawn({
-      cmd: [process.execPath, "--cwd", "packages/app", "dev", "--host", "127.0.0.1", "--port", "3000", "--strictPort"],
+      cmd: [
+        process.execPath,
+        "run",
+        "--cwd",
+        "packages/app",
+        "dev",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3000",
+        "--strictPort",
+      ],
       stdout: "inherit",
       stderr: "inherit",
+      env: {
+        ...process.env,
+        OPENCODE_PASSWORD: password,
+        VITE_OPENCODE_SERVER_HOST: "127.0.0.1",
+        VITE_OPENCODE_SERVER_PORT: "14096",
+      },
     }),
   )
   await waitFor(appUrl, "ResearchOS web app")
@@ -55,7 +74,8 @@ process.exit(1)
 
 async function responds(url: string) {
   try {
-    return (await fetch(url, { signal: AbortSignal.timeout(1_000) })).ok
+    const headers = { Authorization: `Basic ${btoa(`opencode:${password}`)}` }
+    return (await fetch(url, { headers, signal: AbortSignal.timeout(1_000) })).ok
   } catch {
     return false
   }

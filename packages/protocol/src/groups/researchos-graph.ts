@@ -1,8 +1,8 @@
 import { Schema } from "effect"
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { Location } from "@opencode-ai/schema/location"
-import { InvalidRequestError, UnknownError } from "../errors"
-import { LocationQuery, locationQueryOpenApi } from "./location"
+import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api"
+import { Location } from "@opencode/schema/location"
+import { InvalidRequestError, UnknownError } from "../errors.js"
+import { LocationQuery, locationQueryOpenApi } from "./location.js"
 
 const NodeType = Schema.Literals(["paper", "note", "concept", "repo"])
 const EdgeRelation = Schema.Literals(["cites", "mentions", "implements", "evolves"])

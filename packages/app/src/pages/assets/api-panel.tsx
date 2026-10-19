@@ -1,6 +1,6 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import { Tag } from "@opencode-ai/ui/tag"
+import { Button } from "@opencode/ui/button"
+import { Spinner } from "@opencode/ui/spinner"
+import { Badge } from "@opencode/ui/badge"
 import { createSignal, For, Show } from "solid-js"
 import { StatusBadge } from "@/components/researchos/module-state"
 
@@ -54,7 +54,7 @@ export function ApiPanel(props: {
           <h2 class="text-12-medium text-text-base">Academic API control plane</h2>
           <p class="mt-1 text-11-regular text-text-weak">Calls use provider queues, transient retry, narrow schemas, and the project SQLite cache.</p>
         </div>
-        <Tag>{props.descriptors.length} adapters</Tag>
+        <Badge>{props.descriptors.length} adapters</Badge>
       </div>
 
       <For each={props.descriptors}>
@@ -74,8 +74,8 @@ export function ApiPanel(props: {
                 <div class="min-w-0 flex-1">
                   <div class="flex flex-wrap items-center gap-2">
                     <h2 class="text-13-medium text-text-base">{descriptor.name}</h2>
-                    <Tag>{descriptor.auth}</Tag>
-                    <Tag>{descriptor.rps} req/s</Tag>
+                    <Badge>{descriptor.auth}</Badge>
+                    <Badge>{descriptor.rps} req/s</Badge>
                   </div>
                   <p class="mt-1 text-11-regular text-text-weak">{descriptor.description}</p>
                   <p class="mt-2 truncate font-mono text-10-regular text-text-weaker">{descriptor.baseUrl}</p>

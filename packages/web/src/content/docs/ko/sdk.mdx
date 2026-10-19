@@ -40,7 +40,7 @@ const { client } = await createOpencode()
 | 옵션       | 유형          | 설명                    | 기본        |
 | ---------- | ------------- | ----------------------- | ----------- |
 | `hostname` | `string`      | 서버 호스트명           | `127.0.0.1` |
-| `port`     | `number`      | 서버포트                | `14096`      |
+| `port`     | `number`      | 서버포트                | `4096`      |
 | `signal`   | `AbortSignal` | 취소 신호               | `undefined` |
 | `timeout`  | `number`      | 서버 시작시의 시간 아웃 | `5000`      |
 | `config`   | `Config`      | 구성 객체               | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 14096,
+  port: 4096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ opencode의 실행 인스턴스가 이미 있다면 클라이언트 인스턴스
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:14096",
+  baseUrl: "http://localhost:4096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | 옵션            | 유형       | 설명                              | 기본                    |
 | --------------- | ---------- | --------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | 서버의 URL                        | `http://localhost:14096` |
+| `baseUrl`       | `string`   | 서버의 URL                        | `http://localhost:4096` |
 | `fetch`         | `function` | 사용자 정의 fetch 구현            | `globalThis.fetch`      |
 | `parseAs`       | `string`   | 응답 파싱 방법                    | `auto`                  |
 | `responseStyle` | `string`   | 반품 스타일: `data` 또는 `fields` | `fields`                |
@@ -244,7 +244,6 @@ const agents = await client.app.agents()
 | 방법                | 설명                    | 응답                                          |
 | ------------------- | ----------------------- | --------------------------------------------- |
 | `project.list()`    | 모든 프로젝트 보기      | <a href={typesUrl}><code>Project[]</code></a> |
-| `project.current()` | 현재 프로젝트 가져 오기 | <a href={typesUrl}><code>Project</code></a>   |
 
 ---
 
@@ -254,8 +253,6 @@ const agents = await client.app.agents()
 // List all projects
 const projects = await client.project.list()
 
-// Get current project
-const currentProject = await client.project.current()
 ```
 
 ---

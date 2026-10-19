@@ -1,12 +1,6 @@
 import { formatCitations } from "./cite"
 import type { CitationStyle, PaperMeta } from "./types"
 
-interface BibtexEntry {
-  type: string
-  key: string
-  fields: Record<string, string>
-}
-
 export function toBibtex(paper: PaperMeta): string {
   const type = paper.venue ? "inproceedings" : "article"
   const key = bibtexKey(paper)

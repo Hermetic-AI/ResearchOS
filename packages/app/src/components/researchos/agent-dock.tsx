@@ -1,20 +1,20 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import type { Message, Part } from "@opencode-ai/sdk/v2/client"
-import { useLocation, useNavigate, useParams } from "@solidjs/router"
+import { Button } from "@opencode/ui/button"
+import { Icon } from "@opencode/ui/icon"
+import { Spinner } from "@opencode/ui/spinner"
+import type { SessionMessageInfo } from "@opencode/client/promise"
+import { useLocation, useNavigate } from "@solidjs/router"
 import { createEffect, createMemo, createSignal, For, onCleanup, Show } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
-import { researchosModules } from "@/components/researchos-rail"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { researchosModules, useResearchosDirectory, useResearchosLink } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
 import { buildPaperSystem, fetchPaperContext, fetchPaperSections, formatRetrievedSections, LIBRARY_ONLY_INSTRUCTION, recordPaperSession } from "./paper-context"
 import { useResearchosShell } from "./shell-context"
 
-type DockMessage = {
-  readonly info: Message
-  readonly parts: Part[]
+type DockTurn = {
+  readonly id: string
+  readonly role: "user" | "assistant"
+  readonly text: string
 }
 
 const POLL_INTERVAL = 3000
@@ -48,19 +48,20 @@ const displayText = (role: string, text: string) => {
 }
 
 export function AgentDock() {
-  const sdk = useSDK()
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
   const serverSDK = useServerSDK()
   const platform = usePlatform()
   const location = useLocation()
   const navigate = useNavigate()
-  const params = useParams<{ dir: string }>()
+  const link = useResearchosLink()
   const shell = useResearchosShell()
   const [draft, setDraft] = createSignal("")
   const [busy, setBusy] = createSignal(false)
   const [error, setError] = createSignal<string>()
   const [libraryOnly, setLibraryOnly] = createSignal(false)
   const [sessionID, setSessionID] = createSignal<string>()
-  const [items, setItems] = createSignal<DockMessage[]>([])
+  const [items, setItems] = createSignal<SessionMessageInfo[]>([])
   let textarea!: HTMLTextAreaElement
   let transcript!: HTMLDivElement
 
@@ -68,24 +69,29 @@ export function AgentDock() {
     const routed = researchosModules.find((item) => location.pathname.endsWith(`/${item.route}`))
     return shell.agent()?.module ?? routed?.label ?? "Overview"
   })
-  const contextKey = createMemo(() => `${sdk().directory}:${module()}:${shell.agent()?.resource ?? "general"}`)
-  const basename = createMemo(() => sdk().directory.split(/[\\/]/).filter(Boolean).pop() ?? sdk().directory)
+  const contextKey = createMemo(() => `${directory()}:${module()}:${shell.agent()?.resource ?? "general"}`)
+  const basename = createMemo(() => directory().split(/[\\/]/).filter(Boolean).pop() ?? directory())
   const literature = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-literature"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-literature"].literature)
 
-  const turns = createMemo(() =>
-    items().flatMap((item) => {
-      const text = item.parts
-        .flatMap((part) => (part.type === "text" ? [part.text] : []))
-        .join("\n")
-        .trim()
-      if (!text) return []
-      return [{ id: item.info.id, role: item.info.role, text: displayText(item.info.role, text) }]
-    }),
+  const turns = createMemo<DockTurn[]>(() =>
+    items()
+      .slice()
+      .sort((a, b) => a.time.created - b.time.created)
+      .flatMap((message): DockTurn[] => {
+        if (message.type === "user") {
+          const text = displayText("user", message.text).trim()
+          return text ? [{ id: message.id, role: "user" as const, text }] : []
+        }
+        if (message.type === "assistant") {
+          const text = message.content.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n").trim()
+          return text ? [{ id: message.id, role: "assistant" as const, text }] : []
+        }
+        return []
+      }),
   )
   const thinking = createMemo(() => busy() || turns().at(-1)?.role === "user")
 
@@ -125,7 +131,7 @@ export function AgentDock() {
   })
 
   const loadMessages = async (id: string) => {
-    const response = await sdk().client.session.messages({ sessionID: id, limit: MESSAGE_LIMIT }).catch(() => undefined)
+    const response = await serverSDK.api.message.list({ sessionID: id, limit: MESSAGE_LIMIT }).catch(() => undefined)
     if (!response?.data) {
       // The stored session is gone (deleted or server reset); start fresh on next send.
       if (sessionID() !== id) return
@@ -135,17 +141,17 @@ export function AgentDock() {
       return
     }
     if (sessionID() !== id) return
-    setItems(response.data.filter((item) => !!item?.info?.id))
+    setItems(response.data)
   }
 
   const ensureSession = async () => {
     const existing = sessionID()
     if (existing) return existing
-    const session = await sdk().client.session.create({ title: `ResearchOS · ${module()}` })
-    if (!session.data) throw new Error("Session creation returned no data")
-    writeStored(storageKey(contextKey()), session.data.id)
-    setSessionID(session.data.id)
-    return session.data.id
+    const session = await serverSDK.api.session.create({ title: `ResearchOS · ${module()}`, location: { directory: directory() } })
+    if (!session) throw new Error("Session creation returned no data")
+    writeStored(storageKey(contextKey()), session.id)
+    setSessionID(session.id)
+    return session.id
   }
 
   const reset = () => {
@@ -158,7 +164,7 @@ export function AgentDock() {
   const openFull = () => {
     const id = sessionID()
     if (!id) return
-    navigate(`/${params.dir}/session/${id}`)
+    navigate(link()!.session(id))
   }
 
   const submit = () => {
@@ -169,31 +175,24 @@ export function AgentDock() {
     void (async () => {
       const id = await ensureSession()
       const paperId = shell.agent()?.module === "literature" ? shell.agent()?.resource : undefined
-      if (paperId) recordPaperSession(sdk().directory, paperId, id)
+      if (paperId) recordPaperSession(directory(), paperId, id)
       const context = paperId
-        ? await fetchPaperContext({ literature: literature(), sdk: sdk(), paperId }).catch(() => undefined)
+        ? await fetchPaperContext({ literature: literature(), directory: directory(), paperId }).catch(() => undefined)
         : undefined
       if (context) {
-        const retrieved = await fetchPaperSections({ literature: literature(), sdk: sdk(), paperId: context.paper.id, query: text })
+        const retrieved = await fetchPaperSections({ literature: literature(), directory: directory(), paperId: context.paper.id, query: text })
         const block = retrieved?.sections.length ? formatRetrievedSections(context.paper.id, retrieved.sections) : undefined
-        await sdk().client.session.promptAsync({
+        // 2.0 prompts carry no per-request system field, so the paper dossier opens the body.
+        const system = buildPaperSystem({ paper: context.paper, directory: directory(), libraryOnly: libraryOnly() })
+        await serverSDK.api.session.prompt({
           sessionID: id,
-          system: buildPaperSystem({ paper: context.paper, directory: sdk().directory, libraryOnly: libraryOnly() }),
-          parts: block
-            ? [
-                { type: "text", text: block },
-                { type: "text", text },
-              ]
-            : [{ type: "text", text }],
+          text: block ? `${system}\n\n${block}\n\n${text}` : `${system}\n\n${text}`,
         })
         return id
       }
-      const prefix = `[ResearchOS module: ${module()}${shell.agent()?.resource ? ` · resource: ${shell.agent()?.resource}` : ""} · project: ${sdk().directory}]`
+      const prefix = `[ResearchOS module: ${module()}${shell.agent()?.resource ? ` · resource: ${shell.agent()?.resource}` : ""} · project: ${directory()}]`
       const scoped = libraryOnly() ? `${prefix}\n[Scope] ${LIBRARY_ONLY_INSTRUCTION}` : prefix
-      await sdk().client.session.promptAsync({
-        sessionID: id,
-        parts: [{ type: "text", text: `${scoped}\n\n${text}` }],
-      })
+      await serverSDK.api.session.prompt({ sessionID: id, text: `${scoped}\n\n${text}` })
       return id
     })().then(
       (id) => {
@@ -294,7 +293,7 @@ export function AgentDock() {
           <span class="truncate font-mono text-10-regular text-text-weaker">{basename()}</span>
         </button>
         <Show when={shell.dockOpen()}>
-          <Button variant="primary" size="small" disabled={busy() || !draft().trim()} onClick={submit}>
+          <Button variant="submit" size="small" disabled={busy() || !draft().trim()} onClick={submit}>
             <Show when={busy()} fallback={<Icon name="arrow-up" size="small" />}>
               <Spinner class="size-3" />
             </Show>

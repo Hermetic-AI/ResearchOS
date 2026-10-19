@@ -20,7 +20,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Флаг            | Описание                                    | По умолчанию     |
 | --------------- | ------------------------------------------- | ---------------- |
-| `--port`        | Порт для прослушивания                      | `14096`           |
+| `--port`        | Порт для прослушивания                      | `4096`           |
 | `--hostname`    | Имя хоста для прослушивания                 | `127.0.0.1`      |
 | `--mdns`        | Включить обнаружение mDNS                   | `false`          |
 | `--mdns-domain` | Пользовательское доменное имя для mDNS      | `opencode.local` |
@@ -77,7 +77,7 @@ TUI с открытым кодом запущен, `opencode serve` запуст
 http://<hostname>:<port>/doc
 ```
 
-For example, `http://localhost:14096/doc`. Use the spec to generate clients or inspect request and response types. Or view it in a Swagger explorer.
+For example, `http://localhost:4096/doc`. Use the spec to generate clients or inspect request and response types. Or view it in a Swagger explorer.
 
 ---
 
@@ -154,12 +154,9 @@ For example, `http://localhost:14096/doc`. Use the spec to generate clients or i
 | `DELETE` | `/session/:id`                           | Удалить сессию и все её данные           | Возвращает `boolean`                                                                  |
 | `PATCH`  | `/session/:id`                           | Обновить свойства сессии                 | body: `{ title? }`, возвращает <a href={typesUrl}><code>Session</code></a>            |
 | `GET`    | `/session/:id/children`                  | Получить дочерние сессии                 | Возвращает <a href={typesUrl}><code>Session[]</code></a>                              |
-| `GET`    | `/session/:id/todo`                      | Получить список задач для сессии         | Возвращает <a href={typesUrl}><code>Todo[]</code></a>                                 |
 | `POST`   | `/session/:id/init`                      | Анализ приложения и создание `AGENTS.md` | body: `{ messageID, providerID, modelID }`, возвращает `boolean`                      |
 | `POST`   | `/session/:id/fork`                      | Ответвление сессии от сообщения          | body: `{ messageID? }`, возвращает <a href={typesUrl}><code>Session</code></a>        |
 | `POST`   | `/session/:id/abort`                     | Прервать запущенную сессию               | Возвращает `boolean`                                                                  |
-| `POST`   | `/session/:id/share`                     | Поделиться сессией                       | Возвращает <a href={typesUrl}><code>Session</code></a>                                |
-| `DELETE` | `/session/:id/share`                     | Отменить общий доступ к сессии           | Возвращает <a href={typesUrl}><code>Session</code></a>                                |
 | `GET`    | `/session/:id/diff`                      | Получить diff для этой сессии            | query: `messageID?`, возвращает <a href={typesUrl}><code>FileDiff[]</code></a>        |
 | `POST`   | `/session/:id/summarize`                 | Суммировать сессию                       | body: `{ providerID, modelID }`, возвращает `boolean`                                 |
 | `POST`   | `/session/:id/revert`                    | Отменить сообщение                       | body: `{ messageID, partID? }`, возвращает `boolean`                                  |

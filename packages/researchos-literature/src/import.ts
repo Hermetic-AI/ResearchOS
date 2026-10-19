@@ -4,7 +4,7 @@ import { crossrefAdapter, semanticScholarAdapter, type ApiHub } from "@researcho
 import { extractPdfText } from "./pdf/extract"
 import { fetchGrobidReferences } from "./pdf/grobid"
 import { normalizeDoi, parsePdfMetadata, type PdfMetadata } from "./pdf/metadata"
-import { parseReferences, type ParsedReference } from "./pdf/references"
+import { parseReferences } from "./pdf/references"
 import { pdfDir, textDir } from "./paths"
 import type { CitationEdge, PaperMeta } from "./types"
 

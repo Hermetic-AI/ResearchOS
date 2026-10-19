@@ -1,83 +1,97 @@
 import { existsSync, readFileSync, writeFileSync } from "fs"
 import { resolve, sep } from "path"
-import { tool, type Plugin, type PluginModule } from "@opencode-ai/plugin"
+import { Plugin } from "@opencode/plugin"
+import { Schema } from "effect"
 import { convertCsvToLatex, convertMdToLatex } from "./convert"
 import { mergeBibtex } from "./bibtex"
 import { bibtexFromLibrary } from "./library"
 import { WritingStore } from "./store"
 import { SUGGESTION_KINDS, SUGGESTION_STATUSES } from "./types"
 
-export const WritingPlugin: Plugin = async () => ({
-  tool: {
-    table_to_latex: tool({
-      description: "Convert a CSV file to a booktabs-style LaTeX table (caption/label optional)",
-      args: {
-        file: tool.schema.string().describe("CSV file path, relative to the project root"),
-        caption: tool.schema.string().optional(),
-        label: tool.schema.string().optional(),
-      },
-      execute: async (args, context) => {
-        const path = resolveInside(context.directory, args.file)
-        const latex = convertCsvToLatex({
-          csv: readFileSync(path, "utf8"),
-          ...(args.caption ? { caption: args.caption } : {}),
-          ...(args.label ? { label: args.label } : {}),
-        })
-        return { title: "table_to_latex", output: latex }
-      },
-    }),
-    md_to_latex: tool({
-      description: "Convert a Markdown note to a LaTeX fragment (headings, lists, code, tables)",
-      args: { file: tool.schema.string().describe("Markdown file path, relative to the project root") },
-      execute: async (args, context) => ({
-        title: "md_to_latex",
-        output: convertMdToLatex(readFileSync(resolveInside(context.directory, args.file), "utf8")),
-      }),
-    }),
-    bibtex_upsert: tool({
-      description: "Append BibTeX entries into a .bib file, skipping duplicate keys",
-      args: {
-        bib_file: tool.schema.string().describe("Target .bib file, relative to the project root"),
-        entries: tool.schema.array(tool.schema.object({ key: tool.schema.string(), bibtex: tool.schema.string() })),
-      },
-      execute: async (args, context) => {
-        const path = resolveInside(context.directory, args.bib_file)
-        const existing = existsSync(path) ? readFileSync(path, "utf8") : ""
-        const merged = mergeBibtex(existing, args.entries)
-        writeFileSync(path, merged.content)
-        return { title: "bibtex_upsert", output: JSON.stringify({ inserted: merged.inserted, skipped: merged.skipped }) }
-      },
-    }),
-    bibtex_from_library: tool({
-      description: "Fetch BibTeX entries for papers from the local literature library (read-only)",
-      args: { paper_ids: tool.schema.array(tool.schema.string()).min(1) },
-      execute: async (args, context) => ({
-        title: "bibtex_from_library",
-        output: JSON.stringify(bibtexFromLibrary(context.directory, args.paper_ids)),
-      }),
-    }),
-    suggest_record: tool({
-      description: "Persist a writing suggestion and its review outcome",
-      args: {
-        kind: tool.schema.enum(SUGGESTION_KINDS),
-        target_file: tool.schema.string().optional(),
-        input_excerpt: tool.schema.string(),
-        output: tool.schema.string(),
-        status: tool.schema.enum(SUGGESTION_STATUSES),
-      },
-      execute: async (args, context) => {
-        const store = new WritingStore(context.directory)
-        const record = store.recordSuggestion({
-          kind: args.kind,
-          ...(args.target_file ? { targetFile: args.target_file } : {}),
-          inputExcerpt: args.input_excerpt,
-          output: args.output,
-          status: args.status,
-        })
-        store.close()
-        return { title: "suggest_record", output: JSON.stringify(record) }
-      },
-    }),
+export default Plugin.define({
+  id: "researchos.writing",
+  async setup(ctx) {
+    const root = ctx.location.directory
+    await ctx.tool.transform((editor) => {
+      editor.add({
+        name: "table_to_latex",
+        description: "Convert a CSV file to a booktabs-style LaTeX table (caption/label optional)",
+        input: Schema.Struct({
+          file: Schema.String.annotate({ description: "CSV file path, relative to the project root" }),
+          caption: Schema.optionalKey(Schema.String),
+          label: Schema.optionalKey(Schema.String),
+        }),
+        execute: async ({ file, caption, label }) => ({
+          content: convertCsvToLatex({
+            csv: readFileSync(resolveInside(root, file), "utf8"),
+            ...(caption ? { caption } : {}),
+            ...(label ? { label } : {}),
+          }),
+        }),
+      })
+
+      editor.add({
+        name: "md_to_latex",
+        description: "Convert a Markdown note to a LaTeX fragment (headings, lists, code, tables)",
+        input: Schema.Struct({
+          file: Schema.String.annotate({ description: "Markdown file path, relative to the project root" }),
+        }),
+        execute: async ({ file }) => ({
+          content: convertMdToLatex(readFileSync(resolveInside(root, file), "utf8")),
+        }),
+      })
+
+      editor.add({
+        name: "bibtex_upsert",
+        description: "Append BibTeX entries into a .bib file, skipping duplicate keys",
+        input: Schema.Struct({
+          bib_file: Schema.String.annotate({ description: "Target .bib file, relative to the project root" }),
+          entries: Schema.Array(Schema.Struct({ key: Schema.String, bibtex: Schema.String })),
+        }),
+        execute: async ({ bib_file: bibFile, entries }) => {
+          const path = resolveInside(root, bibFile)
+          const existing = existsSync(path) ? readFileSync(path, "utf8") : ""
+          const merged = mergeBibtex(existing, entries)
+          writeFileSync(path, merged.content)
+          return { content: JSON.stringify({ inserted: merged.inserted, skipped: merged.skipped }) }
+        },
+      })
+
+      editor.add({
+        name: "bibtex_from_library",
+        description: "Fetch BibTeX entries for papers from the local literature library (read-only)",
+        input: Schema.Struct({
+          paper_ids: Schema.Array(Schema.String).check(Schema.isMinLength(1)),
+        }),
+        execute: async ({ paper_ids: paperIds }) => ({
+          content: JSON.stringify(bibtexFromLibrary(root, paperIds)),
+        }),
+      })
+
+      editor.add({
+        name: "suggest_record",
+        description: "Persist a writing suggestion and its review outcome",
+        input: Schema.Struct({
+          kind: Schema.Literals(SUGGESTION_KINDS),
+          target_file: Schema.optionalKey(Schema.String),
+          input_excerpt: Schema.String,
+          output: Schema.String,
+          status: Schema.Literals(SUGGESTION_STATUSES),
+        }),
+        execute: async ({ kind, target_file: targetFile, input_excerpt: inputExcerpt, output, status }) => {
+          const store = new WritingStore(root)
+          const record = store.recordSuggestion({
+            kind,
+            ...(targetFile ? { targetFile } : {}),
+            inputExcerpt,
+            output,
+            status,
+          })
+          store.close()
+          return { content: JSON.stringify(record) }
+        },
+      })
+    })
   },
 })
 
@@ -87,8 +101,6 @@ function resolveInside(root: string, path: string): string {
   if (!resolved.startsWith(resolve(root) + sep)) throw new Error(`Path escapes project root: ${path}`)
   return resolved
 }
-
-export default { id: "researchos-writing", server: WritingPlugin } satisfies PluginModule
 
 export { convertCsvToLatex, convertMdToLatex, escapeLatex, latexTable } from "./convert"
 export { wordDiff, splitSentences, hunksFromRewrite, applyHunks } from "./diff"

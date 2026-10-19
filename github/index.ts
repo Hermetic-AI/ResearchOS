@@ -230,7 +230,7 @@ process.exit(exitCode)
 
 function createOpencode() {
   const host = "127.0.0.1"
-  const port = 14096
+  const port = 4096
   const url = `http://${host}:${port}`
   const proc = spawn(`opencode`, [`serve`, `--hostname=${host}`, `--port=${port}`])
   const client = createOpencodeClient({ baseUrl: url })
@@ -495,7 +495,6 @@ async function subscribeSessionEvents() {
   console.log("Subscribing to session events...")
 
   const TOOL: Record<string, [string, string]> = {
-    todowrite: ["Todo", "\x1b[33m\x1b[1m"],
     bash: ["Bash", "\x1b[31m\x1b[1m"],
     edit: ["Edit", "\x1b[32m\x1b[1m"],
     glob: ["Glob", "\x1b[34m\x1b[1m"],

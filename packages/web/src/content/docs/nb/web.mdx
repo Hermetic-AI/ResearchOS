@@ -28,7 +28,7 @@ Du kan konfigurere webserveren ved å bruke kommandolinjeflagg eller i [konfigur
 Som standard velger OpenCode en tilgjengelig port. Du kan spesifisere en port:
 
 ```bash
-opencode web --port 14096
+opencode web --port 4096
 ```
 
 ### Vertsnavn
@@ -77,10 +77,10 @@ Du kan koble en terminal TUI til en kjørende webserver:
 
 ```bash
 # Start the web server
-opencode web --port 14096
+opencode web --port 4096
 
 # In another terminal, attach the TUI
-opencode attach http://localhost:14096
+opencode attach http://localhost:4096
 ```
 
 Dette lar deg bruke både nettgrensesnittet og terminalen samtidig, og deler samme økter og tilstand.
@@ -94,7 +94,7 @@ Du kan også konfigurere serverinnstillinger i `opencode.json` konfigurasjonsfil
 ```json
 {
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "cors": ["https://example.com"]

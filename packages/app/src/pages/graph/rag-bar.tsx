@@ -1,11 +1,11 @@
 import { createSignal, For, Show } from "solid-js"
-import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
-import type { ServerResearchosGraphAskOutput } from "@opencode-ai/client"
+import { Button } from "@opencode/ui/button"
+import { Spinner } from "@opencode/ui/spinner"
+import type { ServerResearchosGraphGraphAskOutput } from "@opencode/client"
 import { StatusBadge } from "@/components/researchos/module-state"
 import { nodeColors } from "./graph-colors"
 
-type AskResult = ServerResearchosGraphAskOutput["data"]
+type AskResult = ServerResearchosGraphGraphAskOutput["data"]
 
 export function RagBar(props: {
   ask: (question: string) => Promise<AskResult>
@@ -41,7 +41,7 @@ export function RagBar(props: {
           placeholder="Ask the graph: find related papers, concepts, and code…"
           class="min-w-0 flex-1 rounded-md border border-border-base bg-surface-inset-base px-3 py-2 text-12-regular text-text-base outline-none placeholder:text-text-weaker focus:border-border-focus"
         />
-        <Button size="small" variant="primary" disabled={!question().trim() || asking()} onClick={() => void submit()}>
+        <Button size="small" variant="submit" disabled={!question().trim() || asking()} onClick={() => void submit()}>
           <Show when={asking()} fallback="Ask"><Spinner class="size-3.5" /></Show>
         </Button>
         <Show when={props.result}>

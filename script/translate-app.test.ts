@@ -60,12 +60,8 @@ describe("translate app", () => {
   })
 
   test("limits each locale to its app surfaces", () => {
-    expect(targetFiles("fr")).toEqual([
-      "packages/app/src/i18n/fr.ts",
-      "packages/ui/src/i18n/fr.ts",
-      "packages/desktop/src/renderer/i18n/fr.ts",
-    ])
-    expect(targetFiles("tr")).toEqual(["packages/app/src/i18n/tr.ts", "packages/ui/src/i18n/tr.ts"])
+    expect(targetFiles("fr")).toEqual(["packages/app/src/runtime/i18n/fr.ts", "packages/ui/src/i18n/fr.ts"])
+    expect(targetFiles("tr")).toEqual(["packages/app/src/runtime/i18n/tr.ts", "packages/ui/src/i18n/tr.ts"])
   })
 
   test("maps product locale codes to their glossaries", () => {

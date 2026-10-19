@@ -1,6 +1,6 @@
 import { createSignal, For, Show } from "solid-js"
-import { Button } from "@opencode-ai/ui/button"
-import { Spinner } from "@opencode-ai/ui/spinner"
+import { Button } from "@opencode/ui/button"
+import { Spinner } from "@opencode/ui/spinner"
 import { StatusBadge } from "@/components/researchos/module-state"
 import { nodeColors, type NodeType } from "./graph-colors"
 
@@ -44,7 +44,7 @@ export function GraphTopbar(props: {
       <div class="flex-1" />
       <StatusBadge status={props.status.status} label={props.status.label} detail={props.status.detail} />
       <span class="text-10-regular text-text-weaker">{props.nodeCount} nodes</span>
-      <Button size="small" variant="secondary" disabled={props.indexing} onClick={props.onReindex}>
+      <Button size="small" variant="neutral" disabled={props.indexing} onClick={props.onReindex}>
         <Show when={props.indexing} fallback="Build graph">
           <Spinner class="size-3.5" />
         </Show>
@@ -59,7 +59,7 @@ export function GraphTopbar(props: {
         placeholder="Locate node by label…"
         class="w-52 rounded-md border border-border-base bg-surface-inset-base px-3 py-1.5 text-12-regular text-text-base outline-none placeholder:text-text-weaker focus:border-border-focus"
       />
-      <Button size="small" variant="secondary" disabled={!term().trim()} onClick={() => props.onLocate(term().trim())}>
+      <Button size="small" variant="neutral" disabled={!term().trim()} onClick={() => props.onLocate(term().trim())}>
         Locate
       </Button>
       <div class="ml-2 flex rounded-md border border-border-base">

@@ -17,7 +17,7 @@ OpenCode は、**JSON** と **JSONC** (コメント付きの JSON) 形式の両�
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
   "server": {
-    "port": 14096,
+    "port": 4096,
   },
 }
 ```
@@ -189,7 +189,7 @@ TUI 固有の設定には、専用の `tui.json` (または `tui.jsonc`) ファ�
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -356,27 +356,6 @@ UI テーマを `tui.json` で設定します。
 デフォルトのエージェントはプライマリエージェントである必要があります (サブエージェントではありません)。これは、`"build"` や `"plan"` のような組み込みエージェント、または定義した[カスタムエージェント](/docs/agents) にすることができます。指定されたエージェントが存在しないか、サブエージェントである場合、OpenCode は警告とともに `"build"` にフォールバックします。
 
 この設定は、TUI、CLI (`opencode run`)、デスクトップアプリ、および GitHub Action のすべてのインターフェイスに適用されます。
-
----
-
-### 共有
-
-`share` オプションを使用して [share](/docs/share) 機能を設定できます。
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-これには以下が必要です:
-
-- `"manual"` - コマンドによる手動共有を許可します (デフォルト)
-- `"auto"` - 新しい会話を自動的に共有します
-- `"disabled"` - 共有を完全に無効にする
-
-デフォルトでは、共有は手動モードに設定されており、`/share` コマンドを使用して会話を明示的に共有する必要があります。
 
 ---
 

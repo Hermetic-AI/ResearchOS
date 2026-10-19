@@ -40,7 +40,7 @@ Dette starter både en server og en klient
 | Alternativ | Skriv         | Beskrivelse                      | Standard    |
 | ---------- | ------------- | -------------------------------- | ----------- |
 | `hostname` | `string`      | Server vertsnavn                 | `127.0.0.1` |
-| `port`     | `number`      | Serverport                       | `14096`      |
+| `port`     | `number`      | Serverport                       | `4096`      |
 | `signal`   | `AbortSignal` | Avbryt signal for kansellering   | `undefined` |
 | `timeout`  | `number`      | Tidsavbrudd i ms for serverstart | `5000`      |
 | `config`   | `Config`      | Konfigurasjonsobjekt             | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 14096,
+  port: 4096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ Hvis du allerede har en kjørende forekomst av opencode, kan du oprete en klient
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:14096",
+  baseUrl: "http://localhost:4096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | Alternativ      | Skriv inn  | Beskrivelse                        | Standard                |
 | --------------- | ---------- | ---------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | URL av serveren                    | `http://localhost:14096` |
+| `baseUrl`       | `string`   | URL av serveren                    | `http://localhost:4096` |
 | `fetch`         | `function` | Egendefinert hentingimplementering | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Svarparsingmetode                  | `auto`                  |
 | `responseStyle` | `string`   | Returstil: `data` eller `fields`   | `fields`                |
@@ -244,7 +244,6 @@ const agents = await client.app.agents()
 | Metode              | Beskrivelse                | Svar                                           |
 | ------------------- | -------------------------- | ---------------------------------------------- |
 | `project.list()`    | Liste over alle prosjekter | <a href={typesUrl}><code>Prosjekt[]</code></a> |
-| `project.current()` | Få nåværende prosjekt      | <a href={typesUrl}><code>Prosjekt</code></a>   |
 
 ---
 
@@ -254,8 +253,6 @@ const agents = await client.app.agents()
 // List all projects
 const projects = await client.project.list()
 
-// Get current project
-const currentProject = await client.project.current()
 ```
 
 ---

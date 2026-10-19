@@ -1,4 +1,4 @@
-import { InvalidRequestError } from "@opencode-ai/protocol/errors"
+import { InvalidRequestError } from "@opencode/protocol/errors"
 import { Effect } from "effect"
 import path from "path"
 

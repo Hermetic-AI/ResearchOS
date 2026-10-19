@@ -1,34 +1,33 @@
 import { createEffect, createMemo, createResource, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js"
 import { useSearchParams } from "@solidjs/router"
-import { Button } from "@opencode-ai/ui/button"
-import type { ServerResearchosGraphAskOutput } from "@opencode-ai/client"
+import { Button } from "@opencode/ui/button"
+import type { ServerResearchosGraphGraphAskOutput } from "@opencode/client"
 import { ModuleState } from "@/components/researchos/module-state"
 import { ModuleHeader } from "@/components/researchos/module-header"
 import { useResearchosShell } from "@/components/researchos/shell-context"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError } from "@/runtime/server/errors"
 import { GraphCanvas } from "./graph-canvas"
 import { GraphTopbar } from "./graph-topbar"
 import { NodeDrawer } from "./node-drawer"
 import { RagBar } from "./rag-bar"
 import { nodeColors, type NodeType } from "./graph-colors"
 
-type AskResult = ServerResearchosGraphAskOutput["data"]
+type AskResult = ServerResearchosGraphGraphAskOutput["data"]
 
 export default function GraphPage() {
-  const sdk = useSDK()
-  const serverSDK = useServerSDK()
+  const directory = useResearchosDirectory()
+    const serverSDK = useServerSDK()
   const platform = usePlatform()
   const shell = useResearchosShell()
   const client = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-graph"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-graph"].graph)
 
   const [filter, setFilter] = createSignal<NodeType | "all">("all")
   const [layout, setLayout] = createSignal<"force" | "circle">("force")
@@ -41,7 +40,7 @@ export default function GraphPage() {
   const [paperMiss, setPaperMiss] = createSignal<string>()
 
   const [graph, graphActions] = createResource(
-    () => ({ directory: sdk().directory, type: filter() }),
+    () => ({ directory: directory(), type: filter() }),
     async ({ directory, type }) => client().get({
       location: { directory },
       ...(type === "all" ? {} : { type }),
@@ -49,7 +48,7 @@ export default function GraphPage() {
   )
 
   const [status] = createResource(
-    () => sdk().directory,
+    () => directory(),
     async (directory) => client().status({ location: { directory } }).then((result) => result.data),
   )
 
@@ -102,14 +101,14 @@ export default function GraphPage() {
 
   const persist = (positions: Array<{ id: string; x: number; y: number }>) => {
     // 布局持久化是后台动作，失败不打断画布交互
-    void client().save_layout({ location: { directory: sdk().directory }, positions }).catch(() => {})
+    void client().save_layout({ location: { directory: directory() }, positions }).catch(() => {})
   }
   const reindex = async () => {
     if (indexing()) return
     setIndexing(true)
     setIndexError(undefined)
     try {
-      await client().reindex({ location: { directory: sdk().directory } })
+      await client().reindex({ location: { directory: directory() } })
       await graphActions.refetch()
     } catch (error) {
       setIndexError(formatServerError(error))
@@ -144,7 +143,7 @@ export default function GraphPage() {
             <p class="flex-1 text-12-regular text-text-weak">
               No graph node is linked to paper <span class="font-mono text-text-base">{paperId()}</span> yet — build the graph first.
             </p>
-            <Button size="small" variant="secondary" disabled={indexing()} onClick={() => void reindex()}>
+            <Button size="small" variant="neutral" disabled={indexing()} onClick={() => void reindex()}>
               Build graph
             </Button>
           </div>
@@ -200,7 +199,7 @@ export default function GraphPage() {
           {(id) => (
             <NodeDrawer
               nodeId={id()}
-              fetcher={(nodeId) => client().node({ id: nodeId, location: { directory: sdk().directory } }).then((result) => result.data)}
+              fetcher={(nodeId) => client().node({ id: nodeId, location: { directory: directory() } }).then((result) => result.data)}
               onSelect={setSelectedId}
               onClose={() => setSelectedId(undefined)}
             />
@@ -208,7 +207,7 @@ export default function GraphPage() {
         </Show>
       </div>
       <RagBar
-        ask={(question) => client().ask({ location: { directory: sdk().directory }, question }).then((result) => result.data)}
+        ask={(question) => client().ask({ location: { directory: directory() }, question }).then((result) => result.data)}
         result={askResult()}
         onResult={setAskResult}
         onSelectNode={(id) => {

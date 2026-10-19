@@ -1,9 +1,9 @@
-import { Location } from "@opencode-ai/core/location"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Location } from "@opencode/core/location"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import { readSource, writeSource } from "@researchos/latex"
 import { applyHunks, bibtexFromLibrary, convertCsvToLatex, convertMdToLatex, hunksFromRewrite, mergeBibtex, wordDiff, WritingStore } from "@researchos/writing"
 import { Effect } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { HttpApiBuilder } from "effect/http-api"
 import { Api } from "../api"
 import { response } from "../location"
 

@@ -1,4 +1,4 @@
-import type { ServerConnection } from "@/context/server"
+import type { ServerConnection } from "@/runtime/server/registry"
 import { createResearchosClient } from "@/utils/researchos-client"
 
 export type EnsureResearchosProjectInput = {
@@ -22,12 +22,11 @@ export async function ensureResearchosProject(
   const client = createResearchosClient({
     baseUrl: http.url,
     fetch: input.fetch,
-    username: http.username,
     password: http.password,
   })
   const location = { directory: input.directory }
 
-  const hasPreset = await client.files
+  const hasPreset = await client.file
     .list({ location, path: ".opencode/agent" })
     .then((result) => (result.data ?? []).some((item) => item.type === "file" && item.path.endsWith("paper-writer.md")))
     .catch(() => false)
@@ -35,7 +34,7 @@ export async function ensureResearchosProject(
   if (hasPreset) return { installed: false }
 
   try {
-    const assetApi = client["server.researchos-assets"]
+    const assetApi = client["server.researchos-assets"].asset
     await assetApi.presetInstall({ location, pack: "researchos-mcp", target: "project" })
     await assetApi.presetInstall({ location, pack: "researchos-agents", target: "project" })
     await assetApi.presetInstall({ location, pack: "researchos-skills", target: "project" })

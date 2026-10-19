@@ -40,7 +40,7 @@ Das startet Server und Client.
 | Option     | Type          | Description                    | Default     |
 | ---------- | ------------- | ------------------------------ | ----------- |
 | `hostname` | `string`      | Server hostname                | `127.0.0.1` |
-| `port`     | `number`      | Server port                    | `14096`      |
+| `port`     | `number`      | Server port                    | `4096`      |
 | `signal`   | `AbortSignal` | Abort signal for cancellation  | `undefined` |
 | `timeout`  | `number`      | Timeout in ms for server start | `5000`      |
 | `config`   | `Config`      | Configuration object           | `{}`        |
@@ -57,7 +57,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 14096,
+  port: 4096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -76,7 +76,7 @@ Wenn opencode bereits laeuft, kannst du nur einen Client erstellen und verbinden
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:14096",
+  baseUrl: "http://localhost:4096",
 })
 ```
 
@@ -84,7 +84,7 @@ const client = createOpencodeClient({
 
 | Option          | Type       | Description                      | Default                 |
 | --------------- | ---------- | -------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | URL of the server                | `http://localhost:14096` |
+| `baseUrl`       | `string`   | URL of the server                | `http://localhost:4096` |
 | `fetch`         | `function` | Custom fetch implementation      | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Response parsing method          | `auto`                  |
 | `responseStyle` | `string`   | Return style: `data` or `fields` | `fields`                |
@@ -246,7 +246,6 @@ const agents = await client.app.agents()
 | Method              | Description                  | Response                                      |
 | ------------------- | ---------------------------- | --------------------------------------------- |
 | `project.list()`    | Listet alle Projekte         | <a href={typesUrl}><code>Project[]</code></a> |
-| `project.current()` | Ruft das aktuelle Projekt ab | <a href={typesUrl}><code>Project</code></a>   |
 
 ---
 
@@ -256,8 +255,6 @@ const agents = await client.app.agents()
 // List all projects
 const projects = await client.project.list()
 
-// Get current project
-const currentProject = await client.project.current()
 ```
 
 ---

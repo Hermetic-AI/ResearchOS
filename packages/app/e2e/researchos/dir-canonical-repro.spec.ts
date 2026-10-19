@@ -9,7 +9,10 @@ import path from "node:path"
 // in-flight work (observed as a hanging literature import refetch).
 let directory = ""
 
-test.describe("repro: 8.3 directory canonicalization", () => {
+// The 1.x canonicalization redirect this guarded lived in app.tsx/entry.tsx (`/${dir}/...` remount on a
+// short-path resolve). 2.0 builds researchos hrefs from the server-resolved directory, so there is no
+// redirect to race; re-open this only if a 2.0 canonicalization step is added.
+test.describe.skip("repro: 8.3 directory canonicalization", () => {
   test.beforeAll(async () => {
     directory = await mkdtemp(path.join(os.tmpdir(), "researchos-short-"))
   })

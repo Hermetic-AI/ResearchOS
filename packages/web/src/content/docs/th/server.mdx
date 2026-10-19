@@ -20,7 +20,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Flag            | คำอธิบาย                                 | ค่าเริ่มต้น      |
 | --------------- | ---------------------------------------- | ---------------- |
-| `--port`        | พอร์ตที่จะฟัง                            | `14096`           |
+| `--port`        | พอร์ตที่จะฟัง                            | `4096`           |
 | `--hostname`    | ชื่อโฮสต์ที่จะฟัง                        | `127.0.0.1`      |
 | `--mdns`        | เปิดใช้งานการค้นพบ mDNS                  | `false`          |
 | `--mdns-domain` | ชื่อโดเมนที่กำหนดเองสำหรับบริการ mDNS    | `opencode.local` |
@@ -77,7 +77,7 @@ opencode TUI ทำงาน `opencode serve` จะเริ่มเซิร�
 http://<hostname>:<port>/doc
 ```
 
-ตัวอย่างเช่น `http://localhost:14096/doc` ใช้ข้อมูลจำเพาะเพื่อสร้างไคลเอ็นต์หรือตรวจสอบคำขอและประเภทการตอบกลับ หรือดูใน Swagger explorer
+ตัวอย่างเช่น `http://localhost:4096/doc` ใช้ข้อมูลจำเพาะเพื่อสร้างไคลเอ็นต์หรือตรวจสอบคำขอและประเภทการตอบกลับ หรือดูใน Swagger explorer
 
 ---
 
@@ -154,12 +154,9 @@ http://<hostname>:<port>/doc
 | `DELETE` | `/session/:id`                           | ลบเซสชันและข้อมูลทั้งหมด           | ส่งคืน `boolean`                                                                 |
 | `PATCH`  | `/session/:id`                           | อัปเดตคุณสมบัติเซสชัน              | body: `{ title? }` ส่งคืน <a href={typesUrl}><code>เซสชัน</code></a>             |
 | `GET`    | `/session/:id/children`                  | รับเซสชันย่อยของเซสชัน             | ส่งคืน <a href={typesUrl}><code>เซสชัน[]</code></a>                              |
-| `GET`    | `/session/:id/todo`                      | รับรายการสิ่งที่ต้องทำสำหรับเซสชัน | ส่งคืน <a href={typesUrl}><code>สิ่งที่ต้องทำ[]</code></a>                       |
 | `POST`   | `/session/:id/init`                      | วิเคราะห์แอปและสร้าง `AGENTS.md`   | เนื้อความ: `{ messageID, providerID, modelID }` ส่งคืน `boolean`                 |
 | `POST`   | `/session/:id/fork`                      | แยกเซสชันที่มีอยู่ไปที่ข้อความ     | body: `{ messageID? }` ส่งคืน <a href={typesUrl}><code>เซสชัน</code></a>         |
 | `POST`   | `/session/:id/abort`                     | ยกเลิกเซสชันที่ทำงานอยู่           | ส่งคืน `boolean`                                                                 |
-| `POST`   | `/session/:id/share`                     | แบ่งปันเซสชั่น                     | ส่งคืน <a href={typesUrl}><code>เซสชัน</code></a>                                |
-| `DELETE` | `/session/:id/share`                     | ยกเลิกการแชร์เซสชัน                | ส่งคืน <a href={typesUrl}><code>เซสชัน</code></a>                                |
 | `GET`    | `/session/:id/diff`                      | รับความแตกต่างสำหรับเซสชั่นนี้     | ข้อความค้นหา: `messageID?` ส่งคืน <a href={typesUrl}><code>FileDiff[]</code></a> |
 | `POST`   | `/session/:id/summarize`                 | สรุปเซสชัน                         | เนื้อความ: `{ providerID, modelID }` ส่งคืน `boolean`                            |
 | `POST`   | `/session/:id/revert`                    | คืนค่าข้อความ                      | เนื้อความ: `{ messageID, partID? }` ส่งคืน `boolean`                             |

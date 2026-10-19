@@ -68,14 +68,16 @@ export class KernelClient {
 }
 
 function spawnKernel(projectRoot: string) {
-  return Bun.spawn({
-    cmd: ["uv", "run", "--directory", resolve(import.meta.dir, "../../researchos-mcp/data"), "researchos-data-bridge"],
-    cwd: projectRoot,
-    env: { ...Bun.env, RESEARCHOS_PROJECT_ROOT: projectRoot },
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "pipe",
-  })
+  return Bun.spawn(
+    ["uv", "run", "--directory", resolve(import.meta.dir, "../../researchos-mcp/data"), "researchos-data-bridge"],
+    {
+      cwd: projectRoot,
+      env: { ...process.env, RESEARCHOS_PROJECT_ROOT: projectRoot },
+      stdin: "pipe",
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  )
 }
 
 function createReader(process: ReturnType<typeof spawnKernel>) {

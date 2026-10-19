@@ -1,28 +1,32 @@
-import { useNavigate, useParams } from "@solidjs/router"
+import { useNavigate } from "@solidjs/router"
 import { For, Show, createEffect, createMemo, createResource, onCleanup } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory, useResearchosLink, type ResearchosLink } from "@/components/researchos-rail"
 import { createResearchosClient } from "@/utils/researchos-client"
 import { StatusBadge } from "@/components/researchos/module-state"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 
 export default function Dashboard() {
-  const sdk = useSDK(); const platform = usePlatform(); const serverSDK = useServerSDK(); const navigate = useNavigate(); const params = useParams<{ dir: string }>()
+  const directory = useResearchosDirectory()
+  const platform = usePlatform()
+  const serverSDK = useServerSDK()
+  const navigate = useNavigate()
+  const link = useResearchosLink()
   const shell = useResearchosShell()
-  const client = createMemo(() => createResearchosClient({ baseUrl: sdk().url, fetch: platform.fetch, username: serverSDK().server.http.username, password: serverSDK().server.http.password }))
+  const client = createMemo(() => createResearchosClient({ baseUrl: serverSDK.url, fetch: platform.fetch, password: serverSDK.server.http.password }))
   createEffect(() => { shell.setAgentContext({ module: "overview" }) })
   onCleanup(() => shell.setAgentContext(undefined))
 
-  const [summary] = createResource(() => sdk().directory, async (directory) => {
+  const [summary] = createResource(() => directory(), async (directory) => {
     const location = { directory }
     const values = await Promise.allSettled([
-      client()["server.researchos-literature"].list({ location, limit: 100 }),
-      client()["server.researchos-graph"].get({ location }),
-      client()["server.researchos-latex"].files({ location }),
-      client()["server.researchos-data"].notebooks({ location }),
-      client()["server.researchos-plot"].artifacts({ location }),
-      client()["server.researchos-reproduce"].list({ location }),
+      client()["server.researchos-literature"].literature.list({ location, limit: 100 }),
+      client()["server.researchos-graph"].graph.get({ location }),
+      client()["server.researchos-latex"].latex.files({ location }),
+      client()["server.researchos-data"].data.notebooks({ location }),
+      client()["server.researchos-plot"].plot.artifacts({ location }),
+      client()["server.researchos-reproduce"].reproduce.list({ location }),
     ])
     const count = (index: number, select: (data: unknown) => number) => values[index]?.status === "fulfilled" ? select(values[index].value.data) : undefined
     return [
@@ -42,12 +46,12 @@ export default function Dashboard() {
     const core = data.slice(0, 6)
     return core.every((item) => item.count === 0)
   })
-  return <main class="h-full overflow-y-auto bg-background-stronger p-6 text-text-base"><div class="mx-auto max-w-6xl"><header class="mb-6"><p class="text-10-medium uppercase tracking-[0.18em] text-text-weak">ResearchOS workspace</p><h1 class="mt-1 text-20-medium">Project cockpit</h1><p class="mt-1 text-11-regular text-text-weak">Live counts come from each module's durable store; unavailable modules are reported honestly.</p></header><Show when={isEmpty()}><WelcomeCard navigate={navigate} dir={params.dir} /></Show><div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><For each={summary()} fallback={<p class="text-11-regular text-text-weak">Loading module state…</p>}>{(module, index) => <button class="group min-h-32 rounded-xl border border-border-weak-base bg-background-base p-4 text-left hover:border-border-focus" onClick={() => navigate(`/${params.dir}/${module.route}`)}><div class="flex items-center justify-between"><span class="text-10-medium text-text-weak">0{index() + 1}</span><ModuleBadge module={module} /></div><p class="mt-5 text-14-medium">{module.name}</p><p class="mt-1 text-11-regular text-text-weak">{module.count === undefined ? module.noun : `${module.count} ${module.noun}`}</p></button>}</For></div><section class="mt-6 grid grid-cols-3 gap-3"><Flow title="Discover" text="Literature → graph → cited evidence" /><Flow title="Experiment" text="Notebook → plot → reproducible run" /><Flow title="Publish" text="LaTeX → writing review → translation" /></section></div></main>
+  return <main class="h-full overflow-y-auto bg-background-stronger p-6 text-text-base"><div class="mx-auto max-w-6xl"><header class="mb-6"><p class="text-10-medium uppercase tracking-[0.18em] text-text-weak">ResearchOS workspace</p><h1 class="mt-1 text-20-medium">Project cockpit</h1><p class="mt-1 text-11-regular text-text-weak">Live counts come from each module's durable store; unavailable modules are reported honestly.</p></header><Show when={isEmpty()}><WelcomeCard link={link()!} /></Show><div class="grid grid-cols-2 gap-3 lg:grid-cols-4"><For each={summary()} fallback={<p class="text-11-regular text-text-weak">Loading module state…</p>}>{(module, index) => <button class="group min-h-32 rounded-xl border border-border-weak-base bg-background-base p-4 text-left hover:border-border-focus" onClick={() => navigate(link()!.module(module.route))}><div class="flex items-center justify-between"><span class="text-10-medium text-text-weak">0{index() + 1}</span><ModuleBadge module={module} /></div><p class="mt-5 text-14-medium">{module.name}</p><p class="mt-1 text-11-regular text-text-weak">{module.count === undefined ? module.noun : `${module.count} ${module.noun}`}</p></button>}</For></div><section class="mt-6 grid grid-cols-3 gap-3"><Flow title="Discover" text="Literature → graph → cited evidence" /><Flow title="Experiment" text="Notebook → plot → reproducible run" /><Flow title="Publish" text="LaTeX → writing review → translation" /></section></div></main>
 }
 
-function WelcomeCard(props: { navigate: ReturnType<typeof useNavigate>; dir: string }) {
-  const navigate = props.navigate
-  return <section class="mb-6 rounded-xl border border-border-weak-base bg-background-base p-5"><p class="text-14-medium text-text-base">Start your first research project</p><p class="mt-1 text-12-regular text-text-weak">Import papers, build a knowledge graph, and let the conversation drive the modules.</p><div class="mt-4 grid grid-cols-3 gap-3"><ActionCard title="Import first papers" description="Drag PDFs into the chat or search arXiv." onClick={() => navigate(`/${props.dir}/literature`)} /><ActionCard title="See what it can do" description="Browse the asset center for agents and skills." onClick={() => navigate(`/${props.dir}/assets`)} /><ActionCard title="Quick note" description="Capture thoughts and link them to papers." onClick={() => navigate(`/${props.dir}/notes`)} /></div></section>
+function WelcomeCard(props: { link: ResearchosLink }) {
+  const navigate = useNavigate()
+  return <section class="mb-6 rounded-xl border border-border-weak-base bg-background-base p-5"><p class="text-14-medium text-text-base">Start your first research project</p><p class="mt-1 text-12-regular text-text-weak">Import papers, build a knowledge graph, and let the conversation drive the modules.</p><div class="mt-4 grid grid-cols-3 gap-3"><ActionCard title="Import first papers" description="Drag PDFs into the chat or search arXiv." onClick={() => navigate(props.link.module("literature"))} /><ActionCard title="See what it can do" description="Browse the asset center for agents and skills." onClick={() => navigate(props.link.module("assets"))} /><ActionCard title="Quick note" description="Capture thoughts and link them to papers." onClick={() => navigate(props.link.module("notes"))} /></div></section>
 }
 
 function ActionCard(props: { title: string; description: string; onClick: () => void }) {

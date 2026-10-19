@@ -40,7 +40,7 @@ const { client } = await createOpencode()
 | オプション | タイプ        | 説明                                | デフォルト  |
 | ---------- | ------------- | ----------------------------------- | ----------- |
 | `hostname` | `string`      | サーバーのホスト名                  | `127.0.0.1` |
-| `port`     | `number`      | サーバーポート                      | `14096`      |
+| `port`     | `number`      | サーバーポート                      | `4096`      |
 | `signal`   | `AbortSignal` | キャンセルのためのアボート信号      | `undefined` |
 | `timeout`  | `number`      | サーバー起動のタイムアウト (ミリ秒) | `5000`      |
 | `config`   | `Config`      | 設定オブジェクト                    | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 14096,
+  port: 4096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ opencode.server.close()
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:14096",
+  baseUrl: "http://localhost:4096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | オプション      | タイプ     | 説明                                     | デフォルト              |
 | --------------- | ---------- | ---------------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | サーバーの URL                           | `http://localhost:14096` |
+| `baseUrl`       | `string`   | サーバーの URL                           | `http://localhost:4096` |
 | `fetch`         | `function` | カスタムフェッチの実装                   | `globalThis.fetch`      |
 | `parseAs`       | `string`   | 応答解析方法                             | `auto`                  |
 | `responseStyle` | `string`   | 戻り値のスタイル: `data` または `fields` | `fields`                |
@@ -244,7 +244,6 @@ const agents = await client.app.agents()
 | メソッド            | 説明                             | 戻り値                                        |
 | ------------------- | -------------------------------- | --------------------------------------------- |
 | `project.list()`    | すべてのプロジェクトをリストする | <a href={typesUrl}><code>Project[]</code></a> |
-| `project.current()` | 現在のプロジェクトを取得         | <a href={typesUrl}><code>Project</code></a>   |
 
 ---
 
@@ -254,8 +253,6 @@ const agents = await client.app.agents()
 // List all projects
 const projects = await client.project.list()
 
-// Get current project
-const currentProject = await client.project.current()
 ```
 
 ---

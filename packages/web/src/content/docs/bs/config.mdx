@@ -17,7 +17,7 @@ OpenCode podržava i **JSON** i **JSONC** (JSON sa komentarima) formate.
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
   "server": {
-    "port": 14096,
+    "port": 4096,
   },
 }
 ```
@@ -186,7 +186,7 @@ Možete konfigurirati postavke servera za naredbe `opencode serve` i `opencode w
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -353,27 +353,6 @@ Možete postaviti zadanog agenta koristeći opciju `default_agent`. Ovo određuj
 Zadani agent mora biti primarni agent (ne podagent). Ovo može biti ugrađeni agent kao što je `"build"` ili `"plan"`, ili [prilagođeni agent](/docs/agents) koji ste definirali. Ako navedeni agent ne postoji ili je podagent, OpenCode će se vratiti na `"build"` s upozorenjem.
 
 Ova postavka se primjenjuje na sva sučelja: TUI, CLI (`opencode run`), desktop aplikaciju i GitHub Action.
-
----
-
-### Dijeljenje
-
-Možete konfigurirati funkciju [share](/docs/share) putem opcije `share`.
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-Ovo prihvata:
-
-- `"manual"` - Dozvoli ručno dijeljenje putem naredbi (podrazumevano)
-- `"auto"` - Automatski dijelite nove razgovore
-- `"disabled"` - Onemogući dijeljenje u potpunosti
-
-Podrazumevano, dijeljenje je postavljeno na ručni način rada gdje trebate eksplicitno dijeliti razgovore pomoću naredbe `/share`.
 
 ---
 

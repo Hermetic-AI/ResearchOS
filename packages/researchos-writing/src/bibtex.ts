@@ -10,7 +10,7 @@ export interface BibtexUpsertResult {
 }
 
 // 纯函数：合并新条目到现有 bib 内容，重复 key 跳过，原有顺序不动
-export function mergeBibtex(existing: string, entries: Array<{ key: string; bibtex: string }>): BibtexUpsertResult {
+export function mergeBibtex(existing: string, entries: ReadonlyArray<{ readonly key: string; readonly bibtex: string }>): BibtexUpsertResult {
   const known = new Set(extractBibKeys(existing))
   const fresh = entries.filter((entry) => !known.has(entry.key))
   const skipped = entries.filter((entry) => known.has(entry.key)).map((entry) => entry.key)

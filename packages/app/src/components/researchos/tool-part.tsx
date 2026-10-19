@@ -1,46 +1,31 @@
-import { PART_MAPPING } from "@opencode-ai/session-ui/message-part"
-import type { MessagePartProps } from "@opencode-ai/session-ui/message-part"
-import { createMemo, Show } from "solid-js"
+import { addToolPartDecorator, type ToolProps } from "@opencode/session-ui/message-part"
+import { Show } from "solid-js"
 import { PanelCard } from "./panel-card"
 import { parsePanelDirective } from "./panel-protocol"
 import { ToolMissingCard } from "./tool-missing-card"
 
-const originalToolPart = PART_MAPPING["tool"]
+type Decorated = ToolProps & { id: string; error?: string }
 
-export function ResearchosToolPart(props: MessagePartProps) {
-  const directive = createMemo(() => {
-    const part = props.part as { state?: { metadata?: unknown; output?: unknown } }
-    const metadata = part.state?.metadata
-    const output = typeof part.state?.output === "string" ? part.state.output : undefined
-    return parsePanelDirective(metadata, output)
-  })
-
-  const missingTool = createMemo(() => {
-    const part = props.part as { state?: { status?: string; error?: unknown; metadata?: unknown } }
-    if (part.state?.status !== "error") return undefined
-    const error = typeof part.state.error === "string" ? part.state.error : ""
-    if (!error.includes("MCP") && !error.includes("not found") && !error.includes("not connected")) return undefined
-    const tool = "tool" in props.part && typeof props.part.tool === "string" ? props.part.tool : "unknown"
-    return { tool, error }
-  })
-
-  return (
-    <>
-      <Show when={directive()}>{(value) => <PanelCard directive={value()} />}</Show>
-      <Show when={missingTool()}>{(value) => <ToolMissingCard tool={value().tool} error={value().error} />}</Show>
-      <Show when={originalToolPart} fallback={<div class="text-text-weak">Unknown tool part</div>}>
-        {(component) => {
-          const Component = component()
-          return <Component {...props} />
-        }}
-      </Show>
-    </>
-  )
+// A tool error only means "the MCP server is missing" when the message says so;
+// other failures are rendered by the upstream error card.
+const missingTool = (props: Decorated) => {
+  if (props.status !== "error") return undefined
+  const error = typeof props.error === "string" ? props.error : ""
+  if (!error.includes("MCP") && !error.includes("not found") && !error.includes("not connected")) return undefined
+  return { tool: props.tool || "unknown", error }
 }
 
-// Register the wrapper so every tool result is inspected for researchos.ui
-// directives. The registration happens at module load time; any session page
-// that imports this module will render panel cards automatically.
+// Decorates every tool part so researchos.ui directives render their panel card and a
+// missing MCP tool gets a fix-it card. Upstream ToolDisplay still renders the tool itself.
 export function registerResearchosToolPart() {
-  PART_MAPPING["tool"] = ResearchosToolPart
+  return addToolPartDecorator((props) => {
+    const directive = parsePanelDirective(props.metadata, props.output)
+    const missing = missingTool(props)
+    return (
+      <>
+        <Show when={directive}>{(value) => <PanelCard directive={value()} />}</Show>
+        <Show when={missing}>{(value) => <ToolMissingCard tool={value().tool} error={value().error} />}</Show>
+      </>
+    )
+  })
 }

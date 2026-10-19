@@ -1,8 +1,8 @@
-import { Location } from "@opencode-ai/schema/location"
+import { Location } from "@opencode/schema/location"
 import { Schema } from "effect"
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { InvalidRequestError, UnknownError } from "../errors"
-import { LocationQuery, locationQueryOpenApi } from "./location"
+import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api"
+import { InvalidRequestError, UnknownError } from "../errors.js"
+import { LocationQuery, locationQueryOpenApi } from "./location.js"
 const Result = Schema.Struct({ paperId: Schema.String, sections: Schema.Array(Schema.Struct({ type: Schema.String, title: Schema.String, original: Schema.Array(Schema.String), translated: Schema.Array(Schema.String) })), glossary: Schema.Array(Schema.Struct({ en: Schema.String, zh: Schema.String, domain: Schema.optional(Schema.String) })) })
 const errors = [InvalidRequestError, UnknownError]
 export const ResearchosTranslateGroup = HttpApiGroup.make("server.researchos-translate")

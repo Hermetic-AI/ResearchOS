@@ -1,13 +1,12 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
+import { Button } from "@opencode/ui/button"
 import { For, Show, createMemo, createResource, createSignal } from "solid-js"
-import { useNavigate, useParams } from "@solidjs/router"
-import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { useNavigate } from "@solidjs/router"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
+import { useResearchosDirectory, useResearchosLink } from "@/components/researchos-rail"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 import { createResearchosClient } from "@/utils/researchos-client"
-import { showToast } from "@/utils/toast"
+import { showToast } from "@/shell/notifications/toast"
 
 type Note = {
   readonly path: string
@@ -25,34 +24,34 @@ type Paper = {
 }
 
 export default function NotesPage() {
-  const sdk = useSDK()
+  const researchosDirectory = useResearchosDirectory()
+  const directory = () => researchosDirectory() ?? ""
   const serverSDK = useServerSDK()
   const platform = usePlatform()
   const shell = useResearchosShell()
   const navigate = useNavigate()
-  const params = useParams<{ dir: string }>()
+  const link = useResearchosLink()
   const client = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-assets"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-assets"].asset)
 
   const [linking, setLinking] = createSignal<string>()
   const [searchQuery, setSearchQuery] = createSignal("")
   const [searchResults, setSearchResults] = createSignal<ReadonlyArray<Paper>>([])
 
   const literature = createMemo(() => createResearchosClient({
-    baseUrl: sdk().url,
+    baseUrl: serverSDK.url,
     fetch: platform.fetch,
-    username: serverSDK().server.http.username,
-    password: serverSDK().server.http.password,
-  })["server.researchos-literature"])
+    password: serverSDK.server.http.password,
+  })["server.researchos-literature"].literature)
 
-  const [notes, notesActions] = createResource(() => sdk().directory, async (directory) => {
+  const [notes, notesActions] = createResource(() => directory(), async (directory) => {
+    const location = { directory }
     const [quick, literature] = await Promise.all([
-      sdk().client.file.list({ path: "notes/quick" }).catch(() => undefined),
-      sdk().client.file.list({ path: "notes/literature" }).catch(() => undefined),
+      serverSDK.api.file.list({ path: "notes/quick", location }).catch(() => undefined),
+      serverSDK.api.file.list({ path: "notes/literature", location }).catch(() => undefined),
     ])
     const paths = [
       ...(quick?.data ?? []).filter((item) => item.type === "file").map((item) => item.path),
@@ -60,9 +59,8 @@ export default function NotesPage() {
     ]
     const items = await Promise.all(
       paths.map(async (path) => {
-        const result = await sdk().client.file.read({ path }).catch(() => undefined)
-        const content = result?.data?.type === "text" ? result.data.content : ""
-        return parseNote(path, content)
+        const bytes = await serverSDK.api.file.read({ path, location }).catch(() => undefined)
+        return parseNote(path, bytes ? new TextDecoder().decode(bytes) : "")
       }),
     )
     return items.filter((item) => !!item).sort((a, b) => b.date.localeCompare(a.date))
@@ -74,24 +72,27 @@ export default function NotesPage() {
   }
 
   const openInGraph = (note: Note) => {
-    navigate(`/${params.dir}/graph?note=${encodeURIComponent(note.path)}`)
+    navigate(link()!.module(`graph?note=${encodeURIComponent(note.path)}`))
   }
 
   const searchPapers = async () => {
     const query = searchQuery().trim()
     if (!query) return
-    const result = await literature().search({ location: { directory: sdk().directory }, query, limit: 10 }).catch(() => undefined)
+    const result = await literature().search({ location: { directory: directory() }, query, limit: 10 }).catch(() => undefined)
     setSearchResults(result?.data ?? [])
   }
 
   const linkPaper = async (note: Note, paper: Paper) => {
-    const current = await sdk().client.file.read({ path: note.path }).catch(() => undefined)
-    const content = current?.data?.type === "text" ? current.data.content : ""
-    const link = `\n\nRelated: [[paper:${paper.id}]] ${paper.title}${paper.year ? ` (${paper.year})` : ""}`
-    await client().noteWrite({
-      location: { directory: sdk().directory },
+    const current = await serverSDK.api.file.read({
       path: note.path,
-      content: content + link,
+      location: { directory: directory() },
+    }).catch(() => undefined)
+    const content = current ? new TextDecoder().decode(current) : ""
+    const relation = `\n\nRelated: [[paper:${paper.id}]] ${paper.title}${paper.year ? ` (${paper.year})` : ""}`
+    await client().noteWrite({
+      location: { directory: directory() },
+      path: note.path,
+      content: content + relation,
     })
     setLinking(undefined)
     setSearchQuery("")
@@ -136,7 +137,7 @@ export default function NotesPage() {
                     </Show>
                   </div>
                   <div class="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button size="small" variant="secondary" onClick={() => askAgent(note)}>Ask agent</Button>
+                    <Button size="small" variant="neutral" onClick={() => askAgent(note)}>Ask agent</Button>
                     <Button size="small" variant="ghost" onClick={() => setLinking(linking() === note.path ? undefined : note.path)}>Link to paper</Button>
                     <Button size="small" variant="ghost" onClick={() => openInGraph(note)}>Open in graph</Button>
                   </div>
@@ -151,7 +152,7 @@ export default function NotesPage() {
                         onInput={(event) => setSearchQuery(event.currentTarget.value)}
                         onKeyDown={(event) => event.key === "Enter" && void searchPapers()}
                       />
-                      <Button size="small" variant="secondary" onClick={() => void searchPapers()}>Search</Button>
+                      <Button size="small" variant="neutral" onClick={() => void searchPapers()}>Search</Button>
                     </div>
                     <Show when={searchResults().length > 0}>
                       <div class="mt-2 space-y-1">

@@ -1,10 +1,9 @@
-import type { ServerResearchosLiteratureGetOutput, ServerResearchosLiteratureReadOutput } from "@opencode-ai/client"
-import type { DirectorySDK } from "@/context/sdk"
+import type { OpenCodeClient, ServerResearchosLiteratureLiteratureGetOutput, ServerResearchosLiteratureLiteratureReadOutput } from "@opencode/client"
 import type { createResearchosClient } from "@/utils/researchos-client"
 
-export type ResearchosLiteratureClient = ReturnType<typeof createResearchosClient>["server.researchos-literature"]
-export type LiteraturePaper = ServerResearchosLiteratureGetOutput["data"]
-export type PaperSection = ServerResearchosLiteratureReadOutput["data"]["sections"][number]
+export type ResearchosLiteratureClient = ReturnType<typeof createResearchosClient>["server.researchos-literature"]["literature"]
+export type LiteraturePaper = ServerResearchosLiteratureLiteratureGetOutput["data"]
+export type PaperSection = ServerResearchosLiteratureLiteratureReadOutput["data"]["sections"][number]
 
 export type PaperContext = {
   readonly paper: LiteraturePaper
@@ -16,11 +15,11 @@ export const LIBRARY_ONLY_INSTRUCTION =
 // Best-effort: any failure yields undefined so callers fall back to plain prompts.
 export async function fetchPaperContext(input: {
   readonly literature: ResearchosLiteratureClient
-  readonly sdk: DirectorySDK
+  readonly directory: string
   readonly paperId: string
 }): Promise<PaperContext | undefined> {
   const paper = await input.literature
-    .get({ id: input.paperId, location: { directory: input.sdk.directory } })
+    .get({ id: input.paperId, location: { directory: input.directory } })
     .then((result) => result.data)
     .catch(() => undefined)
   if (!paper) return undefined
@@ -31,12 +30,12 @@ export async function fetchPaperContext(input: {
 // send the prompt without a retrieval block (the system prompt explains the fallback).
 export async function fetchPaperSections(input: {
   readonly literature: ResearchosLiteratureClient
-  readonly sdk: DirectorySDK
+  readonly directory: string
   readonly paperId: string
   readonly query: string
-}): Promise<ServerResearchosLiteratureReadOutput["data"] | undefined> {
+}): Promise<ServerResearchosLiteratureLiteratureReadOutput["data"] | undefined> {
   return input.literature
-    .read({ id: input.paperId, location: { directory: input.sdk.directory }, query: input.query })
+    .read({ id: input.paperId, location: { directory: input.directory }, query: input.query })
     .then((result) => result.data)
     .catch(() => undefined)
 }
@@ -60,14 +59,14 @@ export function formatRetrievedSections(paperId: string, sections: ReadonlyArray
 // (see packages/researchos-literature/src/import.ts); the API does not expose pdf_path,
 // so we locate it through the file listing instead of guessing absolute paths.
 // Returns the project-relative path when the PDF exists; the context panel shows it read-only.
-export async function archivedPdfPath(sdk: DirectorySDK, paper: LiteraturePaper) {
-  const nodes = await sdk.client.file
-    .list({ path: `.researchos/literature/pdfs/${paperYear(paper)}` })
+export async function archivedPdfPath(input: { api: OpenCodeClient; directory: string; paper: LiteraturePaper }) {
+  const nodes = await input.api.file
+    .list({ location: { directory: input.directory }, path: `.researchos/literature/pdfs/${paperYear(input.paper)}` })
     .then((result) => result.data ?? [])
     .catch(() => undefined)
-  const node = nodes?.find((item) => item.type === "file" && item.name === `${paper.id}.pdf`)
+  const node = nodes?.find((item) => item.type === "file" && item.path.endsWith(`/${input.paper.id}.pdf`))
   if (!node) return undefined
-  return `.researchos/literature/pdfs/${paperYear(paper)}/${paper.id}.pdf`
+  return `.researchos/literature/pdfs/${paperYear(input.paper)}/${input.paper.id}.pdf`
 }
 
 export function buildPaperSystem(input: {
@@ -90,27 +89,29 @@ export const readingNotePath = (paperId: string) => `notes/literature/${paperId}
 
 export async function startReadingNoteSession(input: {
   readonly literature: ResearchosLiteratureClient
-  readonly sdk: DirectorySDK
+  readonly api: OpenCodeClient
+  readonly directory: string
   readonly paperId: string
 }): Promise<string> {
   const context = await fetchPaperContext({
     literature: input.literature,
-    sdk: input.sdk,
+    directory: input.directory,
     paperId: input.paperId,
   })
   if (!context) throw new Error("Paper details could not be loaded from the local server")
-  const session = await input.sdk.client.session.create({
+  const session = await input.api.session.create({
     title: `Reading note · ${context.paper.title.slice(0, 60)}`,
+    location: { directory: input.directory },
   })
-  if (!session.data) throw new Error("Session creation returned no data")
-  recordPaperSession(input.sdk.directory, input.paperId, session.data.id)
-  const text = `The paper's full text is available at .researchos/literature/text/${context.paper.id}.txt — read it with the read tool (in ranges for long papers) before writing. Write a structured Chinese reading note for this paper: 摘要 / 研究问题 / 方法 / 创新点 / 局限性 / 延伸阅读问题 (3个). Save it as a Markdown file at notes/literature/${context.paper.id}.md in the project root, starting with YAML-ish frontmatter lines: cite key, title, paper id. Use the write tool to create the file, then reply with a one-paragraph summary.`
-  await input.sdk.client.session.promptAsync({
-    sessionID: session.data.id,
-    system: buildPaperSystem({ paper: context.paper, directory: input.sdk.directory }),
-    parts: [{ type: "text", text }],
+  if (!session) throw new Error("Session creation returned no data")
+  recordPaperSession(input.directory, input.paperId, session.id)
+  const brief = `The paper's full text is available at .researchos/literature/text/${context.paper.id}.txt — read it with the read tool (in ranges for long papers) before writing. Write a structured Chinese reading note for this paper: 摘要 / 研究问题 / 方法 / 创新点 / 局限性 / 延伸阅读问题 (3个). Save it as a Markdown file at notes/literature/${context.paper.id}.md in the project root, starting with YAML-ish frontmatter lines: cite key, title, paper id. Use the write tool to create the file, then reply with a one-paragraph summary.`
+  // 2.0 prompts carry no per-request system field, so the paper dossier opens the message body.
+  await input.api.session.prompt({
+    sessionID: session.id,
+    text: `${buildPaperSystem({ paper: context.paper, directory: input.directory })}\n\n${brief}`,
   })
-  return session.data.id
+  return session.id
 }
 
 function paperYear(paper: LiteraturePaper) {

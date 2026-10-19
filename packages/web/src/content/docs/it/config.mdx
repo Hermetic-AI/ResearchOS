@@ -17,7 +17,7 @@ OpenCode supporta sia **JSON** sia **JSONC** (JSON con commenti).
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
   "server": {
-    "port": 14096,
+    "port": 4096,
   },
 }
 ```
@@ -186,7 +186,7 @@ Puoi configurare le impostazioni del server per i comandi `opencode serve` e `op
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -353,27 +353,6 @@ Puoi impostare l'agente predefinito usando l'opzione `default_agent`. Questo det
 L'agente predefinito deve essere un agente primary (non un subagent). Puo essere un agente integrato come `"build"` o `"plan"`, oppure un [agente personalizzato](/docs/agents) che hai definito. Se l'agente specificato non esiste o e un subagent, OpenCode fara fallback su `"build"` mostrando un avviso.
 
 Questa impostazione si applica a tutte le interfacce: TUI, CLI (`opencode run`), app desktop e GitHub Action.
-
----
-
-### Condivisione
-
-Puoi configurare la funzione di [condivisione](/docs/share) tramite l'opzione `share`.
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-Valori supportati:
-
-- `"manual"` - Consenti la condivisione manuale tramite comandi (predefinito)
-- `"auto"` - Condividi automaticamente le nuove conversazioni
-- `"disabled"` - Disabilita completamente la condivisione
-
-Per impostazione predefinita, la condivisione e in modalita manuale e devi condividere esplicitamente le conversazioni usando il comando `/share`.
 
 ---
 

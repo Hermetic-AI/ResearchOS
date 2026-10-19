@@ -1,7 +1,7 @@
-import type { ServerResearchosGraphGetOutput } from "@opencode-ai/client"
+import type { ServerResearchosGraphGraphGetOutput } from "@opencode/client"
 
-export type GraphNodeData = ServerResearchosGraphGetOutput["data"]["nodes"][number]
-export type GraphEdgeData = ServerResearchosGraphGetOutput["data"]["edges"][number]
+export type GraphNodeData = ServerResearchosGraphGraphGetOutput["data"]["nodes"][number]
+export type GraphEdgeData = ServerResearchosGraphGraphGetOutput["data"]["edges"][number]
 export type NodeType = GraphNodeData["type"]
 export type EdgeRelation = GraphEdgeData["relation"]
 

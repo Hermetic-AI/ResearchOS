@@ -1,6 +1,6 @@
 import { createResource, onCleanup, type Accessor } from "solid-js"
-import { usePlatform } from "@/context/platform"
-import { useServerSDK } from "@/context/server-sdk"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useServerSDK } from "@/runtime/server/client"
 import { createResearchosClient } from "@/utils/researchos-client"
 
 const REFRESH_INTERVAL = 60_000
@@ -14,18 +14,17 @@ export function createResearchosCounts(directory: Accessor<string | undefined>) 
   const [counts, countsActions] = createResource(directory, async (dir) => {
     const location = { directory: dir }
     const client = createResearchosClient({
-      baseUrl: serverSDK().url,
+      baseUrl: serverSDK.url,
       fetch: platform.fetch,
-      username: serverSDK().server.http.username,
-      password: serverSDK().server.http.password,
+      password: serverSDK.server.http.password,
     })
     const values = await Promise.allSettled([
-      client["server.researchos-literature"].list({ location, limit: 100 }),
-      client["server.researchos-graph"].get({ location }),
-      client["server.researchos-latex"].files({ location }),
-      client["server.researchos-data"].notebooks({ location }),
-      client["server.researchos-plot"].artifacts({ location }),
-      client["server.researchos-reproduce"].list({ location }),
+      client["server.researchos-literature"].literature.list({ location, limit: 100 }),
+      client["server.researchos-graph"].graph.get({ location }),
+      client["server.researchos-latex"].latex.files({ location }),
+      client["server.researchos-data"].data.notebooks({ location }),
+      client["server.researchos-plot"].plot.artifacts({ location }),
+      client["server.researchos-reproduce"].reproduce.list({ location }),
     ])
     const count = (index: number, select: (data: unknown) => number) =>
       values[index]?.status === "fulfilled" ? select(values[index].value.data) : undefined

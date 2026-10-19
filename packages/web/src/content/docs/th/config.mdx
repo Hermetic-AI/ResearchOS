@@ -17,7 +17,7 @@ OpenCode รองรับทั้งรูปแบบ **JSON** และ **J
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
   "server": {
-    "port": 14096,
+    "port": 4096,
   },
 }
 ```
@@ -190,7 +190,7 @@ opencode run "Hello world"
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -357,27 +357,6 @@ Bearer Token (`AWS_BEARER_TOKEN_BEDROCK` หรือ `/connect`) มีคว�
 ตัวแทนเริ่มต้นจะต้องเป็นตัวแทนหลัก (ไม่ใช่ตัวแทนย่อย) ซึ่งอาจเป็นตัวแทนในตัว เช่น `"build"` หรือ `"plan"` หรือ [ตัวแทนที่กำหนดเอง](/docs/agents) ที่คุณกำหนดไว้ หากไม่มีตัวแทนที่ระบุหรือเป็นตัวแทนย่อย OpenCode จะถอยกลับไปที่ `"build"` พร้อมคำเตือน
 
 การตั้งค่านี้ใช้กับอินเทอร์เฟซทั้งหมด: TUI, CLI (`opencode run`) แอปเดสก์ท็อป และ GitHub Action
-
----
-
-### Sharing
-
-คุณสามารถกำหนดค่าคุณสมบัติ [แบ่งปัน](/docs/share) ได้ผ่านทางตัวเลือก `share`
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-ใช้เวลา:
-
-- `"manual"` - ​​อนุญาตให้แชร์ด้วยตนเองผ่านคำสั่ง (ค่าเริ่มต้น)
-- `"auto"` - ​​แบ่งปันการสนทนาใหม่โดยอัตโนมัติ
-- `"disabled"` - ​​ปิดการใช้งานการแชร์ทั้งหมด
-
-ตามค่าเริ่มต้น การแชร์จะถูกตั้งค่าเป็นโหมดกำหนดเอง ซึ่งคุณต้องแชร์การสนทนาอย่างชัดเจนโดยใช้คำสั่ง `/share`
 
 ---
 

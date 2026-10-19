@@ -17,7 +17,7 @@ OpenCode 支持 **JSON** 和 **JSONC**（带注释的 JSON）格式。
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
   "server": {
-    "port": 14096,
+    "port": 4096,
   },
 }
 ```
@@ -184,7 +184,7 @@ opencode run "Hello world"
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -351,27 +351,6 @@ Bearer Token（`AWS_BEARER_TOKEN_BEDROCK` 或 `/connect`）优先于基于配置
 默认代理必须是主代理（不能是子代理）。可以是内置代理（如 `"build"` 或 `"plan"`），也可以是您定义的[自定义代理](/docs/agents)。如果指定的代理不存在或是子代理，OpenCode 将回退到 `"build"` 并发出警告。
 
 此设置适用于所有界面：TUI、CLI（`opencode run`）、桌面应用和 GitHub Action。
-
----
-
-### 分享
-
-您可以通过 `share` 选项配置[分享](/docs/share)功能。
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-该选项接受：
-
-- `"manual"` - 允许通过命令手动分享（默认）
-- `"auto"` - 自动分享新会话
-- `"disabled"` - 完全禁用分享
-
-默认情况下，分享设置为手动模式，您需要使用 `/share` 命令显式分享会话。
 
 ---
 

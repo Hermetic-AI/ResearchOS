@@ -17,7 +17,7 @@ OpenCode understøtter både **JSON** og **JSONC** (JSON med kommentarer) format
   "model": "anthropic/claude-sonnet-4-5",
   "autoupdate": true,
   "server": {
-    "port": 14096,
+    "port": 4096,
   },
 }
 ```
@@ -188,7 +188,7 @@ Du kan konfigurere serverindstillinger for kommandoerne `opencode serve` og `ope
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -355,27 +355,6 @@ Du kan indstille standardagenten ved at bruge indstillingen `default_agent`. Det
 Standardagenten skal være en primær agent (ikke en subagent). Dette kan være en indbygget agent som `"build"` eller `"plan"`, eller en [custom agent](/docs/agents), du har defineret. Hvis den angivne agent ikke eksisterer eller er en underagent, vil OpenCode falde tilbage til `"build"` med en advarsel.
 
 Denne indstilling gælder på tværs af alle grænseflader: TUI, CLI (`opencode run`), desktop-app og GitHub Action.
-
----
-
-### Deling (`share`)
-
-Du kan konfigurere funktionen [share](/docs/share) gennem indstillingen `share`.
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-Dette kræver:
-
-- `"manual"` - Tillad manuel deling via kommandoer (standard)
-- `"auto"` - Del automatisk nye samtaler
-- `"disabled"` - Deaktiver deling helt
-
-Som standard er deling indstillet til manuel tilstand, hvor du eksplicit skal dele samtaler ved hjælp af kommandoen `/share`.
 
 ---
 

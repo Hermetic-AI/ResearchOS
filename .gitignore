@@ -11,8 +11,10 @@ node_modules
 playground
 tmp
 dist
+dist-node
 ts-dist
 .turbo
+.typecheck-profiles
 **/.serena
 .serena/
 **/.omo
@@ -24,14 +26,18 @@ Session.vim
 a.out
 target
 .scripts
+.cache
 .direnv/
 
 # Local dev files
 opencode-dev
 UPCOMING_CHANGELOG.md
+RELEASE_REVIEW.md
 logs/
 *.bun-build
 tsconfig.tsbuildinfo
+
+# Python bridges in packages/researchos-mcp
 **/__pycache__/
 *.py[cod]
 
@@ -41,6 +47,4 @@ tsconfig.tsbuildinfo
 .sisyphus/sessions/
 docs/screens/
 **/.tmp-workspace-*/
-
-# Local third-party skill repos (each is its own git history, not part of ResearchOS)
-skills-repo/
+/artifacts/

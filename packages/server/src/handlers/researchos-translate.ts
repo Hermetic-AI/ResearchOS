@@ -1,8 +1,8 @@
-import { Location } from "@opencode-ai/core/location"
-import { InvalidRequestError, UnknownError } from "@opencode-ai/protocol/errors"
+import { Location } from "@opencode/core/location"
+import { InvalidRequestError, UnknownError } from "@opencode/protocol/errors"
 import { readTranslation, translatePaper } from "@researchos/translate"
 import { Effect } from "effect"
-import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { HttpApiBuilder } from "effect/http-api"
 import { Api } from "../api"
 import { response } from "../location"
 export const ResearchosTranslateHandler = HttpApiBuilder.group(Api, "server.researchos-translate", (handlers) => handlers

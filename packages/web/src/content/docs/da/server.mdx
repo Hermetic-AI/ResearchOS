@@ -20,7 +20,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Flag            | Beskrivelse                                  | Standard         |
 | --------------- | -------------------------------------------- | ---------------- |
-| `--port`        | Port at lytte på                             | `14096`           |
+| `--port`        | Port at lytte på                             | `4096`           |
 | `--hostname`    | Værtsnavn at lytte på                        | `127.0.0.1`      |
 | `--mdns`        | Aktiver mDNS-opdagelse                       | `false`          |
 | `--mdns-domain` | Brugerdefineret domænenavn for mDNS-tjeneste | `opencode.local` |
@@ -77,7 +77,7 @@ Serveren publicerer en OpenAPI 3.1-specifikation som kan vises på:
 http://<hostname>:<port>/doc
 ```
 
-For eksempel `http://localhost:14096/doc`. Brug specifikationen til at generere klienter eller inspicere forespørgsels- og svartyper. Eller se den i en Swagger-utforsker.
+For eksempel `http://localhost:4096/doc`. Brug specifikationen til at generere klienter eller inspicere forespørgsels- og svartyper. Eller se den i en Swagger-utforsker.
 
 ---
 
@@ -154,12 +154,9 @@ OpenCode-serveren viser følgende API'er.
 | `DELETE` | `/session/:id`                           | Slet en session og alle dens data          | Returnerer `boolean`                                                                  |
 | `PATCH`  | `/session/:id`                           | Opdater sessionegenskaber                  | body: `{ title? }`, returnerer <a href={typesUrl}><code>Session</code></a>            |
 | `GET`    | `/session/:id/children`                  | Få en sessions undersessioner              | Returnerer <a href={typesUrl}><code>Session[]</code></a>                              |
-| `GET`    | `/session/:id/todo`                      | Få to-do-listen for en session             | Returnerer <a href={typesUrl}><code>Todo[]</code></a>                                 |
 | `POST`   | `/session/:id/init`                      | Analyser appen og lav `AGENTS.md`          | body: `{ messageID, providerID, modelID }`, returnerer `boolean`                      |
 | `POST`   | `/session/:id/fork`                      | Fork en eksisterende session ved en besked | body: `{ messageID? }`, returnerer <a href={typesUrl}><code>Session</code></a>        |
 | `POST`   | `/session/:id/abort`                     | Afbryd en kørende session                  | Returnerer `boolean`                                                                  |
-| `POST`   | `/session/:id/share`                     | Del en session                             | Returnerer <a href={typesUrl}><code>Session</code></a>                                |
-| `DELETE` | `/session/:id/share`                     | Stop med at dele en session                | Returnerer <a href={typesUrl}><code>Session</code></a>                                |
 | `GET`    | `/session/:id/diff`                      | Få diff for denne session                  | query: `messageID?`, returnerer <a href={typesUrl}><code>FileDiff[]</code></a>        |
 | `POST`   | `/session/:id/summarize`                 | Opsummér sessionen                         | body: `{ providerID, modelID }`, returnerer `boolean`                                 |
 | `POST`   | `/session/:id/revert`                    | Tilbagestil en besked                      | body: `{ messageID, partID? }`, returnerer `boolean`                                  |

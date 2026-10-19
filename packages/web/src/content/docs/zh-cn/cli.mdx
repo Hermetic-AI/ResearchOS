@@ -70,10 +70,10 @@ opencode attach [url]
 
 ```bash
 # Start the backend server for web/mobile access
-opencode web --port 14096 --hostname 0.0.0.0
+opencode web --port 4096 --hostname 0.0.0.0
 
 # In another terminal, attach the TUI to the running backend
-opencode attach http://10.20.30.40:14096
+opencode attach http://10.20.30.40:4096
 ```
 
 #### 标志
@@ -334,7 +334,7 @@ opencode run Explain the use of context in Go
 opencode serve
 
 # In another terminal, run commands that attach to it
-opencode run --attach http://localhost:14096 "Explain async/await in JavaScript"
+opencode run --attach http://localhost:4096 "Explain async/await in JavaScript"
 ```
 
 #### 标志
@@ -345,13 +345,12 @@ opencode run --attach http://localhost:14096 "Explain async/await in JavaScript"
 | <nobr><code>{"--continue"}</code></nobr> | `-c` | 继续上一个会话                                                      |
 | <nobr><code>{"--session"}</code></nobr>  | `-s` | 要继续的会话 ID                                                     |
 | <nobr><code>{"--fork"}</code></nobr>     |      | 继续时分叉会话（与 `--continue` 或 `--session` 配合使用）           |
-| <nobr><code>{"--share"}</code></nobr>    |      | 分享会话                                                            |
 | <nobr><code>{"--model"}</code></nobr>    | `-m` | 要使用的模型，格式为 provider/model                                 |
 | <nobr><code>{"--agent"}</code></nobr>    |      | 要使用的代理                                                        |
 | <nobr><code>{"--file"}</code></nobr>     | `-f` | 附加到消息的文件                                                    |
 | <nobr><code>{"--format"}</code></nobr>   |      | 格式：default（格式化输出）或 json（原始 JSON 事件）                |
 | <nobr><code>{"--title"}</code></nobr>    |      | 会话标题（未提供值时使用截断的提示词）                              |
-| <nobr><code>{"--attach"}</code></nobr>   |      | 连接到正在运行的 opencode 服务器（例如 http://localhost:14096）      |
+| <nobr><code>{"--attach"}</code></nobr>   |      | 连接到正在运行的 opencode 服务器（例如 http://localhost:4096）      |
 | <nobr><code>{"--password"}</code></nobr> | `-p` | 基本认证密码（默认使用 `OPENCODE_SERVER_PASSWORD`）                 |
 | <nobr><code>{"--username"}</code></nobr> | `-u` | 基本认证用户名（默认使用 `OPENCODE_SERVER_USERNAME` 或 `opencode`） |
 | <nobr><code>{"--dir"}</code></nobr>      |      | 运行目录，或附加时远程服务器上的路径                                |
@@ -442,17 +441,14 @@ opencode export [sessionID]
 
 ### import
 
-从 JSON 文件或 OpenCode 分享链接导入会话数据。
+从 JSON 文件导入会话数据。
 
 ```bash
 opencode import <file>
 ```
 
-您可以从本地文件或 OpenCode 分享链接导入。
-
 ```bash
 opencode import session.json
-opencode import https://opncd.ai/s/abc123
 ```
 
 ---
@@ -564,7 +560,6 @@ OpenCode 可以通过环境变量进行配置。
 
 | 变量                                  | 类型    | 描述                                    |
 | ------------------------------------- | ------- | --------------------------------------- |
-| `OPENCODE_AUTO_SHARE`                 | boolean | 自动分享会话                            |
 | `OPENCODE_GIT_BASH_PATH`              | string  | Windows 上 Git Bash 可执行文件的路径    |
 | `OPENCODE_CONFIG`                     | string  | 配置文件路径                            |
 | `OPENCODE_TUI_CONFIG`                 | string  | TUI 配置文件路径                        |
@@ -609,7 +604,6 @@ OpenCode 可以通过环境变量进行配置。
 | `OPENCODE_EXPERIMENTAL_EXA`                     | boolean | 启用实验性 Exa 功能             |
 | `OPENCODE_EXPERIMENTAL_LSP_TY`                  | boolean | 为 python 文件启用 TY LSP       |
 | `OPENCODE_EXPERIMENTAL_PLAN_MODE`               | boolean | 启用计划模式                    |
-| `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS`    | boolean | 启用后台子代理任务              |
 | `OPENCODE_EXPERIMENTAL_EVENT_SYSTEM`            | boolean | 启用实验性事件系统              |
 | `OPENCODE_EXPERIMENTAL_NATIVE_LLM`              | boolean | 启用原生 LLM 请求路径           |
 | `OPENCODE_EXPERIMENTAL_PARALLEL`                | boolean | 启用并行 Web 搜索执行           |

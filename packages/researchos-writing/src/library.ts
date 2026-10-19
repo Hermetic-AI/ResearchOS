@@ -7,10 +7,10 @@ import type { PaperMeta } from "@researchos/literature"
 // 引用助手的 BibTeX 数据源：只读 P1 文献库（graph 包 resolveCiteKey 同款先例），不重新发明查询
 export function bibtexFromLibrary(
   projectRoot: string,
-  paperIds: string[],
+  paperIds: readonly string[],
 ): { entries: Array<{ key: string; bibtex: string }>; missing: string[] } {
   const path = join(projectRoot, ".researchos", "literature", "literature.db")
-  if (!existsSync(path)) return { entries: [], missing: paperIds }
+  if (!existsSync(path)) return { entries: [], missing: [...paperIds] }
   const db = new Database(path, { readonly: true })
   try {
     const found = paperIds.flatMap((id) => {

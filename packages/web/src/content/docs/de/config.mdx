@@ -187,7 +187,7 @@ Sie können Servereinstellungen für die Befehle `opencode serve` und `opencode 
 {
   "$schema": "https://opencode.ai/config.json",
   "server": {
-    "port": 14096,
+    "port": 4096,
     "hostname": "0.0.0.0",
     "mdns": true,
     "mdnsDomain": "myproject.local",
@@ -354,27 +354,6 @@ Sie können den Standardagenten mit der Option `default_agent` festlegen. Dadurc
 Der Standardagent muss ein Primäragent (kein Subagent) sein. Dies kann ein integrierter Agent wie `"build"` oder `"plan"` oder ein von Ihnen definierter [custom agent](/docs/agents) sein. Wenn der angegebene Agent nicht existiert oder ein Subagent ist, greift OpenCode mit einer Warnung auf `"build"` zurück.
 
 Diese Einstellung gilt für alle Schnittstellen: TUI, CLI (`opencode run`), Desktop-App und GitHub Aktion.
-
----
-
-### Teilen
-
-Sie können die Funktion [share](/docs/share) über die Option `share` konfigurieren.
-
-```json title="opencode.json"
-{
-  "$schema": "https://opencode.ai/config.json",
-  "share": "manual"
-}
-```
-
-Dazu braucht es:
-
-- `"manual"` – Manuelles Teilen über Befehle zulassen (Standard)
-- `"auto"` – Neue Konversationen automatisch teilen
-- `"disabled"` – Teile vollständig deaktivieren
-
-Standardmäßig ist die Freigabe auf den manuellen Modus eingestellt, in dem Sie Konversationen explizit mit dem Befehl `/share` teilen müssen.
 
 ---
 

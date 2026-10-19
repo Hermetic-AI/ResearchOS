@@ -1,4 +1,4 @@
-import { Button } from "@opencode-ai/ui/button"
+import { Button } from "@opencode/ui/button"
 import { Show } from "solid-js"
 import { useResearchosShell } from "@/components/researchos/shell-context"
 
@@ -22,7 +22,7 @@ export function PlotPanel(props: { resource?: string }) {
           Use the plot studio in the main workspace to create statistical charts, diagrams, and canvas visualizations.
         </p>
         <div class="flex gap-2">
-          <Button size="small" variant="secondary" onClick={askAgent}>Improve with agent</Button>
+          <Button size="small" variant="neutral" onClick={askAgent}>Improve with agent</Button>
         </div>
         <Show when={props.resource}>
           {(resource) => (

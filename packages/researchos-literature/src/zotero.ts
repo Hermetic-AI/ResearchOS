@@ -7,7 +7,6 @@ import type { LiteratureDB } from "./db"
 import { computePaperId } from "./import"
 import { findArxivId, normalizeDoi } from "./pdf/metadata"
 import { pdfDir } from "./paths"
-import type { PaperMeta } from "./types"
 
 export interface ZoteroImportReport {
   imported: number

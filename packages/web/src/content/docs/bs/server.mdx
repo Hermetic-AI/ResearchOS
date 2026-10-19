@@ -20,7 +20,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Zastava         | Opis                                | Default          |
 | --------------- | ----------------------------------- | ---------------- |
-| `--port`        | Port na kojem slusa                 | `14096`           |
+| `--port`        | Port na kojem slusa                 | `4096`           |
 | `--hostname`    | Hostname na kojem slusa             | `127.0.0.1`      |
 | `--mdns`        | Ukljuci mDNS otkrivanje             | `false`          |
 | `--mdns-domain` | Prilagodeni domen za mDNS servis    | `opencode.local` |
@@ -74,7 +74,7 @@ Server objavljuje OpenAPI 3.1 specifikaciju koju mozete vidjeti na:
 http://<hostname>:<port>/doc
 ```
 
-Na primjer, `http://localhost:14096/doc`. Koristite specifikaciju da generisete klijente ili pregledate tipove zahtjeva i odgovora. Mozete je otvoriti i u Swagger exploreru.
+Na primjer, `http://localhost:4096/doc`. Koristite specifikaciju da generisete klijente ili pregledate tipove zahtjeva i odgovora. Mozete je otvoriti i u Swagger exploreru.
 
 ---
 
@@ -151,12 +151,9 @@ opencode server izlaže sljedece API-je.
 | `DELETE` | `/session/:id`                           | Obriši sesiju i sve njene podatke           | Returns `boolean`                                                                  |
 | `PATCH`  | `/session/:id`                           | Ažuriraj svojstva sesije                    | body: `{ title? }`, returns <a href={typesUrl}><code>Session</code></a>            |
 | `GET`    | `/session/:id/children`                  | Dohvati pod-sesije sesije                   | Returns <a href={typesUrl}><code>Session[]</code></a>                              |
-| `GET`    | `/session/:id/todo`                      | Dohvati listu zadataka za sesiju            | Returns <a href={typesUrl}><code>Todo[]</code></a>                                 |
 | `POST`   | `/session/:id/init`                      | Analiziraj aplikaciju i kreiraj `AGENTS.md` | body: `{ messageID, providerID, modelID }`, returns `boolean`                      |
 | `POST`   | `/session/:id/fork`                      | Granaj postojeću sesiju na poruci           | body: `{ messageID? }`, returns <a href={typesUrl}><code>Session</code></a>        |
 | `POST`   | `/session/:id/abort`                     | Prekini sesiju u toku                       | Returns `boolean`                                                                  |
-| `POST`   | `/session/:id/share`                     | Podijeli sesiju                             | Returns <a href={typesUrl}><code>Session</code></a>                                |
-| `DELETE` | `/session/:id/share`                     | Prestani dijeliti sesiju                    | Returns <a href={typesUrl}><code>Session</code></a>                                |
 | `GET`    | `/session/:id/diff`                      | Dohvati razlike za ovu sesiju               | query: `messageID?`, returns <a href={typesUrl}><code>FileDiff[]</code></a>        |
 | `POST`   | `/session/:id/summarize`                 | Rezimiraj sesiju                            | body: `{ providerID, modelID }`, returns `boolean`                                 |
 | `POST`   | `/session/:id/revert`                    | Vrati poruku                                | body: `{ messageID, partID? }`, returns `boolean`                                  |

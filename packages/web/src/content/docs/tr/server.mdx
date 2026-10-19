@@ -20,7 +20,7 @@ opencode serve [--port <number>] [--hostname <string>] [--cors <origin>]
 
 | Bayrak          | Açıklama                                       | Varsayılan       |
 | --------------- | ---------------------------------------------- | ---------------- |
-| `--port`        | Dinlenecek bağlantı noktası                    | `14096`           |
+| `--port`        | Dinlenecek bağlantı noktası                    | `4096`           |
 | `--hostname`    | Dinlenecek ana bilgisayar adı                  | `127.0.0.1`      |
 | `--mdns`        | mDNS keşfini etkinleştir                       | `false`          |
 | `--mdns-domain` | mDNS hizmeti için özel alan adı                | `opencode.local` |
@@ -75,7 +75,7 @@ Sunucu, şu adreste görülebilen bir OpenAPI 3.1 spesifikasyonu yayınlar:
 http://<hostname>:<port>/doc
 ```
 
-Örneğin `http://localhost:14096/doc`. İstemci oluşturmak, istek/yanit tiplerini incelemek veya Swagger gezgininde açmak için bu spec'i kullanın.
+Örneğin `http://localhost:4096/doc`. İstemci oluşturmak, istek/yanit tiplerini incelemek veya Swagger gezgininde açmak için bu spec'i kullanın.
 
 ---
 
@@ -152,12 +152,9 @@ opencode sunucusu aşağıdaki API'leri sunar.
 | `DELETE` | `/session/:id`                           | Bir oturumu ve tüm verilerini sil           | `boolean` döndürür                                                                   |
 | `PATCH`  | `/session/:id`                           | Oturum özelliklerini güncelle               | gövde: `{ title? }`, <a href={typesUrl}><code>Session</code></a> döndürür            |
 | `GET`    | `/session/:id/children`                  | Bir oturumun alt oturumlarını al            | <a href={typesUrl}><code>Session[]</code></a> döndürür                               |
-| `GET`    | `/session/:id/todo`                      | Bir oturum için yapılacaklar listesini al   | <a href={typesUrl}><code>Todo[]</code></a> döndürür                                  |
 | `POST`   | `/session/:id/init`                      | Uygulamayı analiz et ve `AGENTS.md` oluştur | gövde: `{ messageID, providerID, modelID }`, `boolean` döndürür                      |
 | `POST`   | `/session/:id/fork`                      | Mevcut bir oturumu bir mesajda çatalla      | gövde: `{ messageID? }`, <a href={typesUrl}><code>Session</code></a> döndürür        |
 | `POST`   | `/session/:id/abort`                     | Çalışan bir oturumu iptal et                | `boolean` döndürür                                                                   |
-| `POST`   | `/session/:id/share`                     | Bir oturumu paylaş                          | <a href={typesUrl}><code>Session</code></a> döndürür                                 |
-| `DELETE` | `/session/:id/share`                     | Bir oturumun paylaşımını kaldır             | <a href={typesUrl}><code>Session</code></a> döndürür                                 |
 | `GET`    | `/session/:id/diff`                      | Bu oturum için farkı (diff) al              | sorgu: `messageID?`, <a href={typesUrl}><code>FileDiff[]</code></a> döndürür         |
 | `POST`   | `/session/:id/summarize`                 | Oturumu özetle                              | gövde: `{ providerID, modelID }`, `boolean` döndürür                                 |
 | `POST`   | `/session/:id/revert`                    | Bir mesajı geri al                          | gövde: `{ messageID, partID? }`, `boolean` döndürür                                  |

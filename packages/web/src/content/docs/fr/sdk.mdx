@@ -40,7 +40,7 @@ Cela démarre à la fois un serveur et un client
 | Options    | Tapez         | Descriptif                                         | Par défaut  |
 | ---------- | ------------- | -------------------------------------------------- | ----------- |
 | `hostname` | `string`      | Nom d'hôte du serveur                              | `127.0.0.1` |
-| `port`     | `number`      | Port du serveur                                    | `14096`      |
+| `port`     | `number`      | Port du serveur                                    | `4096`      |
 | `signal`   | `AbortSignal` | Signal d'abandon pour annulation                   | `undefined` |
 | `timeout`  | `number`      | Délai d'attente en ms pour le démarrage du serveur | `5000`      |
 | `config`   | `Config`      | Objet de configuration                             | `{}`        |
@@ -56,7 +56,7 @@ import { createOpencode } from "@opencode-ai/sdk"
 
 const opencode = await createOpencode({
   hostname: "127.0.0.1",
-  port: 14096,
+  port: 4096,
   config: {
     model: "anthropic/claude-3-5-sonnet-20241022",
   },
@@ -75,7 +75,7 @@ Si vous disposez déjà d'une instance en cours d'exécution de opencode, vous p
 import { createOpencodeClient } from "@opencode-ai/sdk"
 
 const client = createOpencodeClient({
-  baseUrl: "http://localhost:14096",
+  baseUrl: "http://localhost:4096",
 })
 ```
 
@@ -83,7 +83,7 @@ const client = createOpencodeClient({
 
 | Options         | Tapez      | Descriptif                                   | Par défaut              |
 | --------------- | ---------- | -------------------------------------------- | ----------------------- |
-| `baseUrl`       | `string`   | URL du serveur                               | `http://localhost:14096` |
+| `baseUrl`       | `string`   | URL du serveur                               | `http://localhost:4096` |
 | `fetch`         | `function` | Implémentation de récupération personnalisée | `globalThis.fetch`      |
 | `parseAs`       | `string`   | Méthode d'analyse des réponses               | `auto`                  |
 | `responseStyle` | `string`   | Style de retour : `data` ou `fields`         | `fields`                |
@@ -244,7 +244,6 @@ const agents = await client.app.agents()
 | Méthode             | Descriptif                 | Réponse                                       |
 | ------------------- | -------------------------- | --------------------------------------------- |
 | `project.list()`    | Lister tous les projets    | <a href={typesUrl}><code>Project[]</code></a> |
-| `project.current()` | Obtenir le projet en cours | <a href={typesUrl}><code>Project</code></a>   |
 
 ---
 
@@ -254,8 +253,6 @@ const agents = await client.app.agents()
 // List all projects
 const projects = await client.project.list()
 
-// Get current project
-const currentProject = await client.project.current()
 ```
 
 ---

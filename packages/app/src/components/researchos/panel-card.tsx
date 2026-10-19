@@ -1,15 +1,15 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
+import { Button } from "@opencode/ui/button"
+import { Icon } from "@opencode/ui/icon"
 import { Show } from "solid-js"
-import { useNavigate, useParams } from "@solidjs/router"
-import { researchosModules } from "@/components/researchos-rail"
+import { useNavigate } from "@solidjs/router"
+import { researchosModules, useResearchosLink } from "@/components/researchos-rail"
 import { useResearchosShell } from "./shell-context"
 import type { PanelDirective } from "./panel-protocol"
 
 export function PanelCard(props: { directive: PanelDirective }) {
   const shell = useResearchosShell()
   const navigate = useNavigate()
-  const params = useParams<{ dir: string }>()
+  const link = useResearchosLink()
   const module = () => researchosModules.find((item) => item.route === props.directive.panel)
   const openPanel = () => {
     shell.setModulePanel({ module: props.directive.panel, resource: props.directive.resource })
@@ -17,7 +17,7 @@ export function PanelCard(props: { directive: PanelDirective }) {
   const openFullPage = () => {
     const route = module()?.route ?? props.directive.panel
     const query = props.directive.resource ? `?${props.directive.panel === "graph" ? "node" : "paper"}=${encodeURIComponent(props.directive.resource)}` : ""
-    navigate(`/${params.dir}/${route}${query}`)
+    navigate(link()!.module(`${route}${query}`))
   }
 
   return (
@@ -30,7 +30,7 @@ export function PanelCard(props: { directive: PanelDirective }) {
         </Show>
       </div>
       <div class="mt-2 flex items-center gap-2">
-        <Button size="small" variant="secondary" onClick={openPanel}>在面板中查看</Button>
+        <Button size="small" variant="neutral" onClick={openPanel}>在面板中查看</Button>
         <Button size="small" variant="ghost" onClick={openFullPage}>全页打开</Button>
       </div>
     </div>

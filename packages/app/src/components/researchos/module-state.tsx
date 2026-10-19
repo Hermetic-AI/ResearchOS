@@ -1,6 +1,6 @@
-import { Button } from "@opencode-ai/ui/button"
-import { Icon } from "@opencode-ai/ui/icon"
-import { Spinner } from "@opencode-ai/ui/spinner"
+import { Button } from "@opencode/ui/button"
+import { Icon } from "@opencode/ui/icon"
+import { Spinner } from "@opencode/ui/spinner"
 import { type ParentProps, Show } from "solid-js"
 import type { ResearchosServiceStatus } from "./health"
 
@@ -81,7 +81,7 @@ export function ModuleState(
           <div class="mt-4 flex items-center gap-2">
             <Show when={props.action}>
               {(action) => (
-                <Button variant="primary" size="small" onClick={action().onClick}>
+                <Button variant="submit" size="small" onClick={action().onClick}>
                   {action().label}
                 </Button>
               )}

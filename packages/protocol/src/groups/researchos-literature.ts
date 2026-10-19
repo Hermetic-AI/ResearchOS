@@ -1,8 +1,8 @@
-import { Location } from "@opencode-ai/schema/location"
+import { Location } from "@opencode/schema/location"
 import { Schema } from "effect"
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
-import { InvalidRequestError, UnknownError } from "../errors"
-import { LocationQuery, locationQueryOpenApi } from "./location"
+import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api"
+import { InvalidRequestError, UnknownError } from "../errors.js"
+import { LocationQuery, locationQueryOpenApi } from "./location.js"
 
 const Source = Schema.Literals(["arxiv", "semantic_scholar", "crossref", "pubmed", "zotero", "manual"])
 

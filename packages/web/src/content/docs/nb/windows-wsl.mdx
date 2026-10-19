@@ -49,13 +49,13 @@ Hvis du foretrekker OpenCode-skrivebordsappen, men vil kjøre serveren i WSL:
 1. **Start serveren i WSL** med `--hostname 0.0.0.0` for å tillate eksterne tilkoblinger:
 
    ```bash
-   opencode serve --hostname 0.0.0.0 --port 14096
+   opencode serve --hostname 0.0.0.0 --port 4096
    ```
 
-2. **Koble skrivebordsappen** til `http://localhost:14096`
+2. **Koble skrivebordsappen** til `http://localhost:4096`
 
 :::note
-Hvis `localhost` ikke fungerer i oppsettet ditt, bruk WSL-IP-adressen i stedet (fra WSL: `hostname -I`) og koble til `http://<wsl-ip>:14096`.
+Hvis `localhost` ikke fungerer i oppsettet ditt, bruk WSL-IP-adressen i stedet (fra WSL: `hostname -I`) og koble til `http://<wsl-ip>:4096`.
 :::
 
 :::caution
