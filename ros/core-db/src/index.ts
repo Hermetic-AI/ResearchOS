@@ -144,6 +144,40 @@ export interface DatasetRow {
   created_at: number
 }
 
+// One row per source paragraph. (project, paper, section, seq) is the natural key, so
+// re-saving the same paragraph updates in place and anchors stay stable.
+export type SegmentStatus = "todo" | "draft" | "final"
+
+export interface TranslationSegment {
+  id: string
+  project_id: string
+  paper_ref: string
+  section: string
+  seq: number
+  page: number | null
+  source: string
+  target: string
+  status: SegmentStatus
+  engine: string
+  updated_at: number
+}
+
+export interface GlossaryTerm {
+  id: string
+  project_id: string
+  source: string
+  target: string
+  note: string
+  created_at: number
+}
+
+export interface SegmentPaper {
+  paper_ref: string
+  segments: number
+  translated: number
+  updated_at: number
+}
+
 export interface AnalysisRow {
   id: string
   project_id: string
@@ -323,6 +357,29 @@ CREATE TABLE IF NOT EXISTS analysis_result (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_result_project ON analysis_result(project_id, created_at);
+CREATE TABLE IF NOT EXISTS translation_segment (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id),
+  paper_ref TEXT NOT NULL,
+  section TEXT NOT NULL,
+  seq INTEGER NOT NULL,
+  page INTEGER,
+  source TEXT NOT NULL,
+  target TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'todo',
+  engine TEXT NOT NULL DEFAULT '',
+  updated_at INTEGER NOT NULL,
+  UNIQUE(project_id, paper_ref, section, seq)
+);
+CREATE TABLE IF NOT EXISTS glossary_term (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id),
+  source TEXT NOT NULL,
+  target TEXT NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  UNIQUE(project_id, source)
+);
 `
 
 export function newId(prefix: string): string {
@@ -793,6 +850,123 @@ export class Db {
     return this.db
       .query("SELECT * FROM analysis_result WHERE project_id = ? ORDER BY created_at DESC LIMIT ?")
       .all(projectId, limit) as AnalysisRow[]
+  }
+
+  addSegment(segment: {
+    projectId: string
+    paperRef: string
+    section: string
+    seq: number
+    page?: number | null
+    source: string
+    target?: string
+    status?: SegmentStatus
+    engine?: string
+  }): TranslationSegment {
+    const row: TranslationSegment = {
+      id: newId("seg"),
+      project_id: segment.projectId,
+      paper_ref: segment.paperRef,
+      section: segment.section,
+      seq: segment.seq,
+      page: segment.page ?? null,
+      source: segment.source,
+      target: segment.target ?? "",
+      status: segment.status ?? "todo",
+      engine: segment.engine ?? "",
+      updated_at: Date.now(),
+    }
+    this.db
+      .query(
+        `INSERT INTO translation_segment (id, project_id, paper_ref, section, seq, page, source, target, status, engine, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(row.id, row.project_id, row.paper_ref, row.section, row.seq, row.page, row.source, row.target, row.status, row.engine, row.updated_at)
+    return row
+  }
+
+  getSegment(id: string): TranslationSegment | null {
+    return (this.db.query("SELECT * FROM translation_segment WHERE id = ?").get(id) as TranslationSegment | null) ?? null
+  }
+
+  findSegment(projectId: string, paperRef: string, section: string, seq: number): TranslationSegment | null {
+    return (
+      (this.db
+        .query("SELECT * FROM translation_segment WHERE project_id = ? AND paper_ref = ? AND section = ? AND seq = ?")
+        .get(projectId, paperRef, section, seq) as TranslationSegment | null) ?? null
+    )
+  }
+
+  // LENGTH(section) first makes "4.2" sort before "4.10", which plain lexicographic order gets wrong.
+  listSegments(projectId: string, paperRef: string): TranslationSegment[] {
+    return this.db
+      .query(
+        `SELECT * FROM translation_segment WHERE project_id = ? AND paper_ref = ?
+         ORDER BY LENGTH(section) ASC, section ASC, seq ASC`,
+      )
+      .all(projectId, paperRef) as TranslationSegment[]
+  }
+
+  // The paper switcher only needs one row per draft, so counts are aggregated in SQL.
+  listSegmentPapers(projectId: string): SegmentPaper[] {
+    return this.db
+      .query(
+        `SELECT paper_ref,
+                COUNT(*) AS segments,
+                SUM(CASE WHEN TRIM(target) <> '' THEN 1 ELSE 0 END) AS translated,
+                MAX(updated_at) AS updated_at
+         FROM translation_segment WHERE project_id = ? GROUP BY paper_ref ORDER BY updated_at DESC, paper_ref ASC`,
+      )
+      .all(projectId) as SegmentPaper[]
+  }
+
+  updateSegment(
+    id: string,
+    patch: { page?: number | null; source?: string; target?: string; status?: SegmentStatus; engine?: string },
+  ): TranslationSegment | null {
+    const current = this.getSegment(id)
+    if (current === null) return null
+    this.db
+      .query("UPDATE translation_segment SET page = ?, source = ?, target = ?, status = ?, engine = ?, updated_at = ? WHERE id = ?")
+      .run(
+        patch.page ?? current.page,
+        patch.source ?? current.source,
+        patch.target ?? current.target,
+        patch.status ?? current.status,
+        patch.engine ?? current.engine,
+        Date.now(),
+        id,
+      )
+    return this.getSegment(id)
+  }
+
+  deleteSegment(id: string): void {
+    this.db.query("DELETE FROM translation_segment WHERE id = ?").run(id)
+  }
+
+  upsertGlossaryTerm(projectId: string, source: string, target: string, note = ""): GlossaryTerm {
+    const existing = (this.db
+      .query("SELECT * FROM glossary_term WHERE project_id = ? AND source = ?")
+      .get(projectId, source) as GlossaryTerm | null) ?? null
+    if (existing !== null) {
+      this.db.query("UPDATE glossary_term SET target = ?, note = ? WHERE id = ?").run(target, note, existing.id)
+      return { ...existing, target, note }
+    }
+    const term: GlossaryTerm = { id: newId("glo"), project_id: projectId, source, target, note, created_at: Date.now() }
+    this.db
+      .query("INSERT INTO glossary_term (id, project_id, source, target, note, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .run(term.id, term.project_id, term.source, term.target, term.note, term.created_at)
+    return term
+  }
+
+  listGlossaryTerms(projectId: string): GlossaryTerm[] {
+    return this.db
+      .query("SELECT * FROM glossary_term WHERE project_id = ? ORDER BY source ASC")
+      .all(projectId) as GlossaryTerm[]
+  }
+
+  deleteGlossaryTerm(id: string): void {
+    this.db.query("DELETE FROM glossary_term WHERE id = ?").run(id)
   }
 }
 

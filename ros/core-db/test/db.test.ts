@@ -222,3 +222,83 @@ describe("dataset + analysis_result", () => {
     db.close()
   })
 })
+
+describe("translation_segment + glossary_term", () => {
+  test("lists segments in document order and finds them by the natural key", () => {
+    const { db, project } = seeded()
+    db.addSegment({ projectId: project.id, paperRef: "2011.13456", section: "4.2", seq: 1, source: "b" })
+    db.addSegment({ projectId: project.id, paperRef: "2011.13456", section: "4", seq: 1, source: "a" })
+    db.addSegment({ projectId: project.id, paperRef: "2011.13456", section: "4.10", seq: 1, source: "d" })
+    db.addSegment({ projectId: project.id, paperRef: "2011.13456", section: "4.1", seq: 2, source: "c" })
+    db.addSegment({ projectId: project.id, paperRef: "other", section: "1", seq: 1, source: "z" })
+    expect(db.listSegments(project.id, "2011.13456").map((s) => s.source)).toEqual(["a", "c", "b", "d"])
+    const found = db.findSegment(project.id, "2011.13456", "4.1", 2)
+    expect(found?.id.startsWith("seg_")).toBe(true)
+    expect(found?.status).toBe("todo")
+    expect(found?.target).toBe("")
+    expect(db.findSegment(project.id, "2011.13456", "4.1", 99)).toBeNull()
+    db.close()
+  })
+
+  test("patches only the given segment fields and ignores unknown ids", () => {
+    const { db, project } = seeded()
+    const created = db.addSegment({
+      projectId: project.id,
+      paperRef: "p",
+      section: "3",
+      seq: 1,
+      page: 7,
+      source: "probability flow ODE",
+    })
+    const updated = db.updateSegment(created.id, { target: "概率流 ODE", status: "draft", engine: "mock" })
+    expect(updated?.page).toBe(7)
+    expect(updated?.source).toBe("probability flow ODE")
+    expect(updated?.target).toBe("概率流 ODE")
+    expect(updated?.status).toBe("draft")
+    expect(updated?.engine).toBe("mock")
+    expect(db.updateSegment("seg_missing", { status: "final" })).toBeNull()
+    db.deleteSegment(created.id)
+    expect(db.listSegments(project.id, "p")).toHaveLength(0)
+    db.close()
+  })
+
+  test("keeps one glossary row per source term and re-reads the updated target", () => {
+    const { db, project } = seeded()
+    const first = db.upsertGlossaryTerm(project.id, "score function", "得分函数")
+    expect(first.id.startsWith("glo_")).toBe(true)
+    expect(first.note).toBe("")
+    const second = db.upsertGlossaryTerm(project.id, "score function", "评分函数", "课题组统一译法")
+    db.upsertGlossaryTerm(project.id, "churn", "扰动")
+    const terms = db.listGlossaryTerms(project.id)
+    expect(terms.map((t) => t.source)).toEqual(["churn", "score function"])
+    expect(terms[1]?.target).toBe("评分函数")
+    expect(terms[1]?.note).toBe("课题组统一译法")
+    expect(terms[1]?.id).toBe(first.id)
+    db.deleteGlossaryTerm(second.id)
+    expect(db.listGlossaryTerms(project.id).map((t) => t.source)).toEqual(["churn"])
+    db.close()
+  })
+
+  test("groups drafts per paper and counts translated segments", () => {
+    const { db, project } = seeded()
+    db.addSegment({ projectId: project.id, paperRef: "arxiv:2011.13456", section: "1", seq: 1, source: "a", target: "甲" })
+    db.addSegment({ projectId: project.id, paperRef: "arxiv:2011.13456", section: "1", seq: 2, source: "b", target: "  " })
+    db.addSegment({ projectId: project.id, paperRef: "other", section: "1", seq: 1, source: "c", target: "丙" })
+    const rows = db.listSegmentPapers(project.id)
+    expect(rows.map((row) => [row.paper_ref, row.segments, row.translated])).toEqual([
+      ["arxiv:2011.13456", 2, 1],
+      ["other", 1, 1],
+    ])
+    db.close()
+  })
+
+  test("glossary terms stay per project", () => {
+    const db = Db.open(":memory:")
+    const a = db.createProject("a", "/tmp/a")
+    const b = db.createProject("b", "/tmp/b")
+    db.upsertGlossaryTerm(a.id, "denoise", "去噪")
+    expect(db.listGlossaryTerms(a.id)).toHaveLength(1)
+    expect(db.listGlossaryTerms(b.id)).toHaveLength(0)
+    db.close()
+  })
+})

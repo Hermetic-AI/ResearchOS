@@ -4,10 +4,12 @@ import { mkdirSync, writeFileSync } from "fs"
 import { homedir } from "os"
 import { join } from "path"
 import { type Config, resolveProvider } from "@researchos/core-config"
-import { Db, type HypothesisStatus, type Project } from "@researchos/core-db"
+import { Db, type HypothesisStatus, type Project, type SegmentStatus } from "@researchos/core-db"
 import { createProvider } from "@researchos/core-provider"
 import { type SkillRoot, CoreAgent } from "@researchos/core-agent"
+import { DataAnalyze } from "./data-analyze"
 import { Stats } from "./stats"
+import { Translation } from "./translation"
 
 export interface AppDeps {
   config: Config
@@ -18,7 +20,7 @@ export interface AppDeps {
 // Lab personas for the multi-agent workbench; the id is persisted in threads.persona.
 export const PERSONAS = [
   { id: "lit", name: "文献研究员", char: "文", color: "accent", note: "精读 · 引用核对", prompt: "你是课题组的文献研究员：先调用 literature_search 找证据，回答中引用文献 id 与 ¶ 段落号，逐条给出支持/反驳。" },
-  { id: "data", name: "数据分析师", char: "数", color: "amber", note: "统计检验 · 等价推导", prompt: "你是课题组的数据分析师：明确样本与检验方法，给出可复核的数字与置信区间，不确定时先说明缺什么数据。" },
+  { id: "data", name: "数据分析师", char: "数", color: "amber", note: "统计检验 · 等价推导", prompt: "你是课题组的数据分析师：先用 data_analyze 复算台账里的数据集，明确样本与检验方法（paired_t 配对、welch_t 两独立样本），给出可复核的数字与置信区间，不确定时先说明缺什么数据。" },
   { id: "repro", name: "复现医生", char: "复", color: "moss", note: "跑码 · 数值对齐", prompt: "你是复现医生：用 read_file 核对代码/日志，对比原文数值，列出偏差与最可能的来源。" },
   { id: "graph", name: "图谱师", char: "图", color: "seal", note: "引用边 · 星图维护", prompt: "你是图谱师：关注论文间引用关系，建议用 /api/citations 补边，并指出孤立节点。" },
   { id: "trans", name: "学术翻译", char: "翻", color: "moss", note: "双语对照 · 术语表", prompt: "你是学术翻译：给出中英对照与术语表，术语分歧处标注候选并请求人工裁决。" },
@@ -67,6 +69,7 @@ export function createApp(deps: AppDeps) {
   const tools = new CoreAgent.ToolRegistry()
   tools.register(CoreAgent.readFileTool(project.directory))
   tools.register(CoreAgent.searchLibraryTool(db, project.id))
+  tools.register(DataAnalyze.dataAnalyzeTool(db, project.id))
 
   const roots = skillRoots(project.directory)
   const state: { skills: ReturnType<typeof CoreAgent.loadSkills> } = { skills: CoreAgent.loadSkills(roots) }
@@ -213,10 +216,10 @@ export function createApp(deps: AppDeps) {
       return { dataset: { ...row, columns: table.columns }, profile: Stats.profile(table), rows: table.rows.slice(0, 50) }
     },
     deleteDataset: (id: string) => db.deleteDataset(id),
-    runStatTest: (datasetId: string, x: string, y: string, alpha: number) => {
+    runStatTest: (datasetId: string, x: string, y: string, alpha: number, method: Stats.TestMethod = "paired_t") => {
       const row = db.getDataset(datasetId)
       if (!row) return { ok: false as const, error: `数据集不存在：${datasetId}` }
-      const outcome = Stats.pairedTTest(Stats.parseCsv(row.csv), x, y, alpha)
+      const outcome = Stats.runTest(Stats.parseCsv(row.csv), method, x, y, alpha)
       if (!outcome.ok) return outcome
       const result = outcome.result
       db.addResult({
@@ -225,8 +228,9 @@ export function createApp(deps: AppDeps) {
         method: result.method,
         x: result.x,
         y: result.y,
+        // pair_count holds pairs for the paired tests and total observations for the two-sample ones.
         pairCount: result.n,
-        statistic: result.t,
+        statistic: "t" in result ? result.t : result.statistic,
         pValue: result.p,
         significant: result.significant,
         payload: result,
@@ -235,7 +239,7 @@ export function createApp(deps: AppDeps) {
         projectId: project.id,
         kind: "data",
         subjectRef: datasetId,
-        summary: `配对 t 检验 ${x} vs ${y}：t=${result.t.toFixed(3)} · p=${Stats.formatP(result.p)} · ${result.significant ? "显著" : "不显著"}（n=${result.n}）`,
+        summary: `${Stats.testLabel(result)} ${x} vs ${y}（${Stats.effectSummary(result)}）：${Stats.statisticSummary(result)} · p=${Stats.formatP(result.p)} · ${result.significant ? "显著" : "不显著"}（n=${result.n}）`,
       })
       return { ok: true as const, result, latex: Stats.toLatexTable(result) }
     },
@@ -255,6 +259,106 @@ export function createApp(deps: AppDeps) {
           latex: Stats.toLatexTable(result),
         }
       }),
+    translatePapers: () =>
+      db.listSegmentPapers(project.id).map((row) => {
+        const paper = db.getPaper(row.paper_ref)
+        return {
+          ref: row.paper_ref,
+          title: paper?.title ?? row.paper_ref,
+          arxiv_id: paper?.arxiv_id ?? null,
+          year: paper?.year ?? null,
+          segments: row.segments,
+          translated: row.translated,
+          updated_at: row.updated_at,
+        }
+      }),
+    draft: (paperRef: string) => {
+      const segments = db.listSegments(project.id, paperRef)
+      const paper = db.getPaper(paperRef)
+      const glossary = db.listGlossaryTerms(project.id)
+      return {
+        paper: {
+          ref: paperRef,
+          title: paper?.title ?? paperRef,
+          arxiv_id: paper?.arxiv_id ?? null,
+          year: paper?.year ?? null,
+          venue: paper?.venue ?? null,
+        },
+        segments,
+        glossary,
+        audit: Translation.auditDraft(segments, glossary),
+      }
+    },
+    // Saving is an upsert on the (paper, section, ¶) anchor, so re-translating a paragraph
+    // rewrites the same row instead of appending a second draft.
+    saveSegment: (input: {
+      paperRef: string
+      section: string
+      seq: number
+      page: number | null
+      source: string
+      target: string
+      status: SegmentStatus
+      engine: string
+    }) => {
+      const existing = db.findSegment(project.id, input.paperRef, input.section, input.seq)
+      const row = existing
+        ? db.updateSegment(existing.id, input)
+        : db.addSegment({ ...input, projectId: project.id })
+      if (row === null) return null
+      const audit = Translation.auditSegment(row.source, row.target, db.listGlossaryTerms(project.id))
+      if (row.target.trim().length > 0 && row.status !== "todo")
+        db.appendTrace({
+          projectId: project.id,
+          kind: "translate",
+          subjectRef: row.id,
+          summary: `译文 ${row.section} ¶${row.seq}（${row.status}）：${audit.leaks.length === 0 ? "保护片段全部透传" : `漏 ${audit.leaks.length} 处`} · 术语命中 ${audit.applied.length}${audit.skipped.length > 0 ? ` · 未采用 ${audit.skipped.join("、")}` : ""}`,
+        })
+      return { segment: row, audit }
+    },
+    deleteSegment: (id: string) => db.deleteSegment(id),
+    importParagraphs: (paperRef: string) => {
+      const paragraphs = db.listParagraphs(paperRef)
+      let imported = 0
+      for (const paragraph of paragraphs) {
+        if (paragraph.text.trim().length === 0) continue
+        if (db.findSegment(project.id, paperRef, "全文", paragraph.seq)) continue
+        db.addSegment({
+          projectId: project.id,
+          paperRef,
+          section: "全文",
+          seq: paragraph.seq,
+          page: paragraph.page,
+          source: paragraph.text,
+        })
+        imported += 1
+      }
+      db.appendTrace({
+        projectId: project.id,
+        kind: "translate",
+        subjectRef: paperRef,
+        summary: `从文献库导入对照分段：新增 ${imported} 段 · 跳过已有 ${paragraphs.length - imported} 段`,
+      })
+      return { imported, paragraphs: paragraphs.length }
+    },
+    glossary: () => db.listGlossaryTerms(project.id),
+    addGlossary: (source: string, target: string, note: string) => {
+      const term = db.upsertGlossaryTerm(project.id, source, target, note)
+      db.appendTrace({
+        projectId: project.id,
+        kind: "translate",
+        subjectRef: term.id,
+        summary: `术语表 ${source} → ${target.trim() === "" ? "待定义" : target}`,
+      })
+      return term
+    },
+    deleteGlossary: (id: string) => db.deleteGlossaryTerm(id),
+    exportDraft: (paperRef: string, format: "md" | "html") => {
+      const segments = db.listSegments(project.id, paperRef)
+      const title = db.getPaper(paperRef)?.title ?? paperRef
+      const content = format === "html" ? Translation.toBilingualHtml(title, segments) : Translation.toMarkdown(title, segments)
+      return { title, filename: `${title.replace(/[^\w.-]+/g, "-").slice(0, 48) || "draft"}.${format === "html" ? "html" : "md"}`, content }
+    },
     createJob: (personaId: string, title: string, task: string) => {
       const persona = PERSONAS.find((p) => p.id === personaId)
       if (persona === undefined) return null
@@ -426,13 +530,98 @@ export async function handleRequest(app: App, request: Request): Promise<Respons
 
   if (path === "/api/notebook/results" && method === "GET") return Response.json(app.listResults())
   if (path === "/api/notebook/tests" && method === "POST") {
-    const body = (await request.json().catch(() => ({}))) as { dataset?: string; x?: string; y?: string; alpha?: number }
+    const body = (await request.json().catch(() => ({}))) as { dataset?: string; x?: string; y?: string; alpha?: number; method?: string }
     if (typeof body.dataset !== "string" || typeof body.x !== "string" || typeof body.y !== "string")
       return Response.json({ error: "dataset, x and y required" }, { status: 400 })
     const alpha = typeof body.alpha === "number" && body.alpha > 0 && body.alpha < 1 ? body.alpha : 0.05
-    const outcome = app.runStatTest(body.dataset, body.x, body.y, alpha)
+    const outcome = app.runStatTest(body.dataset, body.x, body.y, alpha, Stats.parseMethod(body.method))
     if (!outcome.ok) return Response.json({ error: outcome.error }, { status: 400 })
     return Response.json({ result: outcome.result, latex: outcome.latex })
+  }
+
+  if (path === "/api/translate/papers" && method === "GET") return Response.json(app.translatePapers())
+  if (path === "/api/translate/draft" && method === "GET") {
+    const paper = (url.searchParams.get("paper") ?? "").trim()
+    if (paper === "") return Response.json({ error: "paper required" }, { status: 400 })
+    return Response.json(app.draft(paper))
+  }
+
+  if (path === "/api/translate/segments" && method === "POST") {
+    const body = (await request.json().catch(() => ({}))) as {
+      paper?: string
+      section?: string
+      seq?: number
+      page?: number
+      source?: string
+      target?: string
+      status?: string
+      engine?: string
+    }
+    const paper = (body.paper ?? "").trim()
+    const section = (body.section ?? "").trim()
+    const source = (body.source ?? "").trim()
+    const seq = Math.trunc(body.seq ?? 0)
+    if (paper === "" || section === "" || source === "" || seq < 1)
+      return Response.json({ error: "paper, section, seq(>=1) and source required" }, { status: 400 })
+    const target = body.target ?? ""
+    const status: SegmentStatus =
+      body.status === "final" || body.status === "draft" || body.status === "todo"
+        ? body.status
+        : target.trim() === ""
+          ? "todo"
+          : "draft"
+    const saved = app.saveSegment({
+      paperRef: paper,
+      section,
+      seq,
+      page: typeof body.page === "number" ? Math.trunc(body.page) : null,
+      source,
+      target,
+      status,
+      engine: (body.engine ?? "").trim(),
+    })
+    if (saved === null) return Response.json({ error: "segment not found" }, { status: 404 })
+    return Response.json(saved)
+  }
+
+  const segmentMatch = /^\/api\/translate\/segments\/([\w-]+)$/.exec(path)
+  if (segmentMatch?.[1] !== undefined && method === "DELETE") {
+    app.deleteSegment(segmentMatch[1])
+    return Response.json({ ok: true })
+  }
+
+  if (path === "/api/translate/import" && method === "POST") {
+    const body = (await request.json().catch(() => ({}))) as { paper?: string }
+    const paper = (body.paper ?? "").trim()
+    if (paper === "") return Response.json({ error: "paper required" }, { status: 400 })
+    return Response.json(app.importParagraphs(paper))
+  }
+
+  if (path === "/api/translate/export" && method === "GET") {
+    const paper = (url.searchParams.get("paper") ?? "").trim()
+    if (paper === "") return Response.json({ error: "paper required" }, { status: 400 })
+    const format = url.searchParams.get("format") === "html" ? ("html" as const) : ("md" as const)
+    const out = app.exportDraft(paper, format)
+    return new Response(out.content, {
+      headers: {
+        "content-type": format === "html" ? "text/html; charset=utf-8" : "text/markdown; charset=utf-8",
+        "content-disposition": `attachment; filename="${out.filename}"`,
+      },
+    })
+  }
+
+  if (path === "/api/glossary" && method === "GET") return Response.json(app.glossary())
+  if (path === "/api/glossary" && method === "POST") {
+    const body = (await request.json().catch(() => ({}))) as { source?: string; target?: string; note?: string }
+    const source = (body.source ?? "").trim()
+    if (source === "") return Response.json({ error: "source term required" }, { status: 400 })
+    return Response.json(app.addGlossary(source, (body.target ?? "").trim(), (body.note ?? "").trim()))
+  }
+
+  const glossaryMatch = /^\/api\/glossary\/([\w-]+)$/.exec(path)
+  if (glossaryMatch?.[1] !== undefined && method === "DELETE") {
+    app.deleteGlossary(glossaryMatch[1])
+    return Response.json({ ok: true })
   }
 
   if (path === "/api/library" && method === "GET") return Response.json(app.listPapers())

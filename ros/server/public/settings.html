@@ -54,8 +54,8 @@ async function load() {
       <ul class="text-ink-soft space-y-1 list-disc pl-5 text-[12.5px]">
         <li>可视化 provider/model 切换与 maxSteps 编辑（当前改配置文件后重启）</li>
         <li>文献库已上线：papers/citations 表 + FTS5 关键词检索 + <span class="font-mono">literature_search</span> 工具 + 阅读页「粘贴全文分段 → ¶段落锚定批注」；GROBID PDF 自动解析、向量语义近邻（需 sqlite-vec）、graph-RAG 多跳问答在建</li>
-        <li>课题组与数据分析已上线：persona 派单跑在 core-agent 循环上；数据分析页为 CSV 入库 + 列画像 + 配对 t 检验（p 值由不完全 Beta 直接算）+ 期刊图表与 LaTeX，可回流假设证据链。受控 Python kernel 执行、独立样本/效应量、其余检验方法在建</li>
-        <li>学术翻译页的后端对照稿与术语表持久化在建</li>
+        <li>课题组与数据分析已上线：persona 派单跑在 core-agent 循环上；数据分析页为 CSV 入库 + 列画像 + 配对 / Welch 两独立样本 t 检验（p 值由不完全 Beta 直接算，含 95% CI 与 Cohen's d_z / Hedges' g 效应量）+ 非参数 <span class="font-mono">Wilcoxon</span> 符号秩 / <span class="font-mono">Mann-Whitney U</span> 秩和检验（无结时枚举精确零分布，有结改用中位秩与连续性校正正态近似，报 Hodges-Lehmann 位移及其精确置信区间与 rank-biserial <span class="font-mono">r</span>）+ 期刊图表与 LaTeX，可回流假设证据链；对话页 <span class="font-mono">data_analyze</span> 工具可只读复算台账里的数据集。受控 Python kernel 执行与方差分析在建</li>
+        <li>学术翻译已上线：translation_segment 按 (文献, 章节, ¶序号) 自然键 upsert，术语表 glossary_term 持久化；保护片段（公式/引用/图表编号/数字）按类型校验透传，逐段审计 + 章节汇总 + Markdown/双语 HTML 导出。LibreTranslate 引擎与 PDF 大纲自动拆章在建</li>
         <li>Electron 桌面外壳与本地密钥环（P4）</li>
       </ul>
     </div>`

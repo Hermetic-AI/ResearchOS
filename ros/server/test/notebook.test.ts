@@ -73,6 +73,39 @@ describe("notebook routes", () => {
     expect(db.listTrace(app.project.id).some((t) => t.kind === "data" && t.summary.includes("配对 t 检验 ddpm vs ddim"))).toBe(true)
   })
 
+  // scipy: stats.ttest_ind([10,20,30,40],[9,18,27,36], equal_var=False) reads the columns independently.
+  test("runs a Welch test on request and traces df plus Hedges g", async () => {
+    const { app, db } = tempApp()
+    const created = await call(app, "/api/notebook/datasets", { method: "POST", body: JSON.stringify({ name: "fid.csv", csv: CSV }) })
+    const id = (created.body.dataset as { id: string }).id
+    const res = await call(app, "/api/notebook/tests", { method: "POST", body: JSON.stringify({ dataset: id, x: "ddpm", y: "ddim", method: "welch_t" }) })
+    const body = res.body as unknown as { result: Record<string, number | boolean | string>; latex: string }
+    const result = body.result
+    expect(res.status).toBe(200)
+    expect(result.method).toBe("welch_t")
+    expect([result.n_x, result.n_y, result.n]).toEqual([4, 4, 8])
+    expect(result.t as number).toBeCloseTo(0.28787658497487356, 9)
+    expect(result.df as number).toBeCloseTo(5.934605398224744, 6)
+    expect(result.p as number).toBeCloseTo(0.7832297484525951, 6)
+    expect(result.significant).toBe(false)
+    expect(result.ci_low as number).toBeCloseTo(-18.806549133094833, 4)
+    expect(result.ci_high as number).toBeCloseTo(23.806549133094833, 4)
+    // numpy: sqrt(((nx-1)*var_x + (ny-1)*var_y) / (nx+ny-2)) for the same two vectors.
+    expect(result.sd_pooled as number).toBeCloseTo(Math.sqrt(150.83333333333334), 9)
+    expect(result.effect as number).toBeCloseTo(0.17700824815700736, 7)
+    expect(result.effect_label).toBe("negligible")
+    expect(body.latex).toContain("Welch's two-sample t-test")
+    expect(body.latex).toContain("n (ddpm / ddim) & 4 / 4")
+
+    const results = (await call(app, "/api/notebook/results")).body as unknown as Array<Record<string, unknown>>
+    expect(results[0]).toMatchObject({ method: "welch_t", pair_count: 8, significant: false })
+    expect(db.listTrace(app.project.id).some((t) => t.kind === "data" && t.summary.includes("Welch 两独立样本 t 检验 ddpm vs ddim"))).toBe(true)
+
+    // An unrecognized method string falls back to the paired test instead of failing the request.
+    const fallback = await call(app, "/api/notebook/tests", { method: "POST", body: JSON.stringify({ dataset: id, x: "ddpm", y: "ddim", method: "chi_square" }) })
+    expect((fallback.body as { result: { method: string } }).result.method).toBe("paired_t")
+  })
+
   test("deleting a dataset cascades its results", async () => {
     const { app } = tempApp()
     const created = await call(app, "/api/notebook/datasets", { method: "POST", body: JSON.stringify({ csv: CSV }) })
