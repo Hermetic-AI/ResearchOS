@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResearchOS · 数据分析</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { theme: { extend: {
+  colors: {
+    paper: '#FAF8F3', card: '#FFFFFF',
+    ink: { DEFAULT: '#262521', soft: '#6B6A61', faint: '#9C9B90' },
+    line: '#E7E3D8',
+    accent: { DEFAULT: '#2F4B7C', soft: '#E8EDF5' },
+    seal: '#B3402F', moss: '#5A6E4A', amber: '#A67C2E'
+  },
+  fontFamily: {
+    serif: ['"Noto Serif SC"','"Source Han Serif SC"','"Songti SC"','SimSun','Georgia','serif'],
+    sans: ['"Noto Sans SC"','"PingFang SC"','"Microsoft YaHei"','system-ui','sans-serif'],
+    mono: ['"JetBrains Mono"','Consolas','monospace']
+  }
+} } }
+</script>
+<style>
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#E7E3D8;border-radius:4px}
+  .smallcaps{font-variant:all-small-caps;letter-spacing:.14em}
+  .hairline{border-color:#E7E3D8}
+  .celltag{font-size:10.5px;padding:1px 7px;border:1px solid #E7E3D8;border-radius:3px;font-family:"Noto Serif SC",Georgia,serif}
+</style>
+</head>
+<body class="h-screen flex bg-paper text-ink overflow-hidden">
+
+<!-- ══════════ 左栏导航（全站统一壳） ══════════ -->
+<aside class="w-[224px] shrink-0 bg-card border-r hairline flex flex-col">
+  <div class="px-5 h-16 flex items-center gap-2.5 border-b hairline">
+    <span class="font-serif text-[19px] tracking-wide">Research<span class="text-seal">OS</span></span>
+    <span class="ml-auto w-2 h-2 rounded-full bg-seal" title="本地运行"></span>
+  </div>
+  <nav class="flex-1 py-4 px-3 space-y-0.5 text-[13.5px]">
+    <div class="px-3 pb-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">研究场</div>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="index.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="2"/><circle cx="17" cy="5" r="1.6"/><circle cx="18" cy="15" r="2.2"/><circle cx="9" cy="17" r="1.5"/><path d="M8.7 8.3 16 14M8.5 6.2 15.5 5.4M17 13l.3-6M10.4 16.6 16 15.6"/></svg>文献星图</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="chat.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>对话</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="workbench.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="8" height="6" rx="1.5"/><rect x="13" y="14" width="8" height="6" rx="1.5"/></svg>课题组<span class="ml-auto text-[11px] text-seal">2 项进行中</span></a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="reading.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6.5A2.5 2.5 0 0 0 4 19.5z"/><path d="M8 7h7M8 11h5"/></svg>边注阅读器</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="trace.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/><path d="M3.5 10h4M16.5 14h4"/></svg>研究溯源</a>
+    <div class="px-3 pt-4 pb-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">工作台</div>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="library.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v18H6.5A2.5 2.5 0 0 0 4 19.5z"/></svg>文献库<span class="ml-auto text-[11px] text-ink-faint">128</span></a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="translate.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h7M7.5 5c0 4-2 7-4.5 8.5M5 9c1.5 2.5 4 4 6.5 4.5M13 20l4-9 4 9M14.6 16.5h4.8"/></svg>翻译</a>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md bg-accent-soft text-accent font-serif" href="notebook.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>数据分析</a>
+        <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="skills.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 2 2 5.5L20 6l-2.5 4.5L22 13l-5.5 1L15 19l-3-3.5L9 19l.5-5L4 13l4.5-2.5L6 6l6 1.5z"/></svg>技能中心</a>
+  <div class="px-3 pt-4 pb-1.5 text-[10.5px] text-ink-faint smallcaps font-semibold">系统</div>
+    <a class="flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-paper text-ink-soft" href="settings.html"><svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 2h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12"/></svg>设置</a>
+  </nav>
+  <div class="px-5 py-3 border-t hairline text-[11px] text-ink-faint font-serif">Vol. II · 重构原型 · 2026-10</div>
+</aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+  <!-- ══════════ 标题栏 ══════════ -->
+  <header class="h-16 shrink-0 bg-card border-b hairline flex items-center px-6 gap-4">
+    <h1 class="font-serif text-[15.5px]">notebook · <span class="font-sans font-normal text-[13.5px] text-ink-soft">fid_vs_steps.ipynb</span></h1>
+    <span class="flex items-center gap-1.5 text-[12px] text-ink-soft shrink-0 font-serif">
+      <i class="w-1.5 h-1.5 rounded-full bg-moss inline-block"></i>kernel 空闲 · python 3.12 · 共享命名空间
+    </span>
+    <div class="ml-auto flex items-center gap-2 shrink-0">
+      <button class="h-8 px-3 rounded-md border hairline text-[12.5px] text-ink-soft hover:bg-paper">＋ 单元格</button>
+      <button class="h-8 px-3 rounded-md border hairline text-[12.5px] text-ink-soft hover:bg-paper">↻ 重启 kernel</button>
+      <button class="h-8 px-3 rounded-md bg-accent text-white text-[12.5px] hover:opacity-90">▶ 全部运行</button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex min-h-0">
+    <!-- ══════════ notebook 主体 ══════════ -->
+    <div class="flex-1 min-w-0 overflow-y-auto px-8 py-6 space-y-4 max-w-4xl">
+
+      <!-- 自然语言单元格 -->
+      <div class="bg-card border hairline rounded-md p-4">
+        <div class="flex items-center gap-2 text-[11px] text-ink-faint mb-2.5">
+          <span class="celltag text-seal border !border-seal/40">NL</span>
+          <span class="font-mono">[1]</span>
+          <span class="ml-auto font-serif">数据分析师 agent</span>
+        </div>
+        <div class="text-[13.5px] font-serif">对 <b>runs/cifar10/</b> 下 DDPM 与 DDIM 各 5 个 seed 的 FID 做配对 t 检验，并画 FID–步数曲线（10/20/50 步）。</div>
+        <div class="mt-3 border-t hairline pt-3 text-[12.5px] text-ink-soft leading-relaxed">
+          已拆解为 3 步：① profile 两份结果表 → ② stat_test(paired t) → ③ chart(折线)。产物已登记。
+        </div>
+      </div>
+
+      <!-- Python 单元格 + 配对 t 检验表 -->
+      <div class="bg-card border hairline rounded-md overflow-hidden">
+        <div class="px-4 py-2 flex items-center gap-2 text-[11px] text-ink-faint border-b hairline">
+          <span class="celltag text-accent border !border-accent/40">PY</span>
+          <span class="font-mono">[2]</span>
+          <span class="ml-auto font-serif">耗时 0.4s</span>
+          <button class="text-ink-faint hover:text-accent">▶</button>
+        </div>
+        <pre class="px-4 py-3 text-[12.5px] font-mono bg-paper text-ink leading-6 overflow-x-auto border-b hairline">df = load_results("runs/cifar10/")
+ttest = stat_test(df, method="paired_t", x="ddpm_fid", y="ddim_fid")</pre>
+        <div class="px-4 py-3">
+          <table class="w-full text-[12.5px] text-ink-soft">
+            <thead>
+              <tr class="text-left text-ink-faint border-b hairline smallcaps font-semibold">
+                <th class="py-1.5 font-semibold">steps</th>
+                <th class="font-semibold">DDPM FID</th>
+                <th class="font-semibold">DDIM FID</th>
+                <th class="font-semibold">Δ</th>
+                <th class="font-semibold">p 值</th>
+              </tr>
+            </thead>
+            <tbody class="font-mono">
+              <tr class="border-b hairline"><td class="py-1.5">10</td><td>18.42 ± 0.61</td><td>6.87 ± 0.22</td><td class="text-seal">−11.55</td><td>0.0004</td></tr>
+              <tr class="border-b hairline"><td class="py-1.5">20</td><td>9.13 ± 0.35</td><td>4.12 ± 0.18</td><td class="text-seal">−5.01</td><td>0.002</td></tr>
+              <tr><td class="py-1.5">50</td><td>4.02 ± 0.21</td><td>3.15 ± 0.14</td><td class="text-seal">−0.87</td><td>0.031</td></tr>
+            </tbody>
+          </table>
+          <div class="mt-2 text-[11px] text-ink-faint font-serif italic">配对 t 检验 · n=5 seed · 单尾；Δ 显著项以朱红标出。</div>
+        </div>
+      </div>
+
+      <!-- 图表单元格：Fig. 2 -->
+      <div class="bg-card border hairline rounded-md overflow-hidden">
+        <div class="px-4 py-2 flex items-center gap-2 text-[11px] text-ink-faint border-b hairline">
+          <span class="celltag text-accent border !border-accent/40">PY</span>
+          <span class="font-mono">[3]</span>
+          <span class="ml-auto font-serif">chart · 1.8s</span>
+          <button class="text-ink-faint hover:text-accent">▶</button>
+        </div>
+        <div class="p-5 grid place-items-center">
+          <svg viewBox="0 0 420 210" class="w-full max-w-lg bg-card">
+            <line x1="40" y1="170" x2="400" y2="170" stroke="#E7E3D8"/>
+            <line x1="40" y1="170" x2="40" y2="15" stroke="#E7E3D8"/>
+            <text x="220" y="196" font-size="11" fill="#6B6A61" text-anchor="middle" font-family="Noto Serif SC, Georgia, serif">采样步数</text>
+            <text x="14" y="95" font-size="11" fill="#6B6A61" text-anchor="middle" transform="rotate(-90 14 95)" font-family="Noto Serif SC, Georgia, serif">FID ↓</text>
+            <!-- DDPM 曲线（墨蓝） -->
+            <polyline points="80,40 200,105 360,148" fill="none" stroke="#2F4B7C" stroke-width="2"/>
+            <g fill="#2F4B7C"><circle cx="80" cy="40" r="3.5"/><circle cx="200" cy="105" r="3.5"/><circle cx="360" cy="148" r="3.5"/></g>
+            <!-- DDIM 曲线（苔绿） -->
+            <polyline points="80,120 200,140 360,152" fill="none" stroke="#5A6E4A" stroke-width="2"/>
+            <g fill="#5A6E4A"><circle cx="80" cy="120" r="3.5"/><circle cx="200" cy="140" r="3.5"/><circle cx="360" cy="152" r="3.5"/></g>
+            <!-- 显著性标注（朱红） -->
+            <path d="M80 40 v76" stroke="#B3402F" stroke-width="1" stroke-dasharray="2 3"/>
+            <text x="92" y="84" font-size="10" fill="#B3402F" font-family="Noto Serif SC, Georgia, serif">Δ=−11.55 · p=0.0004</text>
+            <!-- 图例 -->
+            <g font-size="11" font-family="Noto Serif SC, Georgia, serif">
+              <rect x="252" y="22" width="126" height="36" rx="4" fill="#FAF8F3" stroke="#E7E3D8"/>
+              <circle cx="266" cy="34" r="3.5" fill="#2F4B7C"/><text x="276" y="38" fill="#262521">DDPM</text>
+              <circle cx="266" cy="49" r="3.5" fill="#5A6E4A"/><text x="276" y="53" fill="#262521">DDIM</text>
+            </g>
+            <text x="80" y="182" font-size="10" fill="#9C9B90" text-anchor="middle">10</text>
+            <text x="200" y="182" font-size="10" fill="#9C9B90" text-anchor="middle">20</text>
+            <text x="360" y="182" font-size="10" fill="#9C9B90" text-anchor="middle">50</text>
+          </svg>
+          <div class="text-[11px] text-ink-faint font-serif italic mt-1 self-start max-w-lg">Fig. 2 — FID–步数曲线：10 步区间的显著分歧（朱红虚线）随步数增加而收敛。</div>
+        </div>
+      </div>
+
+      <!-- 结论 + 回流 -->
+      <div class="bg-card border hairline rounded-md p-4 text-[13px] font-serif border-l-2 !border-l-moss">
+        <b>agent 结论：</b>10 步时 DDIM 相对 DDPM 的 FID 优势最大（−11.55，p=0.0004），随步数增加差距收敛——与文献库中 2206.00364 §4.2 表 2 一致。
+        <div class="flex gap-2 mt-3 font-sans">
+          <a href="reading.html" class="h-7 px-2.5 rounded-md border !border-moss/40 text-moss text-[12px] grid place-items-center hover:bg-paper">🔗 关联到论文 §4.2（link_experiment）</a>
+          <button class="h-7 px-2.5 rounded-md border hairline text-ink-soft text-[12px] grid place-items-center hover:bg-paper">📋 生成 LaTeX 表格</button>
+        </div>
+      </div>
+
+      <div class="rounded-md border border-dashed hairline p-4 text-center text-[12.5px] text-ink-faint hover:border-accent hover:text-accent cursor-pointer font-serif">＋ 新单元格（自然语言 或 Python）</div>
+    </div>
+
+    <!-- ══════════ 产物面板 ══════════ -->
+    <aside class="w-[256px] shrink-0 bg-card border-l hairline p-4 text-[12.5px] overflow-y-auto">
+      <div class="font-serif text-[13.5px] mb-3">实验产物 <span class="text-ink-faint text-[11px]">.researchos/data</span></div>
+      <div class="space-y-2">
+        <div class="rounded-md border hairline p-2.5 hover:border-accent/50 cursor-pointer">
+          <div class="font-serif">fid_vs_steps.svg</div>
+          <div class="text-ink-faint text-[11px] mt-0.5">cell[3] · git <span class="font-mono">a1f3c2</span> · 今天 14:02</div>
+        </div>
+        <div class="rounded-md border hairline p-2.5 hover:border-accent/50 cursor-pointer">
+          <div class="font-serif">paired_t_20261014.json</div>
+          <div class="text-ink-faint text-[11px] mt-0.5">cell[2] · 统计检验结果</div>
+        </div>
+        <div class="rounded-md border hairline p-2.5 hover:border-accent/50 cursor-pointer">
+          <div class="font-serif">table_fid.tex</div>
+          <div class="text-ink-faint text-[11px] mt-0.5">LaTeX 片段 · 供 experiments.tex 引用</div>
+        </div>
+        <div class="rounded-md border hairline p-2.5 hover:border-accent/50 cursor-pointer">
+          <div class="font-serif">cifar10_results.parquet</div>
+          <div class="text-ink-faint text-[11px] mt-0.5">数据集 · 12 行</div>
+        </div>
+      </div>
+      <div class="mt-5 pt-4 border-t hairline space-y-2 text-ink-soft">
+        <div class="text-ink-faint text-[10.5px] smallcaps font-semibold">回溯链</div>
+        <div class="leading-relaxed font-serif">产物 → git HEAD <span class="font-mono text-[11px] text-accent">a1f3c2</span> → LaTeX 章节 <span class="text-accent font-serif">experiments.tex §5.2</span></div>
+        <a href="trace.html" class="inline-block text-[12px] text-accent hover:underline">查看完整溯源 →</a>
+      </div>
+      <div class="mt-5 pt-4 border-t hairline space-y-2">
+        <button class="w-full h-8 rounded-md border hairline text-ink-soft hover:bg-paper">📊 快速统计检验</button>
+        <button class="w-full h-8 rounded-md border hairline text-ink-soft hover:bg-paper">🖼 图表模板库</button>
+      </div>
+      <div class="mt-5 pt-4 border-t hairline text-[11px] text-ink-faint font-serif leading-relaxed">
+        图表默认套用期刊版式：单栏宽 3.3 in · 衬线轴标签 · Fig. 编号自动续排。
+      </div>
+    </aside>
+  </div>
+</main>
+</body>
+</html>
